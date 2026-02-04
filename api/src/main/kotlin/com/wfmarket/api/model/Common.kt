@@ -48,3 +48,15 @@ enum class Language(val wire: String, val label: String) {
     }
 }
 
+/** A user's presence, as used on orders, profiles and the status socket. */
+enum class UserStatus(val wire: String, val label: String) {
+    INGAME("ingame", "In game"),
+    ONLINE("online", "Online"),
+    INVISIBLE("invisible", "Invisible"),
+    OFFLINE("offline", "Offline");
+
+    companion object {
+        fun of(wire: String?): UserStatus = entries.firstOrNull { it.wire == wire } ?: OFFLINE
+    }
+}
+
