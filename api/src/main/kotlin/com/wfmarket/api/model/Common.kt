@@ -24,3 +24,27 @@ enum class Platform(val wire: String, val label: String) {
     }
 }
 
+/** Languages the site publishes content in. */
+enum class Language(val wire: String, val label: String) {
+    EN("en", "English"),
+    RU("ru", "Русский"),
+    KO("ko", "한국어"),
+    FR("fr", "Français"),
+    SV("sv", "Svenska"),
+    DE("de", "Deutsch"),
+    ZH_HANT("zh-hant", "繁體中文"),
+    ZH_HANS("zh-hans", "简体中文"),
+    PT("pt", "Português"),
+    ES("es", "Español"),
+    PL("pl", "Polski"),
+    CS("cs", "Čeština"),
+    UK("uk", "Українська"),
+    IT("it", "Italiano"),
+    TR("tr", "Türkçe"),
+    JA("ja", "日本語");
+
+    companion object {
+        fun of(wire: String?): Language = entries.firstOrNull { it.wire == wire } ?: EN
+    }
+}
+
