@@ -60,3 +60,8 @@ enum class UserStatus(val wire: String, val label: String) {
     }
 }
 
+object OrderType {
+    const val SELL = "sell"
+    const val BUY = "buy"
+}
+
