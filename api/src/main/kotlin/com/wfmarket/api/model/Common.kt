@@ -65,3 +65,19 @@ object OrderType {
     const val BUY = "buy"
 }
 
+/**
+ * Localised strings and images shared by every catalogue entity. Which fields are present depends
+ * on the entity, so all of them are optional.
+ */
+@Serializable
+data class I18n(
+    val name: String? = null,
+    val description: String? = null,
+    val wikiLink: String? = null,
+    val icon: String? = null,
+    val thumb: String? = null,
+    val subIcon: String? = null,
+    val nodeName: String? = null,
+    val systemName: String? = null,
+)
+
