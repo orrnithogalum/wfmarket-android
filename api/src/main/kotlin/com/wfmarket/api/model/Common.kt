@@ -94,3 +94,10 @@ fun assetUrl(path: String?): String? = when {
     else -> STATIC_ASSETS + path.removePrefix("/")
 }
 
+/**
+ * v1 endpoints embed a user either as a full object or as a bare id, depending on the route.
+ * This decodes both shapes into [V1User].
+ */
+object V1UserOrIdSerializer : KSerializer<V1User> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("V1UserOrId")
+
