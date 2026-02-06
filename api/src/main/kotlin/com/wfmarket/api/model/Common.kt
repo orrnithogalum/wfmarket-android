@@ -101,3 +101,12 @@ fun assetUrl(path: String?): String? = when {
 object V1UserOrIdSerializer : KSerializer<V1User> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("V1UserOrId")
 
+    override fun deserialize(decoder: Decoder): V1User {
+        val input = decoder as JsonDecoder
+        return when (val element = input.decodeJsonElement()) {
+            is JsonPrimitive -> V1User(id = element.content)
+            is JsonObject -> input.json.decodeFromJsonElement(V1User.serializer(), element)
+            else -> V1User()
+        }
+    }
+
