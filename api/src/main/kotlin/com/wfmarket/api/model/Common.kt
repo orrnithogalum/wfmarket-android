@@ -81,3 +81,7 @@ data class I18n(
     val systemName: String? = null,
 )
 
+/** The nearest available translation: requested language, then English, then anything. */
+fun Map<String, I18n>.localized(language: String): I18n? =
+    this[language] ?: this["en"] ?: values.firstOrNull()
+
