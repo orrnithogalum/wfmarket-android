@@ -88,3 +88,9 @@ fun Map<String, I18n>.localized(language: String): I18n? =
 /** Image paths in API responses are relative to this. */
 const val STATIC_ASSETS = "https://warframe.market/static/assets/"
 
+fun assetUrl(path: String?): String? = when {
+    path.isNullOrBlank() -> null
+    path.startsWith("http") -> path
+    else -> STATIC_ASSETS + path.removePrefix("/")
+}
+
