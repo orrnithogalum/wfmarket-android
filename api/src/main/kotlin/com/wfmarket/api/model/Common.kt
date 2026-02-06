@@ -85,3 +85,6 @@ data class I18n(
 fun Map<String, I18n>.localized(language: String): I18n? =
     this[language] ?: this["en"] ?: values.firstOrNull()
 
+/** Image paths in API responses are relative to this. */
+const val STATIC_ASSETS = "https://warframe.market/static/assets/"
+
