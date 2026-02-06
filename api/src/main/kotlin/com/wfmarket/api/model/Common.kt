@@ -110,3 +110,7 @@ object V1UserOrIdSerializer : KSerializer<V1User> {
         }
     }
 
+    override fun serialize(encoder: Encoder, value: V1User) {
+        encoder.encodeSerializableValue(V1User.serializer(), value)
+    }
+}
