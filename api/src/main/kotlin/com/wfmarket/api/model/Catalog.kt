@@ -32,3 +32,6 @@ data class Item(
     val tradable: Boolean? = null,
 )
 
+@Serializable
+data class ItemSet(val id: String? = null, val items: List<Item> = emptyList())
+
