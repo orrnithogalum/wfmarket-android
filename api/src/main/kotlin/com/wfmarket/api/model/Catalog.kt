@@ -61,3 +61,12 @@ data class RivenAttribute(
     val i18n: Map<String, I18n> = emptyMap(),
 )
 
+/** Kuva lich and Sister of Parvos weapons share one shape. */
+@Serializable
+data class NemesisWeapon(
+    val id: String,
+    val slug: String,
+    val reqMasteryRank: Int? = null,
+    val i18n: Map<String, I18n> = emptyMap(),
+)
+
