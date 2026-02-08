@@ -46,3 +46,18 @@ data class RivenWeapon(
     val i18n: Map<String, I18n> = emptyMap(),
 )
 
+@Serializable
+data class RivenAttribute(
+    val id: String,
+    val slug: String,
+    val group: String? = null,
+    val prefix: String? = null,
+    val suffix: String? = null,
+    val exclusiveTo: List<String> = emptyList(),
+    val positiveIsNegative: Boolean = false,
+    val positiveOnly: Boolean = false,
+    val negativeOnly: Boolean = false,
+    val unit: String? = null,
+    val i18n: Map<String, I18n> = emptyMap(),
+)
+
