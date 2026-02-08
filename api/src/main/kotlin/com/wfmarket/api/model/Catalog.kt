@@ -35,3 +35,14 @@ data class Item(
 @Serializable
 data class ItemSet(val id: String? = null, val items: List<Item> = emptyList())
 
+@Serializable
+data class RivenWeapon(
+    val id: String,
+    val slug: String,
+    val group: String? = null,
+    val rivenType: String? = null,
+    val disposition: Double? = null,
+    val reqMasteryRank: Int? = null,
+    val i18n: Map<String, I18n> = emptyMap(),
+)
+
