@@ -79,3 +79,11 @@ data class Ephemera(
     val i18n: Map<String, I18n> = emptyMap(),
 )
 
+@Serializable
+data class Quirk(
+    val id: String,
+    val slug: String,
+    val group: String? = null,
+    val i18n: Map<String, I18n> = emptyMap(),
+)
+
