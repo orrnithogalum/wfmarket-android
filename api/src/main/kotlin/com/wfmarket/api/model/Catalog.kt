@@ -97,3 +97,11 @@ data class Location(
     val i18n: Map<String, I18n> = emptyMap(),
 )
 
+/** Missions and NPCs share one shape. */
+@Serializable
+data class NamedEntity(
+    val id: String,
+    val slug: String,
+    val i18n: Map<String, I18n> = emptyMap(),
+)
+
