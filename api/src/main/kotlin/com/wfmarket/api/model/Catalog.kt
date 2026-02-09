@@ -70,3 +70,12 @@ data class NemesisWeapon(
     val i18n: Map<String, I18n> = emptyMap(),
 )
 
+@Serializable
+data class Ephemera(
+    val id: String,
+    val slug: String,
+    val element: String? = null,
+    val animation: String? = null,
+    val i18n: Map<String, I18n> = emptyMap(),
+)
+
