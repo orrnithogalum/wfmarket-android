@@ -87,3 +87,13 @@ data class Quirk(
     val i18n: Map<String, I18n> = emptyMap(),
 )
 
+@Serializable
+data class Location(
+    val id: String,
+    val slug: String,
+    val faction: String? = null,
+    val minLevel: Int? = null,
+    val maxLevel: Int? = null,
+    val i18n: Map<String, I18n> = emptyMap(),
+)
+
