@@ -117,3 +117,11 @@ data class Achievement(
     val state: AchievementState? = null,
 )
 
+@Serializable
+data class AchievementState(
+    val featured: Boolean = false,
+    val hidden: Boolean = false,
+    val progress: Int? = null,
+    val completedAt: String? = null,
+)
+
