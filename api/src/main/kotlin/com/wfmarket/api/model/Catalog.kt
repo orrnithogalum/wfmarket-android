@@ -125,3 +125,9 @@ data class AchievementState(
     val completedAt: String? = null,
 )
 
+@Serializable
+data class Showcase(
+    val i18n: Map<String, ShowcaseText> = emptyMap(),
+    val items: List<ShowcaseItem> = emptyList(),
+)
+
