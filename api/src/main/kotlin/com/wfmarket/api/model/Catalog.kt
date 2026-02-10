@@ -105,3 +105,15 @@ data class NamedEntity(
     val i18n: Map<String, I18n> = emptyMap(),
 )
 
+@Serializable
+data class Achievement(
+    val id: String = "",
+    val slug: String = "",
+    val type: String? = null,
+    val secret: Boolean = false,
+    val reputationBonus: Int? = null,
+    val goal: Int? = null,
+    val i18n: Map<String, I18n> = emptyMap(),
+    val state: AchievementState? = null,
+)
+
