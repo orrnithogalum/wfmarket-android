@@ -131,3 +131,6 @@ data class Showcase(
     val items: List<ShowcaseItem> = emptyList(),
 )
 
+@Serializable
+data class ShowcaseText(val title: String? = null, val description: String? = null)
+
