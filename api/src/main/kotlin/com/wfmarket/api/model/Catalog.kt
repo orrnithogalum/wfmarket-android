@@ -134,3 +134,9 @@ data class Showcase(
 @Serializable
 data class ShowcaseText(val title: String? = null, val description: String? = null)
 
+@Serializable
+data class ShowcaseItem(
+    val item: String,
+    val background: String? = null,
+    val bigCard: Boolean = false,
+)
