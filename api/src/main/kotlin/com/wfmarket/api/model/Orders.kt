@@ -22,3 +22,6 @@ data class Order(
     val user: User? = null,
 )
 
+@Serializable
+data class TopOrders(val sell: List<Order> = emptyList(), val buy: List<Order> = emptyList())
+
