@@ -81,3 +81,10 @@ data class Review(
     val hidden: Boolean = false,
 )
 
+@Serializable
+data class ReviewsPage(
+    val reviews: List<Review> = emptyList(),
+    @SerialName("own_review") val ownReview: Review? = null,
+    @SerialName("total_review_count") val totalReviewCount: Int? = null,
+)
+
