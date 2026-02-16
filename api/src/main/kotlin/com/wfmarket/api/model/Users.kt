@@ -56,3 +56,18 @@ data class UpdateMe(
     val locale: String? = null,
 )
 
+/** The snake_case user embedded in v1 auction, chat and review responses. */
+@Serializable
+data class V1User(
+    val id: String = "",
+    val slug: String? = null,
+    @SerialName("ingame_name") val ingameName: String? = null,
+    val avatar: String? = null,
+    val reputation: Int = 0,
+    val platform: String? = null,
+    val crossplay: Boolean = false,
+    val locale: String? = null,
+    val status: String? = null,
+    @SerialName("last_seen") val lastSeen: String? = null,
+)
+
