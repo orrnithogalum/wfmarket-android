@@ -47,3 +47,12 @@ data class User(
     val aboutText: String? get() = aboutRaw?.let(::decodeHtmlEntities)
 }
 
+/** Fields of `PATCH /v2/me`. Null fields are left unchanged. */
+@Serializable
+data class UpdateMe(
+    val about: String? = null,
+    val platform: String? = null,
+    val crossplay: Boolean? = null,
+    val locale: String? = null,
+)
+
