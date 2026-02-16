@@ -71,3 +71,13 @@ data class V1User(
     @SerialName("last_seen") val lastSeen: String? = null,
 )
 
+@Serializable
+data class Review(
+    val id: String = "",
+    val text: String = "",
+    @SerialName("user_from") val userFrom: V1User = V1User(),
+    @SerialName("review_type") val reviewType: Int = 1,
+    val date: String? = null,
+    val hidden: Boolean = false,
+)
+
