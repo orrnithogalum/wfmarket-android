@@ -88,3 +88,17 @@ data class ReviewsPage(
     @SerialName("total_review_count") val totalReviewCount: Int? = null,
 )
 
+@Serializable
+data class ClosedOrder(
+    val id: String = "",
+    val quantity: Int = 1,
+    val platinum: Double = 0.0,
+    @SerialName("order_type") val orderType: String = OrderType.SELL,
+    val item: ClosedOrderItem = ClosedOrderItem(),
+    @SerialName("mod_rank") val modRank: Int? = null,
+    val subtype: String? = null,
+    @SerialName("amber_stars") val amberStars: Int? = null,
+    @SerialName("cyan_stars") val cyanStars: Int? = null,
+    @SerialName("closed_date") val closedDate: String? = null,
+)
+
