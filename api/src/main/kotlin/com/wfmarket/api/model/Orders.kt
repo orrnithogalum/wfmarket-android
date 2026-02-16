@@ -25,3 +25,20 @@ data class Order(
 @Serializable
 data class TopOrders(val sell: List<Order> = emptyList(), val buy: List<Order> = emptyList())
 
+/** Body of `POST /v2/order`. Null fields are omitted. */
+@Serializable
+data class CreateOrder(
+    val itemId: String,
+    val type: String,
+    val platinum: Int,
+    val quantity: Int,
+    /** Only for bulk-tradable items: the server rejects it on anything else. */
+    val perTrade: Int? = null,
+    val visible: Boolean = true,
+    val rank: Int? = null,
+    val charges: Int? = null,
+    val subtype: String? = null,
+    val amberStars: Int? = null,
+    val cyanStars: Int? = null,
+)
+
