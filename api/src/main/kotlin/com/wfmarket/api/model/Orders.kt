@@ -42,3 +42,16 @@ data class CreateOrder(
     val cyanStars: Int? = null,
 )
 
+/** Body of `PATCH /v2/order/{id}`. Null fields are left unchanged. */
+@Serializable
+data class UpdateOrder(
+    val platinum: Int? = null,
+    val quantity: Int? = null,
+    val perTrade: Int? = null,
+    val visible: Boolean? = null,
+    val rank: Int? = null,
+    val charges: Int? = null,
+    val subtype: String? = null,
+    val amberStars: Int? = null,
+    val cyanStars: Int? = null,
+)
