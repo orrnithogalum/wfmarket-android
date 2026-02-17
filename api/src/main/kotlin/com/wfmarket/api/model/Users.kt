@@ -102,3 +102,10 @@ data class ClosedOrder(
     @SerialName("closed_date") val closedDate: String? = null,
 )
 
+@Serializable
+data class ClosedOrderItem(
+    val id: String = "",
+    @SerialName("url_name") val urlName: String = "",
+    val thumb: String? = null,
+    val icon: String? = null,
+)
