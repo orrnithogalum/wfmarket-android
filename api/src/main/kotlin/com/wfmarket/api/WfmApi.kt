@@ -47,3 +47,42 @@ interface WfmContext {
     fun onSessionExpired() {}
 }
 
+/**
+ * The warframe.market HTTP API.
+ *
+ * The site is mid-migration: catalogue, orders and profile live on `/v2`, while sign-in, auctions,
+ * chat, statistics, the ducanator and account settings are still on `/v1`. This class hides that
+ * split behind one surface. It has no Android dependencies.
+ */
+class WfmApi(
+    private val context: WfmContext,
+    val http: OkHttpClient = defaultHttpClient(),
+    private val userAgent: String = DEFAULT_USER_AGENT,
+) {
+    val json: Json get() = WfmJson
+
+    // ---------------------------------------------------------------- Authentication
+
+    // ---------------------------------------------------------------- Catalogue (public, v2)
+
+    // ---------------------------------------------------------------- Warframe's own data
+
+    // ---------------------------------------------------------------- Statistics and tools (v1)
+
+    // ---------------------------------------------------------------- Orders (v2)
+
+    // ---------------------------------------------------------------- Users
+
+    // ---------------------------------------------------------------- Account settings (v1)
+
+    // ---------------------------------------------------------------- Auctions (v1)
+
+    // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
+
+    // ---------------------------------------------------------------- Transport
+
+    /** The auth scheme each API generation last accepted. Sign-in issues a token usable by both. */
+    @Volatile private var v1Scheme = "JWT"
+    @Volatile private var v2Scheme = "Bearer"
+
+
