@@ -63,6 +63,28 @@ class WfmApi(
 
     // ---------------------------------------------------------------- Authentication
 
+    /** Signs in and returns the session token. The password is sent once and never stored. */
+    suspend fun signIn(email: String, password: String, deviceId: String): SignInResult {
+        val body = buildJsonObject {
+            put("auth_type", "header")
+            put("email", email)
+            put("password", password)
+            put("device_id", deviceId)
+        }
+        val request = request(V1, "POST", "/auth/signin", emptyMap(), body, authenticated = false)
+            .header("Authorization", "JWT")
+            .build()
+        return execute(request, authenticated = false) { response, text ->
+            val fromHeader = response.header("Authorization")?.removePrefix("JWT ")?.removePrefix("Bearer ")?.trim()
+            val fromCookie = response.headers("Set-Cookie")
+                .firstOrNull { it.startsWith("JWT=") }
+                ?.substringAfter("JWT=")?.substringBefore(';')
+            val token = fromHeader?.takeIf { it.isNotBlank() && it != "JWT" } ?: fromCookie
+                ?: throw WfmException(WfmErrorKind.UNKNOWN, listOf("The server didn't return a session."))
+            SignInResult(token = token, rawUser = WfmJson.parseToJsonElement(text).jsonObject["payload"])
+        }
+    }
+
     // ---------------------------------------------------------------- Catalogue (public, v2)
 
     // ---------------------------------------------------------------- Warframe's own data
