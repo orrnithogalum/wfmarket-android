@@ -43,4 +43,7 @@ interface WfmContext {
     val crossplay: Boolean
     val token: String?
 
+    /** Called when an authenticated request is rejected: the stored session is no longer valid. */
+    fun onSessionExpired() {}
+}
 
