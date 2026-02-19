@@ -176,6 +176,9 @@ class WfmApi(
     suspend fun createOrder(order: CreateOrder): Order =
         v2(Order.serializer(), "POST", "/order", body = WfmJson.encodeToJsonElement(order))
 
+    suspend fun updateOrder(id: String, patch: UpdateOrder): Order =
+        v2(Order.serializer(), "PATCH", "/order/$id", body = WfmJson.encodeToJsonElement(patch))
+
     // ---------------------------------------------------------------- Users
 
     // ---------------------------------------------------------------- Account settings (v1)
