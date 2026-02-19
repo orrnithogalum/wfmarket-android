@@ -173,6 +173,9 @@ class WfmApi(
     suspend fun ordersForUser(slug: String): List<Order> = v2(ListSerializer(Order.serializer()), "GET", "/orders/user/$slug")
     suspend fun myOrders(): List<Order> = v2(ListSerializer(Order.serializer()), "GET", "/orders/my")
 
+    suspend fun createOrder(order: CreateOrder): Order =
+        v2(Order.serializer(), "POST", "/order", body = WfmJson.encodeToJsonElement(order))
+
     // ---------------------------------------------------------------- Users
 
     // ---------------------------------------------------------------- Account settings (v1)
