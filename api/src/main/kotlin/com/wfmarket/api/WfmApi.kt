@@ -91,6 +91,24 @@ class WfmApi(
 
     // ---------------------------------------------------------------- Catalogue (public, v2)
 
+    suspend fun versions(): Versions = v2(Versions.serializer(), "GET", "/versions")
+    suspend fun items(): List<Item> = v2(ListSerializer(Item.serializer()), "GET", "/items")
+    suspend fun item(slug: String): Item = v2(Item.serializer(), "GET", "/item/$slug")
+    suspend fun itemSet(slug: String): ItemSet = v2(ItemSet.serializer(), "GET", "/item/$slug/set")
+    suspend fun showcase(): Showcase = v2(Showcase.serializer(), "GET", "/dashboard/showcase")
+    suspend fun rivenWeapons(): List<RivenWeapon> = v2(ListSerializer(RivenWeapon.serializer()), "GET", "/riven/weapons")
+    suspend fun rivenAttributes(): List<RivenAttribute> = v2(ListSerializer(RivenAttribute.serializer()), "GET", "/riven/attributes")
+    suspend fun lichWeapons(): List<NemesisWeapon> = v2(ListSerializer(NemesisWeapon.serializer()), "GET", "/lich/weapons")
+    suspend fun lichEphemeras(): List<Ephemera> = v2(ListSerializer(Ephemera.serializer()), "GET", "/lich/ephemeras")
+    suspend fun lichQuirks(): List<Quirk> = v2(ListSerializer(Quirk.serializer()), "GET", "/lich/quirks")
+    suspend fun sisterWeapons(): List<NemesisWeapon> = v2(ListSerializer(NemesisWeapon.serializer()), "GET", "/sister/weapons")
+    suspend fun sisterEphemeras(): List<Ephemera> = v2(ListSerializer(Ephemera.serializer()), "GET", "/sister/ephemeras")
+    suspend fun sisterQuirks(): List<Quirk> = v2(ListSerializer(Quirk.serializer()), "GET", "/sister/quirks")
+    suspend fun locations(): List<Location> = v2(ListSerializer(Location.serializer()), "GET", "/locations")
+    suspend fun missions(): List<NamedEntity> = v2(ListSerializer(NamedEntity.serializer()), "GET", "/missions")
+    suspend fun npcs(): List<NamedEntity> = v2(ListSerializer(NamedEntity.serializer()), "GET", "/npcs")
+    suspend fun achievements(): List<Achievement> = v2(ListSerializer(Achievement.serializer()), "GET", "/achievements")
+
     // ---------------------------------------------------------------- Warframe's own data
 
     // ---------------------------------------------------------------- Statistics and tools (v1)
