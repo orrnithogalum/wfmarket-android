@@ -160,6 +160,11 @@ class WfmApi(
 
     // ---------------------------------------------------------------- Statistics and tools (v1)
 
+    suspend fun itemStatistics(slug: String): ItemStatistics = v1(ItemStatistics.serializer(), "GET", "/items/$slug/statistics")
+    suspend fun dropSources(slug: String): List<DropSource> =
+        v1(DropSourcesPayload.serializer(), "GET", "/items/$slug/dropsources").dropsources
+    suspend fun ducats(): Ducats = v1(Ducats.serializer(), "GET", "/tools/ducats")
+
     // ---------------------------------------------------------------- Orders (v2)
 
     // ---------------------------------------------------------------- Users
