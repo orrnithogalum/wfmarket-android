@@ -111,6 +111,37 @@ class WfmApi(
 
     // ---------------------------------------------------------------- Warframe's own data
 
+    /**
+     * The current Prime Resurgence, from the game's official world state, or null between rotations.
+     * warframe.market's own showcase isn't used for this because it's maintained by hand and lags.
+     */
+    suspend fun primeResurgence(nowMillis: Long = System.currentTimeMillis()): PrimeResurgence? {
+        val request = Request.Builder().url(WORLD_STATE).header("User-Agent", userAgent).get().build()
+        val state = execute(request, authenticated = false) { _, text ->
+            WfmJson.decodeFromString(WorldState.serializer(), text)
+        }
+        val trader = state.primeVaultTraders.firstOrNull {
+            it.activation.date.millis <= nowMillis && nowMillis < it.expiry.date.millis
+        } ?: return null
+        val news = state.events
+            .filter { event -> event.link?.contains("prime-resurgence") == true }
+            .maxByOrNull { it.date.date.millis }
+        val gameLanguage = when (context.language) {
+            "zh-hant" -> "tc"
+            "zh-hans" -> "zh"
+            else -> context.language
+        }
+        return PrimeResurgence(
+            expiresAtMillis = trader.expiry.date.millis,
+            gameRefs = trader.manifest.map { it.itemType.replace("/StoreItems/", "/") },
+            headline = news?.messages?.let { list ->
+                (list.firstOrNull { it.language == gameLanguage } ?: list.firstOrNull { it.language == "en" })?.message
+            },
+            bannerUrl = news?.imageUrl,
+            link = news?.link,
+        )
+    }
+
     // ---------------------------------------------------------------- Statistics and tools (v1)
 
     // ---------------------------------------------------------------- Orders (v2)
