@@ -85,6 +85,10 @@ class WfmApi(
         }
     }
 
+    suspend fun signOut() {
+        runCatching { v1(JsonElement.serializer(), "POST", "/auth/signout", body = JsonObject(emptyMap())) }
+    }
+
     // ---------------------------------------------------------------- Catalogue (public, v2)
 
     // ---------------------------------------------------------------- Warframe's own data
