@@ -167,6 +167,12 @@ class WfmApi(
 
     // ---------------------------------------------------------------- Orders (v2)
 
+    suspend fun recentOrders(): List<Order> = v2(ListSerializer(Order.serializer()), "GET", "/orders/recent")
+    suspend fun ordersForItem(slug: String): List<Order> = v2(ListSerializer(Order.serializer()), "GET", "/orders/item/$slug")
+    suspend fun topOrders(slug: String): TopOrders = v2(TopOrders.serializer(), "GET", "/orders/item/$slug/top")
+    suspend fun ordersForUser(slug: String): List<Order> = v2(ListSerializer(Order.serializer()), "GET", "/orders/user/$slug")
+    suspend fun myOrders(): List<Order> = v2(ListSerializer(Order.serializer()), "GET", "/orders/my")
+
     // ---------------------------------------------------------------- Users
 
     // ---------------------------------------------------------------- Account settings (v1)
