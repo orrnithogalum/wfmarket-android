@@ -142,6 +142,22 @@ class WfmApi(
         )
     }
 
+    /**
+     * Last week's riven trades on [platform], which Warframe publishes every Monday, or null for
+     * mobile, which it publishes none for.
+     */
+    suspend fun rivenTrades(platform: String): RivenTrades? {
+        val file = RIVEN_TRADE_FILES[platform] ?: return null
+        val request = Request.Builder().url("$RIVEN_TRADES$file.json").header("User-Agent", userAgent).get().build()
+        return execute(request, authenticated = false) { response, text ->
+            RivenTrades(
+                platform = platform,
+                publishedMillis = response.headers.getDate("Last-Modified")?.time ?: System.currentTimeMillis(),
+                trades = WfmJson.decodeFromString(ListSerializer(RivenTrade.serializer()), relaxedJson(text)),
+            )
+        }
+    }
+
     // ---------------------------------------------------------------- Statistics and tools (v1)
 
     // ---------------------------------------------------------------- Orders (v2)
