@@ -179,6 +179,10 @@ class WfmApi(
     suspend fun updateOrder(id: String, patch: UpdateOrder): Order =
         v2(Order.serializer(), "PATCH", "/order/$id", body = WfmJson.encodeToJsonElement(patch))
 
+    suspend fun deleteOrder(id: String) {
+        v2(JsonElement.serializer(), "DELETE", "/order/$id")
+    }
+
     // ---------------------------------------------------------------- Users
 
     // ---------------------------------------------------------------- Account settings (v1)
