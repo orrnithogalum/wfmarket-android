@@ -183,6 +183,11 @@ class WfmApi(
         v2(JsonElement.serializer(), "DELETE", "/order/$id")
     }
 
+    /** Records [quantity] of this order as traded. It's how sales reach the trading history. */
+    suspend fun closeOrder(id: String, quantity: Int) {
+        v2(JsonElement.serializer(), "POST", "/order/$id/close", body = buildJsonObject { put("quantity", quantity) })
+    }
+
     // ---------------------------------------------------------------- Users
 
     // ---------------------------------------------------------------- Account settings (v1)
