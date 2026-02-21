@@ -208,6 +208,14 @@ class WfmApi(
     suspend fun uploadBackground(bytes: ByteArray, fileName: String, mimeType: String): User =
         upload("/me/background", "background", bytes, fileName, mimeType)
 
+    private suspend fun upload(path: String, field: String, bytes: ByteArray, fileName: String, mimeType: String): User {
+        val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+            .addFormDataPart(field, fileName, bytes.toRequestBody(mimeType.toMediaType()))
+            .build()
+        val request = baseRequest(V2 + path, V2).method("POST", body).build()
+        return execute(request, authenticated = true) { _, text -> unwrapV2(User.serializer(), text) }
+    }
+
     // ---------------------------------------------------------------- Account settings (v1)
 
     // ---------------------------------------------------------------- Auctions (v1)
