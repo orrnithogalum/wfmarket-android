@@ -205,6 +205,9 @@ class WfmApi(
     suspend fun uploadAvatar(bytes: ByteArray, fileName: String, mimeType: String): User =
         upload("/me/avatar", "avatar", bytes, fileName, mimeType)
 
+    suspend fun uploadBackground(bytes: ByteArray, fileName: String, mimeType: String): User =
+        upload("/me/background", "background", bytes, fileName, mimeType)
+
     // ---------------------------------------------------------------- Account settings (v1)
 
     // ---------------------------------------------------------------- Auctions (v1)
