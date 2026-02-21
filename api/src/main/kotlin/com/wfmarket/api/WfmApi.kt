@@ -219,6 +219,10 @@ class WfmApi(
     suspend fun userAchievements(slug: String): List<Achievement> =
         v2(ListSerializer(Achievement.serializer()), "GET", "/achievements/user/$slug")
 
+    /** The account's closed orders, i.e. the trading history on the profile's Statistics tab. */
+    suspend fun closedOrders(slug: String): List<ClosedOrder> =
+        v1(ClosedOrdersPayload.serializer(), "GET", "/profile/$slug/statistics").closedOrders
+
     // ---------------------------------------------------------------- Account settings (v1)
 
     // ---------------------------------------------------------------- Auctions (v1)
