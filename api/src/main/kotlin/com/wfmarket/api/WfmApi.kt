@@ -188,6 +188,14 @@ class WfmApi(
         v2(JsonElement.serializer(), "POST", "/order/$id/close", body = buildJsonObject { put("quantity", quantity) })
     }
 
+    /** Shows or hides all of the user's orders of one type (`sell`/`buy`), or all when null. */
+    suspend fun setAllOrdersVisible(visible: Boolean, type: String?) {
+        v2(JsonElement.serializer(), "PATCH", "/orders/group/all", body = buildJsonObject {
+            put("visible", visible)
+            type?.let { put("type", it) }
+        })
+    }
+
     // ---------------------------------------------------------------- Users
 
     // ---------------------------------------------------------------- Account settings (v1)
