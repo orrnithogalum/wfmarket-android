@@ -198,6 +198,10 @@ class WfmApi(
 
     // ---------------------------------------------------------------- Users
 
+    suspend fun me(): User = v2(User.serializer(), "GET", "/me")
+    suspend fun user(slug: String): User = v2(User.serializer(), "GET", "/user/$slug")
+    suspend fun updateMe(patch: UpdateMe): User = v2(User.serializer(), "PATCH", "/me", body = WfmJson.encodeToJsonElement(patch))
+
     // ---------------------------------------------------------------- Account settings (v1)
 
     // ---------------------------------------------------------------- Auctions (v1)
