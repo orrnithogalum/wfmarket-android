@@ -216,6 +216,9 @@ class WfmApi(
         return execute(request, authenticated = true) { _, text -> unwrapV2(User.serializer(), text) }
     }
 
+    suspend fun userAchievements(slug: String): List<Achievement> =
+        v2(ListSerializer(Achievement.serializer()), "GET", "/achievements/user/$slug")
+
     // ---------------------------------------------------------------- Account settings (v1)
 
     // ---------------------------------------------------------------- Auctions (v1)
