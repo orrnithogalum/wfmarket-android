@@ -202,6 +202,9 @@ class WfmApi(
     suspend fun user(slug: String): User = v2(User.serializer(), "GET", "/user/$slug")
     suspend fun updateMe(patch: UpdateMe): User = v2(User.serializer(), "PATCH", "/me", body = WfmJson.encodeToJsonElement(patch))
 
+    suspend fun uploadAvatar(bytes: ByteArray, fileName: String, mimeType: String): User =
+        upload("/me/avatar", "avatar", bytes, fileName, mimeType)
+
     // ---------------------------------------------------------------- Account settings (v1)
 
     // ---------------------------------------------------------------- Auctions (v1)
