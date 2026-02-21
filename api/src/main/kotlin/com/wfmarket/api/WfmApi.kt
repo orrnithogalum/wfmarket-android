@@ -223,6 +223,10 @@ class WfmApi(
     suspend fun closedOrders(slug: String): List<ClosedOrder> =
         v1(ClosedOrdersPayload.serializer(), "GET", "/profile/$slug/statistics").closedOrders
 
+    suspend fun removeClosedOrder(id: String) {
+        v1(JsonElement.serializer(), "DELETE", "/profile/statistics/remove/$id")
+    }
+
     // ---------------------------------------------------------------- Account settings (v1)
 
     // ---------------------------------------------------------------- Auctions (v1)
