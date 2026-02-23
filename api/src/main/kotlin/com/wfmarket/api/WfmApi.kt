@@ -230,6 +230,13 @@ class WfmApi(
     suspend fun reviews(slug: String, page: Int = 1): ReviewsPage =
         v1(ReviewsPage.serializer(), "GET", "/profile/$slug/reviews/$page")
 
+    suspend fun createReview(slug: String, text: String, reviewType: Int) {
+        v1(JsonElement.serializer(), "POST", "/profile/$slug/review", body = buildJsonObject {
+            put("text", text)
+            put("review_type", reviewType)
+        })
+    }
+
     // ---------------------------------------------------------------- Account settings (v1)
 
     // ---------------------------------------------------------------- Auctions (v1)
