@@ -247,6 +247,14 @@ class WfmApi(
 
     // ---------------------------------------------------------------- Account settings (v1)
 
+    suspend fun changePassword(current: String, new: String, confirm: String) {
+        v1(JsonElement.serializer(), "POST", "/settings/account/change_password", body = buildJsonObject {
+            put("current_password", current)
+            put("new_password", new)
+            put("new_password_second", confirm)
+        })
+    }
+
     // ---------------------------------------------------------------- Auctions (v1)
 
     // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
