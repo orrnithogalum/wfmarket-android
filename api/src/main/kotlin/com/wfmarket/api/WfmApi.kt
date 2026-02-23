@@ -241,6 +241,10 @@ class WfmApi(
         v1(JsonElement.serializer(), "PUT", "/profile/$slug/review/$reviewId", body = buildJsonObject { put("text", text) })
     }
 
+    suspend fun deleteReview(slug: String, reviewId: String) {
+        v1(JsonElement.serializer(), "DELETE", "/profile/$slug/review/$reviewId")
+    }
+
     // ---------------------------------------------------------------- Account settings (v1)
 
     // ---------------------------------------------------------------- Auctions (v1)
