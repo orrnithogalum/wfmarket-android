@@ -227,6 +227,9 @@ class WfmApi(
         v1(JsonElement.serializer(), "DELETE", "/profile/statistics/remove/$id")
     }
 
+    suspend fun reviews(slug: String, page: Int = 1): ReviewsPage =
+        v1(ReviewsPage.serializer(), "GET", "/profile/$slug/reviews/$page")
+
     // ---------------------------------------------------------------- Account settings (v1)
 
     // ---------------------------------------------------------------- Auctions (v1)
