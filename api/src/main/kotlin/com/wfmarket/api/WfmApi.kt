@@ -237,6 +237,10 @@ class WfmApi(
         })
     }
 
+    suspend fun updateReview(slug: String, reviewId: String, text: String) {
+        v1(JsonElement.serializer(), "PUT", "/profile/$slug/review/$reviewId", body = buildJsonObject { put("text", text) })
+    }
+
     // ---------------------------------------------------------------- Account settings (v1)
 
     // ---------------------------------------------------------------- Auctions (v1)
