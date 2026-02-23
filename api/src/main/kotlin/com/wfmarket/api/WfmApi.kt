@@ -255,6 +255,13 @@ class WfmApi(
         })
     }
 
+    suspend fun changeEmail(current: String, newEmail: String) {
+        v1(JsonElement.serializer(), "POST", "/settings/account/change_email", body = buildJsonObject {
+            put("current_password", current)
+            put("new_email", newEmail)
+        })
+    }
+
     // ---------------------------------------------------------------- Auctions (v1)
 
     // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
