@@ -262,6 +262,10 @@ class WfmApi(
         })
     }
 
+    suspend fun unlinkAccount(service: String) {
+        v1(JsonElement.serializer(), "DELETE", "/settings/account/$service")
+    }
+
     // ---------------------------------------------------------------- Auctions (v1)
 
     // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
