@@ -270,6 +270,10 @@ class WfmApi(
         v1(JsonElement.serializer(), "POST", "/settings/account/extirpate")
     }
 
+    suspend fun cancelAccountDeletion() {
+        v1(JsonElement.serializer(), "DELETE", "/settings/account/extirpate")
+    }
+
     // ---------------------------------------------------------------- Auctions (v1)
 
     // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
