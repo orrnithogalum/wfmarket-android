@@ -276,6 +276,14 @@ class WfmApi(
 
     // ---------------------------------------------------------------- Auctions (v1)
 
+    suspend fun recentAuctions(): List<Auction> = v1(AuctionsPayload.serializer(), "GET", "/auctions").auctions
+    suspend fun popularAuctions(): List<Auction> = v1(AuctionsPayload.serializer(), "GET", "/auctions/popular").auctions
+    suspend fun searchAuctions(search: AuctionSearch): List<Auction> =
+        v1(AuctionsPayload.serializer(), "GET", "/auctions/search", query = search.toQuery()).auctions
+    suspend fun myAuctions(): List<Auction> = v1(AuctionsPayload.serializer(), "GET", "/profile/auctions").auctions
+    suspend fun userAuctions(slug: String): List<Auction> = v1(AuctionsPayload.serializer(), "GET", "/profile/$slug/auctions").auctions
+    suspend fun participatingAuctions(): List<Auction> = v1(AuctionsPayload.serializer(), "GET", "/profile/auctions/participant").auctions
+
     // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
 
     // ---------------------------------------------------------------- Transport
