@@ -284,6 +284,9 @@ class WfmApi(
     suspend fun userAuctions(slug: String): List<Auction> = v1(AuctionsPayload.serializer(), "GET", "/profile/$slug/auctions").auctions
     suspend fun participatingAuctions(): List<Auction> = v1(AuctionsPayload.serializer(), "GET", "/profile/auctions/participant").auctions
 
+    suspend fun auction(id: String): Auction = v1(AuctionPayload.serializer(), "GET", "/auctions/entry/$id").auction
+    suspend fun auctionBids(id: String): List<Bid> = v1(BidsPayload.serializer(), "GET", "/auctions/entry/$id/bids").bids
+
     // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
 
     // ---------------------------------------------------------------- Transport
