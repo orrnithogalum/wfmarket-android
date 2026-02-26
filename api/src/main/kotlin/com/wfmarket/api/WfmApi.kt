@@ -296,6 +296,11 @@ class WfmApi(
     suspend fun setAuctionVisible(id: String, visible: Boolean): Auction =
         v1(AuctionPayload.serializer(), "PUT", "/auctions/entry/$id", body = buildJsonObject { put("visible", visible) }).auction
 
+    /** Closes the auction, or removes it outright when nobody has bid. */
+    suspend fun closeAuction(id: String) {
+        v1(JsonElement.serializer(), "PUT", "/auctions/entry/$id/close")
+    }
+
     // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
 
     // ---------------------------------------------------------------- Transport
