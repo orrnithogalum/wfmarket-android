@@ -293,6 +293,9 @@ class WfmApi(
     suspend fun updateAuction(id: String, update: UpdateAuction): Auction =
         v1(AuctionPayload.serializer(), "PUT", "/auctions/entry/$id", body = WfmJson.encodeToJsonElement(update)).auction
 
+    suspend fun setAuctionVisible(id: String, visible: Boolean): Auction =
+        v1(AuctionPayload.serializer(), "PUT", "/auctions/entry/$id", body = buildJsonObject { put("visible", visible) }).auction
+
     // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
 
     // ---------------------------------------------------------------- Transport
