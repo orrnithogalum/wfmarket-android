@@ -287,6 +287,9 @@ class WfmApi(
     suspend fun auction(id: String): Auction = v1(AuctionPayload.serializer(), "GET", "/auctions/entry/$id").auction
     suspend fun auctionBids(id: String): List<Bid> = v1(BidsPayload.serializer(), "GET", "/auctions/entry/$id/bids").bids
 
+    suspend fun createAuction(request: CreateAuction): Auction =
+        v1(AuctionPayload.serializer(), "POST", "/auctions/create", body = WfmJson.encodeToJsonElement(request)).auction
+
     // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
 
     // ---------------------------------------------------------------- Transport
