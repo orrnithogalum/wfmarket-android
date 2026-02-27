@@ -309,6 +309,8 @@ class WfmApi(
 
     // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
 
+    suspend fun chats(): List<Chat> = v1(ChatsPayload.serializer(), "GET", "/im/chats").chats
+
     // ---------------------------------------------------------------- Transport
 
     /** The auth scheme each API generation last accepted. Sign-in issues a token usable by both. */
