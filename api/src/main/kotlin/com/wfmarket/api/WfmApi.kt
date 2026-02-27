@@ -304,6 +304,9 @@ class WfmApi(
     suspend fun markAuctionWinner(id: String, userId: String): Auction =
         v1(AuctionPayload.serializer(), "POST", "/auctions/entry/$id/win", body = buildJsonObject { put("user_id", userId) }).auction
 
+    suspend fun clearAuctionWinner(id: String): Auction =
+        v1(AuctionPayload.serializer(), "DELETE", "/auctions/entry/$id/win").auction
+
     // ---------------------------------------------------------------- Chat (v1, sending is over the socket)
 
     // ---------------------------------------------------------------- Transport
