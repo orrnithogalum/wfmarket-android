@@ -330,6 +330,10 @@ class WfmApi(
         })
     }
 
+    suspend fun unignoreUser(userId: String) {
+        v1(JsonElement.serializer(), "DELETE", "/im/ignore/$userId")
+    }
+
     // ---------------------------------------------------------------- Transport
 
     /** The auth scheme each API generation last accepted. Sign-in issues a token usable by both. */
