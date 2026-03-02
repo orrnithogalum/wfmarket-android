@@ -336,6 +336,8 @@ class WfmApi(
 
     // ---------------------------------------------------------------- Transport
 
+    private val rateGate = RateGate(permitsPerSecond = 3)
+
     /** The auth scheme each API generation last accepted. Sign-in issues a token usable by both. */
     @Volatile private var v1Scheme = "JWT"
     @Volatile private var v2Scheme = "Bearer"
