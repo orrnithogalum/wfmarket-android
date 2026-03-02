@@ -311,6 +311,10 @@ class WfmApi(
 
     suspend fun chats(): List<Chat> = v1(ChatsPayload.serializer(), "GET", "/im/chats").chats
 
+    /** Note: opening a chat is what marks its messages read on the server. */
+    suspend fun chatMessages(chatId: String): List<ChatMessage> =
+        v1(ChatMessagesPayload.serializer(), "GET", "/im/chats/$chatId").messages
+
     // ---------------------------------------------------------------- Transport
 
     /** The auth scheme each API generation last accepted. Sign-in issues a token usable by both. */
