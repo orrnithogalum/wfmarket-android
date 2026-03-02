@@ -319,6 +319,10 @@ class WfmApi(
     suspend fun openChat(userId: String): String =
         v1(ChatIdPayload.serializer(), "POST", "/im/chats", body = buildJsonObject { put("user_id", userId) }).chatId
 
+    suspend fun deleteChat(chatId: String) {
+        v1(JsonElement.serializer(), "DELETE", "/im/chats/$chatId")
+    }
+
     // ---------------------------------------------------------------- Transport
 
     /** The auth scheme each API generation last accepted. Sign-in issues a token usable by both. */
