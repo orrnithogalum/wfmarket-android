@@ -315,6 +315,10 @@ class WfmApi(
     suspend fun chatMessages(chatId: String): List<ChatMessage> =
         v1(ChatMessagesPayload.serializer(), "GET", "/im/chats/$chatId").messages
 
+    /** Opens the chat with a user, creating it if needed, and returns its id. */
+    suspend fun openChat(userId: String): String =
+        v1(ChatIdPayload.serializer(), "POST", "/im/chats", body = buildJsonObject { put("user_id", userId) }).chatId
+
     // ---------------------------------------------------------------- Transport
 
     /** The auth scheme each API generation last accepted. Sign-in issues a token usable by both. */
