@@ -323,6 +323,13 @@ class WfmApi(
         v1(JsonElement.serializer(), "DELETE", "/im/chats/$chatId")
     }
 
+    suspend fun ignoreUser(userId: String, chatId: String?) {
+        v1(JsonElement.serializer(), "POST", "/im/ignore", body = buildJsonObject {
+            put("user_id", userId)
+            chatId?.let { put("chat_id", it) }
+        })
+    }
+
     // ---------------------------------------------------------------- Transport
 
     /** The auth scheme each API generation last accepted. Sign-in issues a token usable by both. */
