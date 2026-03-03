@@ -342,4 +342,10 @@ class WfmApi(
     @Volatile private var v1Scheme = "JWT"
     @Volatile private var v2Scheme = "Bearer"
 
+    /** Raw v2 `GET`, returned as text so callers can cache the response verbatim. */
+    suspend fun rawV2(path: String): String {
+        val request = baseRequest(V2 + path, V2).get().build()
+        return execute(request, authenticated = false) { _, text -> text }
+    }
+
 
