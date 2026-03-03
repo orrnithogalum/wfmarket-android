@@ -354,4 +354,15 @@ class WfmApi(
     fun <T> decodeList(serializer: KSerializer<T>, raw: String): List<T> =
         unwrapV2(ListSerializer(serializer), raw)
 
+    private suspend fun <T> v2(
+        serializer: KSerializer<T>,
+        method: String,
+        path: String,
+        query: Map<String, String> = emptyMap(),
+        body: JsonElement? = null,
+    ): T {
+        val request = request(V2, method, path, query, body).build()
+        return execute(request, authenticated = context.token != null) { _, text -> unwrapV2(serializer, text) }
+    }
+
 
