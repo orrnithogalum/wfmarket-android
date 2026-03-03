@@ -351,4 +351,7 @@ class WfmApi(
     fun decodeItems(rawItemsResponse: String): List<Item> =
         unwrapV2(ListSerializer(Item.serializer()), rawItemsResponse)
 
+    fun <T> decodeList(serializer: KSerializer<T>, raw: String): List<T> =
+        unwrapV2(ListSerializer(serializer), raw)
+
 
