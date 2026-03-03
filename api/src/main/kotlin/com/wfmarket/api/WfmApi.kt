@@ -365,4 +365,18 @@ class WfmApi(
         return execute(request, authenticated = context.token != null) { _, text -> unwrapV2(serializer, text) }
     }
 
+    private suspend fun <T> v1(
+        serializer: KSerializer<T>,
+        method: String,
+        path: String,
+        query: Map<String, String> = emptyMap(),
+        body: JsonElement? = null,
+    ): T {
+        val request = request(V1, method, path, query, body).build()
+        return execute(request, authenticated = context.token != null) { _, text ->
+            val payload = WfmJson.parseToJsonElement(text).jsonObject["payload"] ?: JsonObject(emptyMap())
+            WfmJson.decodeFromJsonElement(serializer, payload)
+        }
+    }
+
 
