@@ -384,4 +384,23 @@ class WfmApi(
         return WfmJson.decodeFromJsonElement(serializer, data)
     }
 
+    private fun request(
+        base: String,
+        method: String,
+        path: String,
+        query: Map<String, String>,
+        body: JsonElement?,
+        authenticated: Boolean = true,
+    ): Request.Builder {
+        val url = (base + path).toHttpUrl().newBuilder().apply {
+            query.forEach { (key, value) -> addQueryParameter(key, value) }
+        }.build().toString()
+        val requestBody: RequestBody? = when {
+            body != null -> body.toString().toRequestBody(JSON_TYPE)
+            method == "GET" || method == "DELETE" -> null
+            else -> "{}".toRequestBody(JSON_TYPE)
+        }
+        return baseRequest(url, base, authenticated).method(method, requestBody)
+    }
+
 
