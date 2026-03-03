@@ -403,4 +403,18 @@ class WfmApi(
         return baseRequest(url, base, authenticated).method(method, requestBody)
     }
 
+    private fun baseRequest(url: String, base: String, authenticated: Boolean = true): Request.Builder =
+        Request.Builder().url(url)
+            .header("User-Agent", userAgent)
+            .header("Accept", "application/json")
+            .header("Platform", context.platform)
+            .header("Language", context.language)
+            .header("Crossplay", context.crossplay.toString())
+            .apply {
+                val token = context.token
+                if (authenticated && token != null) {
+                    header("Authorization", "${if (base == V1) v1Scheme else v2Scheme} $token")
+                }
+            }
+
 
