@@ -348,4 +348,7 @@ class WfmApi(
         return execute(request, authenticated = false) { _, text -> text }
     }
 
+    fun decodeItems(rawItemsResponse: String): List<Item> =
+        unwrapV2(ListSerializer(Item.serializer()), rawItemsResponse)
+
 
