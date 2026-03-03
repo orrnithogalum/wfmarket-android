@@ -379,4 +379,9 @@ class WfmApi(
         }
     }
 
+    private fun <T> unwrapV2(serializer: KSerializer<T>, text: String): T {
+        val data = WfmJson.parseToJsonElement(text).jsonObject["data"] ?: JsonNull
+        return WfmJson.decodeFromJsonElement(serializer, data)
+    }
+
 
