@@ -500,4 +500,23 @@ class WfmApi(
         return WfmException(kind, shown, fields, code)
     }
 
+    companion object {
+        const val V1 = "https://api.warframe.market/v1"
+        const val V2 = "https://api.warframe.market/v2"
+        const val WORLD_STATE = "https://api.warframe.com/cdn/worldState.php"
+        const val RIVEN_TRADES = "https://www-static.warframe.com/repos/weeklyRivens"
+        private val RIVEN_TRADE_FILES = mapOf("pc" to "PC", "ps4" to "PS4", "xbox" to "XB1", "switch" to "SWI")
+        const val DEFAULT_USER_AGENT = "WfMarketAndroid/1.0"
+
+        private val JSON_TYPE = "application/json".toMediaType()
+
+        fun defaultHttpClient(): OkHttpClient = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(45, TimeUnit.SECONDS)
+            .writeTimeout(45, TimeUnit.SECONDS)
+            .pingInterval(25, TimeUnit.SECONDS)
+            .followRedirects(true)
+            .build()
+    }
+}
 
