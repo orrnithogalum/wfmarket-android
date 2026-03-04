@@ -417,4 +417,11 @@ class WfmApi(
                 }
             }
 
+    /** Reading a response and parsing it both block, so neither may touch the caller's thread. */
+    private suspend fun <T> execute(
+        request: Request,
+        authenticated: Boolean,
+        parse: (Response, String) -> T,
+    ): T = withContext(Dispatchers.IO) { executeBlocking(request, authenticated, parse) }
+
 
