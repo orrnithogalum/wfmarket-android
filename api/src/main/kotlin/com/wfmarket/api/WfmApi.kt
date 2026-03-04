@@ -483,4 +483,21 @@ class WfmApi(
         }
     }
 
+    private fun failure(code: Int, text: String): WfmException {
+        val errors = runCatching { WfmJson.parseToJsonElement(text).jsonObject["error"] }.getOrNull()
+        val (messages, fields) = parseErrors(errors)
+        val kind = when (code) {
+            400, 422 -> WfmErrorKind.VALIDATION
+            401 -> WfmErrorKind.UNAUTHORIZED
+            403 -> WfmErrorKind.FORBIDDEN
+            404 -> WfmErrorKind.NOT_FOUND
+            429 -> WfmErrorKind.RATE_LIMITED
+            in 500..599 -> WfmErrorKind.SERVER
+            else -> WfmErrorKind.UNKNOWN
+        }
+        // A 404 body is often just the URL; don't show that to anyone.
+        val shown = if (kind == WfmErrorKind.NOT_FOUND) emptyList() else messages
+        return WfmException(kind, shown, fields, code)
+    }
+
 
