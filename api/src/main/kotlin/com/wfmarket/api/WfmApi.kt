@@ -520,3 +520,5 @@ class WfmApi(
     }
 }
 
+data class SignInResult(val token: String, val rawUser: JsonElement?)
+
