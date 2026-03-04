@@ -424,4 +424,63 @@ class WfmApi(
         parse: (Response, String) -> T,
     ): T = withContext(Dispatchers.IO) { executeBlocking(request, authenticated, parse) }
 
+    private suspend fun <T> executeBlocking(
+        request: Request,
+        authenticated: Boolean,
+        parse: (Response, String) -> T,
+    ): T {
+        var attempt = 0
+        var current = request
+        var triedOtherScheme = false
+        while (true) {
+            rateGate.acquire()
+            val response = try {
+                http.newCall(current).await()
+            } catch (e: IOException) {
+                // GETs are idempotent, so ride out transient network failures.
+                if (current.method == "GET" && attempt < 2) {
+                    attempt++
+                    delay(600L * attempt)
+                    continue
+                }
+                throw WfmException(WfmErrorKind.NETWORK, emptyList(), cause = e)
+            }
+            response.use {
+                val text = it.body.string()
+                when {
+                    it.isSuccessful -> try {
+                        return parse(it, text)
+                    } catch (e: WfmException) {
+                        throw e
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        throw WfmException(WfmErrorKind.UNKNOWN, listOf("Unexpected response from warframe.market."), status = it.code, cause = e)
+                    }
+                    it.code == 429 && attempt < 3 -> {
+                        attempt++
+                        delay(1000L * attempt)
+                    }
+                    it.code >= 500 && current.method == "GET" && attempt < 2 -> {
+                        attempt++
+                        delay(800L * attempt)
+                    }
+                    it.code == 401 && authenticated && !triedOtherScheme && current.header("Authorization") != null -> {
+                        // Both generations have accepted both schemes over time. Try the other
+                        // before concluding that the session is dead.
+                        triedOtherScheme = true
+                        val isV1 = current.url.encodedPath.startsWith("/v1")
+                        val other = if (current.header("Authorization")!!.startsWith("JWT")) "Bearer" else "JWT"
+                        if (isV1) v1Scheme = other else v2Scheme = other
+                        current = current.newBuilder().header("Authorization", "$other ${context.token}").build()
+                    }
+                    else -> {
+                        if (it.code == 401 && authenticated) context.onSessionExpired()
+                        throw failure(it.code, text)
+                    }
+                }
+            }
+        }
+    }
+
 
