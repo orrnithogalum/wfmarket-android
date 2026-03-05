@@ -530,3 +530,6 @@ val WfmJson = Json {
     encodeDefaults = true
 }
 
+@kotlinx.serialization.Serializable
+private data class DropSourcesPayload(val dropsources: List<DropSource> = emptyList())
+
