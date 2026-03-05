@@ -522,3 +522,11 @@ class WfmApi(
 
 data class SignInResult(val token: String, val rawUser: JsonElement?)
 
+val WfmJson = Json {
+    ignoreUnknownKeys = true
+    coerceInputValues = true
+    explicitNulls = false
+    isLenient = true
+    encodeDefaults = true
+}
+
