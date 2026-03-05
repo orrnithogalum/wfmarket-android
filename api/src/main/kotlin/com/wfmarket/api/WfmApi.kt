@@ -533,3 +533,8 @@ val WfmJson = Json {
 @kotlinx.serialization.Serializable
 private data class DropSourcesPayload(val dropsources: List<DropSource> = emptyList())
 
+@kotlinx.serialization.Serializable
+private data class ClosedOrdersPayload(
+    @kotlinx.serialization.SerialName("closed_orders") val closedOrders: List<ClosedOrder> = emptyList(),
+)
+
