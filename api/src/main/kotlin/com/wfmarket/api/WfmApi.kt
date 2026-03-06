@@ -550,3 +550,6 @@ private data class BidsPayload(val bids: List<Bid> = emptyList())
 @kotlinx.serialization.Serializable
 private data class ChatsPayload(val chats: List<Chat> = emptyList())
 
+@kotlinx.serialization.Serializable
+private data class ChatMessagesPayload(val messages: List<ChatMessage> = emptyList())
+
