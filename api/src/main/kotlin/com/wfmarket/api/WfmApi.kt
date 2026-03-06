@@ -544,3 +544,6 @@ private data class AuctionsPayload(val auctions: List<Auction> = emptyList())
 @kotlinx.serialization.Serializable
 private data class AuctionPayload(val auction: Auction = Auction())
 
+@kotlinx.serialization.Serializable
+private data class BidsPayload(val bids: List<Bid> = emptyList())
+
