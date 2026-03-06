@@ -553,3 +553,8 @@ private data class ChatsPayload(val chats: List<Chat> = emptyList())
 @kotlinx.serialization.Serializable
 private data class ChatMessagesPayload(val messages: List<ChatMessage> = emptyList())
 
+@kotlinx.serialization.Serializable
+private data class ChatIdPayload(
+    @kotlinx.serialization.SerialName("chat_id") val chatId: String = "",
+)
+
