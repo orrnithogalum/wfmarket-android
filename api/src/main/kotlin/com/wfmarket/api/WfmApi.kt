@@ -538,3 +538,6 @@ private data class ClosedOrdersPayload(
     @kotlinx.serialization.SerialName("closed_orders") val closedOrders: List<ClosedOrder> = emptyList(),
 )
 
+@kotlinx.serialization.Serializable
+private data class AuctionsPayload(val auctions: List<Auction> = emptyList())
+
