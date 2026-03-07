@@ -36,3 +36,16 @@ class WfmException(
         }
 }
 
+/** Translates the site's `app.*` error keys into the English text its own UI shows. */
+object ErrorMessages {
+    private val table: Map<String, String> by lazy {
+        runCatching {
+            val text = ErrorMessages::class.java.getResourceAsStream("/wfm/messages_en.json")!!
+                .bufferedReader().use { it.readText() }
+            Json.parseToJsonElement(text).let { root ->
+                (root as JsonObject).mapValues { (it.value as JsonPrimitive).content }
+            }
+        }.getOrDefault(emptyMap())
+    }
+
+
