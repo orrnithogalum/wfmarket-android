@@ -573,3 +573,20 @@ private class RateGate(private val permitsPerSecond: Int) {
     private val mutex = Mutex()
     private val recent = ArrayDeque<Long>()
 
+    suspend fun acquire() {
+        val waitMs = mutex.withLock {
+            val now = System.currentTimeMillis()
+            while (recent.isNotEmpty() && now - recent.first() >= 1000) recent.removeFirst()
+            if (recent.size < permitsPerSecond) {
+                recent.addLast(now)
+                0L
+            } else {
+                val slot = recent.first() + 1000
+                recent.removeFirst()
+                recent.addLast(slot)
+                slot - now
+            }
+        }
+        if (waitMs > 0) delay(waitMs)
+    }
+}
