@@ -558,3 +558,13 @@ private data class ChatIdPayload(
     @kotlinx.serialization.SerialName("chat_id") val chatId: String = "",
 )
 
+private suspend fun Call.await(): Response = suspendCancellableCoroutine { continuation ->
+    enqueue(object : Callback {
+        override fun onResponse(call: Call, response: Response) = continuation.resume(response)
+        override fun onFailure(call: Call, e: IOException) {
+            if (continuation.isActive) continuation.resumeWithException(e)
+        }
+    })
+    continuation.invokeOnCancellation { runCatching { cancel() } }
+}
+
