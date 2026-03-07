@@ -568,3 +568,8 @@ private suspend fun Call.await(): Response = suspendCancellableCoroutine { conti
     continuation.invokeOnCancellation { runCatching { cancel() } }
 }
 
+/** A sliding-window limiter: warframe.market asks clients to stay at or under 3 requests a second. */
+private class RateGate(private val permitsPerSecond: Int) {
+    private val mutex = Mutex()
+    private val recent = ArrayDeque<Long>()
+
