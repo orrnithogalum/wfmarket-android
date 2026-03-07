@@ -48,4 +48,6 @@ object ErrorMessages {
         }.getOrDefault(emptyMap())
     }
 
+    fun translate(key: String): String = table[key] ?: humanize(key)
+
 
