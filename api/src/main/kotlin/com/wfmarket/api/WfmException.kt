@@ -84,3 +84,28 @@ internal fun parseErrors(error: JsonElement?): Pair<List<String>, Map<String, St
     }
 }
 
+/**
+ * Flattens nested field errors such as `{"item": {"name": ["app.form.invalid"]}}`. A generic message
+ * like "Invalid value" says nothing without its field, so those are prefixed with the field's name.
+ */
+private fun fieldErrors(inputs: JsonObject): Map<String, String> = buildMap {
+    fun strings(element: JsonElement): List<String> = when (element) {
+        is JsonPrimitive -> listOfNotNull(element.contentOrNull)
+        is JsonArray -> element.flatMap(::strings)
+        is JsonObject -> emptyList()
+    }
+
+    fun visit(key: String, value: JsonElement) {
+        when (value) {
+            is JsonObject -> value.forEach { (child, nested) -> visit(child, nested) }
+            is JsonArray -> {
+                value.filterIsInstance<JsonObject>().forEach { nested -> nested.forEach { (child, inner) -> visit(child, inner) } }
+                val text = strings(value).joinToString(" ", transform = ErrorMessages::translate)
+                if (text.isNotEmpty()) put(key, labelled(key, text))
+            }
+            is JsonPrimitive -> value.contentOrNull?.let { put(key, labelled(key, ErrorMessages.translate(it))) }
+        }
+    }
+    inputs.forEach { (key, value) -> visit(key, value) }
+}
+
