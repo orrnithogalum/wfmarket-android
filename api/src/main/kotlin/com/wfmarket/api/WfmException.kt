@@ -59,3 +59,28 @@ object ErrorMessages {
     }
 }
 
+/**
+ * Normalises both API generations' error envelopes:
+ * - v2: `{"error":{"request":["app.x"],"inputs":{"field":"app.y"}}}`
+ * - v1: `{"error":"app.x"}`, `{"error":["app.x"]}` or `{"error":{"field":["app.y"]}}`
+ */
+internal fun parseErrors(error: JsonElement?): Pair<List<String>, Map<String, String>> {
+    fun strings(element: JsonElement?): List<String> = when (element) {
+        is JsonPrimitive -> listOfNotNull(element.contentOrNull)
+        is JsonArray -> element.flatMap { strings(it) }
+        is JsonObject -> element.values.flatMap { strings(it) }
+        else -> emptyList()
+    }
+
+    return when (error) {
+        null -> emptyList<String>() to emptyMap()
+        is JsonPrimitive, is JsonArray -> strings(error).map(ErrorMessages::translate) to emptyMap()
+        is JsonObject -> {
+            val request = strings(error["request"]) + strings(error["_form"])
+            val inputs = (error["inputs"] as? JsonObject)
+                ?: JsonObject(error.filterKeys { it != "request" && it != "_form" })
+            request.map(ErrorMessages::translate) to fieldErrors(inputs)
+        }
+    }
+}
+
