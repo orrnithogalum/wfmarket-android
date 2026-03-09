@@ -109,3 +109,5 @@ private fun fieldErrors(inputs: JsonObject): Map<String, String> = buildMap {
     inputs.forEach { (key, value) -> visit(key, value) }
 }
 
+private val GenericMessages = setOf("Invalid value", "Value is not allowed", "This field is required", "Field is required")
+
