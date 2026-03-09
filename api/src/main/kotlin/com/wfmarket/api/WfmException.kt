@@ -111,3 +111,8 @@ private fun fieldErrors(inputs: JsonObject): Map<String, String> = buildMap {
 
 private val GenericMessages = setOf("Invalid value", "Value is not allowed", "This field is required", "Field is required")
 
+private fun labelled(key: String, message: String): String {
+    if (message !in GenericMessages) return message
+    val label = key.replace(Regex("([a-z])([A-Z])"), "$1 $2").replace('_', ' ').replaceFirstChar { it.uppercase() }
+    return "$label: $message"
+}
