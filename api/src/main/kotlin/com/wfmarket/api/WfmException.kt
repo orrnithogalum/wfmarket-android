@@ -50,4 +50,12 @@ object ErrorMessages {
 
     fun translate(key: String): String = table[key] ?: humanize(key)
 
+    private fun humanize(key: String): String {
+        if (!key.startsWith("app.")) return key
+        return key.substringAfterLast('.')
+            .replace(Regex("([a-z])([A-Z])"), "$1 $2")
+            .replace('_', ' ')
+            .replaceFirstChar { it.uppercase() }
+    }
+}
 
