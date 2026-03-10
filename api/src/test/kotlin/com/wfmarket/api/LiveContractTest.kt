@@ -53,4 +53,14 @@ class LiveContractTest {
         assertNotNull(item.i18n["en"]?.description)
         assertTrue(api.itemSet("mesa_prime_set").items.size > 1)
     }
+
+    @Test fun orders() = runBlocking {
+        val orders = api.ordersForItem("mesa_prime_set")
+        assertTrue(orders.isNotEmpty())
+        assertNotNull(orders.first().user)
+        assertTrue(orders.first().user!!.ingameName.isNotBlank())
+        val top = api.topOrders("mesa_prime_set")
+        assertTrue(top.sell.isNotEmpty() && top.buy.isNotEmpty())
+        assertTrue(api.recentOrders().isNotEmpty())
+    }
 }
