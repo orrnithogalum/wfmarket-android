@@ -43,4 +43,14 @@ class LiveContractTest {
         assertTrue(api.achievements().isNotEmpty())
         assertTrue(api.showcase().items.isNotEmpty())
     }
+
+    @Test fun itemDetails() = runBlocking {
+        val item = api.item("mesa_prime_set")
+        assertEquals("mesa_prime_set", item.slug)
+        assertNotNull(item.tradingTax)
+        assertNotNull(item.ducats)
+        assertNotNull(item.i18n["en"]?.wikiLink)
+        assertNotNull(item.i18n["en"]?.description)
+        assertTrue(api.itemSet("mesa_prime_set").items.size > 1)
+    }
 }
