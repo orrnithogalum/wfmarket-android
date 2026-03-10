@@ -19,3 +19,5 @@ export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 | `app/data` | Repositories, settings, encrypted session, on-disk catalogue cache | Yes |
 | `app/notifications` | Background service, worker, notification actions | Yes |
 | `app/ui` | Compose screens, charts, theme, navigation | Yes |
+
+Screens talk only to repositories. All knowledge of the site's API lives in `api`.
