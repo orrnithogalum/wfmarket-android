@@ -10,3 +10,12 @@ site or Digital Extremes.
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 ./gradlew :app:installRelease   # or :app:installDebug
 ```
+
+## Layout
+
+| Module | Contents | Depends on Android? |
+| --- | --- | --- |
+| `api` | HTTP client (`WfmApi`), websockets (`WfmSockets`), models, error translation | No |
+| `app/data` | Repositories, settings, encrypted session, on-disk catalogue cache | Yes |
+| `app/notifications` | Background service, worker, notification actions | Yes |
+| `app/ui` | Compose screens, charts, theme, navigation | Yes |
