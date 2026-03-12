@@ -24,3 +24,6 @@ class WfMarketApp : Application(), SingletonImageLoader.Factory, Configuration.P
             .components { add(OkHttpNetworkFetcherFactory(callFactory = { container.api.http })) }
             .build()
 
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder().build()
+}
