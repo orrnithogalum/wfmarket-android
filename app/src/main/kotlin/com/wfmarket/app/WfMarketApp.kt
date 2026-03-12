@@ -19,3 +19,8 @@ class WfMarketApp : Application(), SingletonImageLoader.Factory, Configuration.P
         container.start()
     }
 
+    override fun newImageLoader(context: PlatformContext): ImageLoader =
+        ImageLoader.Builder(context)
+            .components { add(OkHttpNetworkFetcherFactory(callFactory = { container.api.http })) }
+            .build()
+
