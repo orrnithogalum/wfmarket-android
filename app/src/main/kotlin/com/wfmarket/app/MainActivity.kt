@@ -26,3 +26,44 @@ class MainActivity : ComponentActivity() {
 
     private val requestNotifications = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+        deepLink = intent?.data
+        val container = (application as WfMarketApp).container
+        setContent {
+            val settings by container.settings.flow.collectAsStateWithLifecycle()
+            val signedIn by container.account.isSignedIn.collectAsStateWithLifecycle()
+            // Asked right after sign-in, when the reason for it is obvious.
+            LaunchedEffect(signedIn) {
+                if (signedIn && ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+            // The splash shows before any code runs, so Android is told in advance what the next one
+            // should look like, including the app's own theme choice if it differs from the system's.
+            LaunchedEffect(settings.theme) {
+                getSystemService(UiModeManager::class.java).setApplicationNightMode(
+                    when (settings.theme) {
+                        ThemeMode.SYSTEM -> UiModeManager.MODE_NIGHT_AUTO
+                        ThemeMode.LIGHT -> UiModeManager.MODE_NIGHT_NO
+                        ThemeMode.DARK -> UiModeManager.MODE_NIGHT_YES
+                    },
+                )
+            }
+            val dark = settings.theme == ThemeMode.DARK || (settings.theme == ThemeMode.SYSTEM && isSystemInDarkTheme())
+            LaunchedEffect(dark, settings.amoled, settings.dynamicColor) {
+                splashScreen.setSplashScreenTheme(
+                    when {
+                        dark && settings.amoled -> R.style.Theme_WfMarket_SplashAmoled
+                        settings.dynamicColor -> R.style.Theme_WfMarket
+                        else -> R.style.Theme_WfMarket_SplashStatic
+                    },
+                )
+            }
+            WfMarketTheme(settings.theme, settings.dynamicColor, settings.amoled) {
+                AppRoot(deepLink, onDeepLinkHandled = { deepLink = null })
+            }
+        }
+    }
+
