@@ -13,3 +13,9 @@ class WfMarketApp : Application(), SingletonImageLoader.Factory, Configuration.P
     lateinit var container: AppContainer
         private set
 
+    override fun onCreate() {
+        super.onCreate()
+        container = AppContainer(this)
+        container.start()
+    }
+
