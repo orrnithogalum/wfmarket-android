@@ -24,3 +24,5 @@ import com.wfmarket.app.ui.theme.WfMarketTheme
 class MainActivity : ComponentActivity() {
     private var deepLink by mutableStateOf<Uri?>(null)
 
+    private val requestNotifications = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+
