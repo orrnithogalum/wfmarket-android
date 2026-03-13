@@ -1,0 +1,14 @@
+<resources>
+    <style name="Theme.WfMarket" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/splash_dynamic</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+    </style>
+
+    <style name="Theme.WfMarket.SplashStatic">
+        <item name="android:windowSplashScreenBackground">@color/splash_static</item>
+    </style>
+
+    <style name="Theme.WfMarket.SplashAmoled">
+        <item name="android:windowSplashScreenBackground">@android:color/black</item>
+    </style>
+</resources>
