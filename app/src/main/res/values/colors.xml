@@ -1,0 +1,7 @@
+<resources>
+    <color name="ic_launcher_background">#0C2F96</color>
+    <color name="splash_logo">#000000</color>
+    <!-- The same backgrounds the app's themes use, since the splash shows before any code runs. -->
+    <color name="splash_dynamic">@android:color/system_neutral1_10</color>
+    <color name="splash_static">#FEF7FF</color>
+</resources>

@@ -1,0 +1,5 @@
+<resources>
+    <color name="splash_logo">#FFFFFF</color>
+    <color name="splash_dynamic">@android:color/system_neutral1_900</color>
+    <color name="splash_static">#141218</color>
+</resources>
