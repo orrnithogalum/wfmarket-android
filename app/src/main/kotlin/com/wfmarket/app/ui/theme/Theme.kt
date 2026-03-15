@@ -59,3 +59,16 @@ private val LightSemantic = SemanticColors(
     platinum = Color(0xFF3B7FA8),
 )
 
+private val DarkSemantic = SemanticColors(
+    positive = Color(0xFF4FC99A),
+    negative = Color(0xFFE66767),
+    seriesBlue = Color(0xFF3987E5),
+    seriesOrange = Color(0xFFD95926),
+    seriesAqua = Color(0xFF199E70),
+    seriesViolet = Color(0xFF9085E9),
+    ingame = Color(0xFFB496F2),
+    online = Color(0xFF55D08C),
+    offline = Color(0xFF8E9492),
+    platinum = Color(0xFF8CC8EA),
+)
+
