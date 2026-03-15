@@ -72,3 +72,5 @@ private val DarkSemantic = SemanticColors(
     platinum = Color(0xFF8CC8EA),
 )
 
+val LocalSemanticColors = compositionLocalOf { LightSemantic }
+
