@@ -28,3 +28,21 @@ import com.wfmarket.app.data.ThemeMode
 private val LightFallback: ColorScheme = lightColorScheme()
 private val DarkFallback: ColorScheme = darkColorScheme()
 
+/**
+ * Colors whose meaning must hold under every wallpaper, so they aren't drawn from dynamic color.
+ * The series values come from a palette validated for colorblind separation on both surfaces.
+ */
+@Immutable
+data class SemanticColors(
+    val positive: Color,
+    val negative: Color,
+    val seriesBlue: Color,
+    val seriesOrange: Color,
+    val seriesAqua: Color,
+    val seriesViolet: Color,
+    val ingame: Color,
+    val online: Color,
+    val offline: Color,
+    val platinum: Color,
+)
+
