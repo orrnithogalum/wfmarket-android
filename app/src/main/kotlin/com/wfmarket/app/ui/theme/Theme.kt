@@ -95,3 +95,35 @@ private fun ColorScheme.withBlackSurfaces() = copy(
     surfaceContainerHighest = lerp(surfaceContainerHighest, Color.Black, 0.4f),
 )
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun WfMarketTheme(theme: ThemeMode, dynamicColor: Boolean, amoled: Boolean, content: @Composable () -> Unit) {
+    val dark = when (theme) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+    }
+    val context = LocalContext.current
+    val colors = when {
+        dynamicColor && dark -> dynamicDarkColorScheme(context)
+        dynamicColor -> dynamicLightColorScheme(context)
+        dark -> DarkFallback
+        else -> LightFallback
+    }.let { if (dark && amoled) it.withBlackSurfaces() else it }
+
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !dark
+                isAppearanceLightNavigationBars = !dark
+            }
+        }
+    }
+
+    CompositionLocalProvider(LocalSemanticColors provides if (dark) DarkSemantic else LightSemantic) {
+        // Expressive motion: components move on springs, with a little overshoot.
+        MaterialExpressiveTheme(colorScheme = colors, motionScheme = MotionScheme.expressive(), shapes = AppShapes, content = content)
+    }
+}
