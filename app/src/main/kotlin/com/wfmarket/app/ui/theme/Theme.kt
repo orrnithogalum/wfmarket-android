@@ -82,3 +82,16 @@ private val AppShapes = Shapes(
     extraLarge = RoundedCornerShape(32.dp),
 )
 
+/** Pure black behind everything. Cards keep part of their tint, so they still stand out from it. */
+private fun ColorScheme.withBlackSurfaces() = copy(
+    background = Color.Black,
+    surface = Color.Black,
+    surfaceDim = Color.Black,
+    surfaceBright = lerp(surfaceBright, Color.Black, 0.5f),
+    surfaceContainerLowest = Color.Black,
+    surfaceContainerLow = lerp(surfaceContainerLow, Color.Black, 0.7f),
+    surfaceContainer = lerp(surfaceContainer, Color.Black, 0.6f),
+    surfaceContainerHigh = lerp(surfaceContainerHigh, Color.Black, 0.5f),
+    surfaceContainerHighest = lerp(surfaceContainerHighest, Color.Black, 0.4f),
+)
+
