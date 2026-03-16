@@ -152,3 +152,14 @@ sealed interface Load<out T> {
     data class Failed(val message: String) : Load<Nothing>
 }
 
+/**
+ * Takes the outcome of a fetch and reports whether it worked. Fresh data replaces old, but a failed
+ * refresh keeps what's on screen, because old data is better than an error over data that was fine.
+ */
+fun <T> MutableStateFlow<Load<T>>.accept(result: Result<T>): Boolean {
+    result.exceptionOrNull()?.let { if (it is CancellationException) throw it }
+    result.onSuccess { value = Load.Ready(it) }
+        .onFailure { failure -> if (value !is Load.Ready) value = Load.Failed(failure.userMessage()) }
+    return result.isSuccess
+}
+
