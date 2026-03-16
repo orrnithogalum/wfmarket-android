@@ -108,3 +108,6 @@ class CollapsingHeaderState {
         internal set
 }
 
+@Composable
+fun rememberCollapsingHeaderState(): CollapsingHeaderState = remember { CollapsingHeaderState() }
+
