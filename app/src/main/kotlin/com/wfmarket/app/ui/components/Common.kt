@@ -145,3 +145,10 @@ fun CollapsingHeaderLayout(
     }
 }
 
+/** The outcome of a load, as observed by a screen. */
+sealed interface Load<out T> {
+    data object Loading : Load<Nothing>
+    data class Ready<T>(val value: T) : Load<T>
+    data class Failed(val message: String) : Load<Nothing>
+}
+
