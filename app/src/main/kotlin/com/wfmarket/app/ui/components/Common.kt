@@ -111,3 +111,37 @@ class CollapsingHeaderState {
 @Composable
 fun rememberCollapsingHeaderState(): CollapsingHeaderState = remember { CollapsingHeaderState() }
 
+/**
+ * A header that scrolls away with the list below it and returns as soon as the user scrolls back.
+ * Handling this before the list does keeps it working alongside pull-to-refresh.
+ */
+@Composable
+fun CollapsingHeaderLayout(
+    header: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    state: CollapsingHeaderState = rememberCollapsingHeaderState(),
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val connection = remember(state) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val next = (state.offset + available.y).coerceIn(-state.headerHeight.toFloat(), 0f)
+                val consumed = next - state.offset
+                state.offset = next
+                return Offset(0f, consumed)
+            }
+        }
+    }
+    Column(modifier.nestedScroll(connection)) {
+        Box(
+            Modifier.clipToBounds().layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints.copy(maxHeight = Constraints.Infinity))
+                state.headerHeight = placeable.height
+                val shift = state.offset.roundToInt()
+                layout(placeable.width, (placeable.height + shift).coerceAtLeast(0)) { placeable.place(0, shift) }
+            },
+        ) { header() }
+        content()
+    }
+}
+
