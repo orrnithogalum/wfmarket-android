@@ -165,3 +165,10 @@ fun <T> MutableStateFlow<Load<T>>.accept(result: Result<T>): Boolean {
 
 fun Throwable.userMessage(): String = (this as? WfmException)?.summary ?: message ?: "Something went wrong."
 
+@Composable
+fun LoadingBox(modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+        LoadingIndicator()
+    }
+}
+
