@@ -163,3 +163,5 @@ fun <T> MutableStateFlow<Load<T>>.accept(result: Result<T>): Boolean {
     return result.isSuccess
 }
 
+fun Throwable.userMessage(): String = (this as? WfmException)?.summary ?: message ?: "Something went wrong."
+
