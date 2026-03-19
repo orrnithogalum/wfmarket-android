@@ -172,3 +172,24 @@ fun LoadingBox(modifier: Modifier = Modifier) {
     }
 }
 
+/** Pull-to-refresh with the expressive indicator, whose shape morphs while it works. */
+@Composable
+fun RefreshBox(
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val state = rememberPullToRefreshState()
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier,
+        state = state,
+        indicator = {
+            PullToRefreshDefaults.LoadingIndicator(state = state, isRefreshing = isRefreshing, modifier = Modifier.align(Alignment.TopCenter))
+        },
+        content = content,
+    )
+}
+
