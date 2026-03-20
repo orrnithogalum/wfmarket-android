@@ -237,3 +237,5 @@ fun Modifier.fadingEdges(state: ScrollableState, reversed: Boolean = false): Mod
         }
 }
 
+private val FADE_HEIGHT = 24.dp
+
