@@ -193,3 +193,14 @@ fun RefreshBox(
     )
 }
 
+/**
+ * Gives content that doesn't scroll, like a spinner or an error, a page that does. Without one,
+ * pull-to-refresh has nothing to pull on.
+ */
+@Composable
+fun PullablePage(content: @Composable BoxScope.() -> Unit) {
+    LazyColumn(Modifier.fillMaxSize()) {
+        item { Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.TopCenter, content = content) }
+    }
+}
+
