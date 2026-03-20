@@ -204,3 +204,36 @@ fun PullablePage(content: @Composable BoxScope.() -> Unit) {
     }
 }
 
+/**
+ * Fades scrolling content out at its edges, so it doesn't get sliced by whatever sits next to it,
+ * like a search bar or the navigation bar. An edge only fades while there's more to scroll that way,
+ * so content at rest stays fully visible.
+ */
+@Composable
+fun Modifier.fadingEdges(state: ScrollableState, reversed: Boolean = false): Modifier {
+    // A list laid out from the bottom scrolls backward downward.
+    val top by animateFloatAsState(if (if (reversed) state.canScrollForward else state.canScrollBackward) 1f else 0f, label = "topFade")
+    val bottom by animateFloatAsState(if (if (reversed) state.canScrollBackward else state.canScrollForward) 1f else 0f, label = "bottomFade")
+    return graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+        .drawWithContent {
+            drawContent()
+            val height = FADE_HEIGHT.toPx().coerceAtMost(size.height / 2)
+            if (top > 0f) {
+                drawRect(
+                    Brush.verticalGradient(0f to Color.Black.copy(alpha = 1f - top), 1f to Color.Black, startY = 0f, endY = height),
+                    size = Size(size.width, height),
+                    blendMode = BlendMode.DstIn,
+                )
+            }
+            if (bottom > 0f) {
+                val start = size.height - height
+                drawRect(
+                    Brush.verticalGradient(0f to Color.Black, 1f to Color.Black.copy(alpha = 1f - bottom), startY = start, endY = size.height),
+                    topLeft = Offset(0f, start),
+                    size = Size(size.width, height),
+                    blendMode = BlendMode.DstIn,
+                )
+            }
+        }
+}
+
