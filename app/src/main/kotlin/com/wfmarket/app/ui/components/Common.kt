@@ -342,3 +342,5 @@ fun SkeletonBox(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape
 
 private enum class ImageState { LOADING, READY, FAILED }
 
+private const val PLACEHOLDER_DELAY_MILLIS = 150L
+
