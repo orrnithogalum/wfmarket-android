@@ -266,3 +266,58 @@ fun FadingLazyColumn(
 
 private const val SCROLL_TO_TOP_AFTER = 8
 
+/**
+ * Shows once the list is well down and the user starts heading back up, which is when it's wanted,
+ * and stays out of the way while they read on down. It can be turned off in Settings.
+ */
+@Composable
+private fun BoxScope.ScrollToTopButton(state: LazyListState) {
+    val settings by appContainer().settings.flow.collectAsStateWithLifecycle()
+    if (!settings.scrollToTopButton) return
+    var headingUp by remember { mutableStateOf(false) }
+    LaunchedEffect(state) {
+        var last = state.firstVisibleItemIndex to state.firstVisibleItemScrollOffset
+        snapshotFlow { state.firstVisibleItemIndex to state.firstVisibleItemScrollOffset }.collect { now ->
+            val (index, offset) = now
+            val (lastIndex, lastOffset) = last
+            // Small jitters, like a list settling, say nothing about where the user is going.
+            if (index != lastIndex || kotlin.math.abs(offset - lastOffset) > 24) {
+                headingUp = index < lastIndex || (index == lastIndex && offset < lastOffset)
+                last = now
+            }
+        }
+    }
+    val scope = rememberCoroutineScope()
+    val far by remember { derivedStateOf { state.firstVisibleItemIndex >= SCROLL_TO_TOP_AFTER } }
+    AnimatedVisibility(
+        visible = far && headingUp,
+        modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp),
+        enter = fadeIn() + scaleIn(initialScale = 0.8f) + slideInVertically { -it / 2 },
+        exit = fadeOut() + scaleOut(targetScale = 0.8f) + slideOutVertically { -it / 2 },
+    ) {
+        Surface(
+            onClick = {
+                headingUp = false
+                scope.launch {
+                    // A long way up is mostly a jump, so it doesn't scroll for seconds.
+                    if (state.firstVisibleItemIndex > SCROLL_TO_TOP_AFTER * 3) state.scrollToItem(SCROLL_TO_TOP_AFTER)
+                    state.animateScrollToItem(0)
+                }
+            },
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            shadowElevation = 3.dp,
+        ) {
+            Row(
+                Modifier.padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Icon(Icons.Filled.ArrowUpward, null, Modifier.size(18.dp))
+                Text("Back to top", style = MaterialTheme.typography.labelLarge)
+            }
+        }
+    }
+}
+
