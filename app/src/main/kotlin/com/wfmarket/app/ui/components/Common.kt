@@ -321,3 +321,10 @@ private fun BoxScope.ScrollToTopButton(state: LazyListState) {
     }
 }
 
+/** `verticalScroll` with [fadingEdges]. */
+@Composable
+fun Modifier.fadingVerticalScroll(): Modifier {
+    val state = rememberScrollState()
+    return fadingEdges(state).verticalScroll(state)
+}
+
