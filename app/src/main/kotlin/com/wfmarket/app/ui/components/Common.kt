@@ -328,3 +328,15 @@ fun Modifier.fadingVerticalScroll(): Modifier {
     return fadingEdges(state).verticalScroll(state)
 }
 
+/** A placeholder for content that's on its way, in the shape it will have. */
+@Composable
+fun SkeletonBox(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(12.dp)) {
+    val pulse by rememberInfiniteTransition(label = "skeleton").animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.8f,
+        animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse),
+        label = "skeletonAlpha",
+    )
+    Box(modifier.graphicsLayer { alpha = pulse }.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHighest))
+}
+
