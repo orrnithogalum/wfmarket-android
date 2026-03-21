@@ -264,3 +264,5 @@ fun FadingLazyColumn(
     }
 }
 
+private const val SCROLL_TO_TOP_AFTER = 8
+
