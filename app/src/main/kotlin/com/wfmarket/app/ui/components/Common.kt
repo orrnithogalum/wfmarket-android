@@ -344,3 +344,61 @@ private enum class ImageState { LOADING, READY, FAILED }
 
 private const val PLACEHOLDER_DELAY_MILLIS = 150L
 
+/**
+ * A remote image that shows it's loading, shows a quiet icon if it can't be fetched, and tries again
+ * when the network returns. Large images get a spinner, and small ones a pulsing tile.
+ */
+@Composable
+fun RemoteImage(
+    url: String?,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+    contentScale: ContentScale = ContentScale.Fit,
+    spinner: Boolean = false,
+) {
+    var state by remember(url) { mutableStateOf(ImageState.LOADING) }
+    var attempt by remember(url) { mutableIntStateOf(0) }
+    // Images already in memory arrive within a frame or two, and shouldn't flash a placeholder.
+    var slow by remember(url) { mutableStateOf(false) }
+    LaunchedEffect(url) {
+        delay(PLACEHOLDER_DELAY_MILLIS)
+        slow = true
+    }
+    if (state == ImageState.FAILED) {
+        val connectivity = appContainer().connectivity
+        LaunchedEffect(connectivity) {
+            connectivity.reconnected.collect {
+                state = ImageState.LOADING
+                attempt++
+            }
+        }
+    }
+    Box(modifier, contentAlignment = Alignment.Center) {
+        key(attempt) {
+            AsyncImage(
+                url,
+                contentDescription,
+                Modifier.matchParentSize(),
+                contentScale = contentScale,
+                onLoading = { state = ImageState.LOADING },
+                onSuccess = { state = ImageState.READY },
+                onError = { state = ImageState.FAILED },
+            )
+        }
+        when (state) {
+            ImageState.READY -> Unit
+            ImageState.LOADING -> when {
+                !slow -> Unit
+                spinner -> LoadingIndicator(Modifier.size(40.dp))
+                else -> SkeletonBox(Modifier.matchParentSize(), RoundedCornerShape(8.dp))
+            }
+            ImageState.FAILED -> Icon(
+                Icons.Outlined.BrokenImage,
+                null,
+                Modifier.size(if (spinner) 32.dp else 20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            )
+        }
+    }
+}
+
