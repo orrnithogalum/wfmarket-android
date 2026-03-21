@@ -239,3 +239,28 @@ fun Modifier.fadingEdges(state: ScrollableState, reversed: Boolean = false): Mod
 
 private val FADE_HEIGHT = 24.dp
 
+/** A vertically scrolling list with [fadingEdges], and a way back to the top once it's long. */
+@Composable
+fun FadingLazyColumn(
+    modifier: Modifier = Modifier,
+    state: LazyListState = rememberLazyListState(),
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    reverseLayout: Boolean = false,
+    verticalArrangement: Arrangement.Vertical = if (reverseLayout) Arrangement.Bottom else Arrangement.Top,
+    scrollToTop: Boolean = true,
+    content: LazyListScope.() -> Unit,
+) {
+    // Min constraints pass through as they did to the list alone, so it sizes the same as before.
+    Box(modifier, propagateMinConstraints = true) {
+        LazyColumn(
+            Modifier.fadingEdges(state, reverseLayout),
+            state,
+            contentPadding,
+            reverseLayout = reverseLayout,
+            verticalArrangement = verticalArrangement,
+            content = content,
+        )
+        if (scrollToTop) Box(Modifier.matchParentSize()) { ScrollToTopButton(state) }
+    }
+}
+
