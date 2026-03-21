@@ -340,3 +340,5 @@ fun SkeletonBox(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape
     Box(modifier.graphicsLayer { alpha = pulse }.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHighest))
 }
 
+private enum class ImageState { LOADING, READY, FAILED }
+
