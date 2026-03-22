@@ -402,3 +402,14 @@ fun RemoteImage(
     }
 }
 
+/** An icon on one of Material's expressive shapes, as empty and error states use. */
+@Composable
+fun ShapedIcon(icon: ImageVector, shape: RoundedPolygon, modifier: Modifier = Modifier, size: Dp = 88.dp) {
+    Box(
+        modifier.size(size).clip(shape.toShape()).background(MaterialTheme.colorScheme.secondaryContainer),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, null, Modifier.size(size * 0.45f), tint = MaterialTheme.colorScheme.onSecondaryContainer)
+    }
+}
+
