@@ -413,3 +413,31 @@ fun ShapedIcon(icon: ImageVector, shape: RoundedPolygon, modifier: Modifier = Mo
     }
 }
 
+@Composable
+fun MessageBox(
+    icon: ImageVector,
+    title: String,
+    body: String? = null,
+    modifier: Modifier = Modifier,
+    shape: RoundedPolygon = MaterialShapes.Cookie9Sided,
+    action: (@Composable () -> Unit)? = null,
+) {
+    Column(
+        modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        ShapedIcon(icon, shape, Modifier.padding(bottom = 4.dp))
+        Text(title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+        body?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
+        action?.invoke()
+    }
+}
+
