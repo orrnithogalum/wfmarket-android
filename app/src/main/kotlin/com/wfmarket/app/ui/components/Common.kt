@@ -441,3 +441,19 @@ fun MessageBox(
     }
 }
 
+@Composable
+fun ErrorBox(message: String, modifier: Modifier = Modifier, onRetry: (() -> Unit)? = null) {
+    val connectivity = appContainer().connectivity
+    val online by connectivity.online.collectAsStateWithLifecycle()
+    val retry by rememberUpdatedState(onRetry)
+    // Whatever failed is worth another try as soon as the network is back.
+    LaunchedEffect(connectivity) { connectivity.reconnected.collect { retry?.invoke() } }
+    val button: @Composable () -> Unit = { onRetry?.let { FilledTonalButton(onClick = it) { Text("Try again") } } }
+    if (online) {
+        MessageBox(Icons.Outlined.CloudOff, "Couldn't load this", message, modifier, MaterialShapes.SoftBurst, button)
+    } else {
+        val body = if (onRetry != null) "This will load by itself when you're back online." else "Connect to the internet to load this."
+        MessageBox(Icons.Outlined.WifiOff, "You're offline", body, modifier, MaterialShapes.Clover4Leaf, button)
+    }
+}
+
