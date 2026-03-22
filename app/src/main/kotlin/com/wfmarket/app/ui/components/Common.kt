@@ -457,3 +457,8 @@ fun ErrorBox(message: String, modifier: Modifier = Modifier, onRetry: (() -> Uni
     }
 }
 
+@Composable
+fun EmptyBox(title: String, body: String? = null, modifier: Modifier = Modifier) {
+    MessageBox(Icons.Outlined.Inbox, title, body, modifier, MaterialShapes.Cookie9Sided)
+}
+
