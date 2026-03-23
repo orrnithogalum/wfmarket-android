@@ -462,3 +462,20 @@ fun EmptyBox(title: String, body: String? = null, modifier: Modifier = Modifier)
     MessageBox(Icons.Outlined.Inbox, title, body, modifier, MaterialShapes.Cookie9Sided)
 }
 
+@Composable
+fun <T> LoadContent(load: Load<T>, onRetry: (() -> Unit)? = null, content: @Composable (T) -> Unit) {
+    val kind = when (load) {
+        Load.Loading -> 0
+        is Load.Failed -> 1
+        is Load.Ready -> 2
+    }
+    // Keyed on the kind of state, so fresh data replaces old data without a fade.
+    Crossfade(kind, label = "load") { shown ->
+        when (shown) {
+            0 -> PullablePage { LoadingBox() }
+            1 -> (load as? Load.Failed)?.let { failed -> PullablePage { ErrorBox(failed.message, onRetry = onRetry) } }
+            else -> (load as? Load.Ready)?.let { content(it.value) }
+        }
+    }
+}
+
