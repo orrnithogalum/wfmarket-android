@@ -547,3 +547,5 @@ fun StatusDotIcon(status: String?) {
     }
 }
 
+val StatusFilterOptions = listOf(UserStatus.INGAME, UserStatus.ONLINE, UserStatus.OFFLINE)
+
