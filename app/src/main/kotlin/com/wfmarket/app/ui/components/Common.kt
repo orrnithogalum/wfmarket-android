@@ -536,3 +536,14 @@ fun UserAvatar(url: String?, name: String?, modifier: Modifier = Modifier, size:
     }
 }
 
+/**
+ * A status dot for a chip's icon slot. Chips size and space their icons as 18dp, so the dot is
+ * centered in that much room, and sits level and balanced with the label like any other icon.
+ */
+@Composable
+fun StatusDotIcon(status: String?) {
+    Box(Modifier.size(FilterChipDefaults.IconSize), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(10.dp).clip(CircleShape).background(statusColor(status)))
+    }
+}
+
