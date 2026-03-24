@@ -498,3 +498,13 @@ fun Platinum(
     }
 }
 
+@Composable
+fun statusColor(status: String?): Color {
+    val semantic = LocalSemanticColors.current
+    return when (status) {
+        "ingame" -> semantic.ingame
+        "online" -> semantic.online
+        else -> semantic.offline
+    }
+}
+
