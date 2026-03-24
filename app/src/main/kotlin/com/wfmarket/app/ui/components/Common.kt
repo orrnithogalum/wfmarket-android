@@ -568,3 +568,16 @@ fun StatusFilterChips(selected: Set<String>, onChange: (Set<String>) -> Unit, mo
     }
 }
 
+/** Status is never conveyed by color alone, so the label travels with the dot. */
+@Composable
+fun StatusLabel(status: String?, modifier: Modifier = Modifier) {
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Box(Modifier.size(8.dp).clip(CircleShape).background(statusColor(status)))
+        Text(
+            UserStatus.of(status).label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
