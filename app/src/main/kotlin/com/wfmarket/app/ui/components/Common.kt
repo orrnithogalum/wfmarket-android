@@ -479,3 +479,22 @@ fun <T> LoadContent(load: Load<T>, onRetry: (() -> Unit)? = null, content: @Comp
     }
 }
 
+/** A platinum amount with the app's platinum glyph. */
+@Composable
+fun Platinum(
+    value: Number,
+    modifier: Modifier = Modifier,
+    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.titleMedium,
+) {
+    val text = if (value.toDouble() % 1.0 == 0.0) value.toInt().toString() else String.format(Locale.US, "%.1f", value.toDouble())
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(text, style = style, fontWeight = FontWeight.SemiBold)
+        Icon(
+            PlatinumIcon,
+            contentDescription = "platinum",
+            modifier = Modifier.size(with(androidx.compose.ui.platform.LocalDensity.current) { style.fontSize.toDp() * 1.05f }),
+            tint = LocalSemanticColors.current.platinum,
+        )
+    }
+}
+
