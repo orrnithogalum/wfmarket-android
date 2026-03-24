@@ -508,3 +508,31 @@ fun statusColor(status: String?): Color {
     }
 }
 
+@Composable
+fun UserAvatar(url: String?, name: String?, modifier: Modifier = Modifier, size: Dp = 40.dp, status: String? = null, shape: Shape = CircleShape) {
+    Box(modifier.size(size)) {
+        Box(
+            Modifier.fillMaxSize().clip(shape).background(MaterialTheme.colorScheme.secondaryContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                name?.take(1)?.uppercase().orEmpty(),
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                style = if (size >= 64.dp) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleMedium,
+            )
+            if (url != null) {
+                AsyncImage(url, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            }
+        }
+        if (status != null) {
+            Box(
+                Modifier.align(Alignment.BottomEnd)
+                    .size(size * 0.3f)
+                    .clip(CircleShape)
+                    .background(statusColor(status))
+                    .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
+            )
+        }
+    }
+}
+
