@@ -549,3 +549,22 @@ fun StatusDotIcon(status: String?) {
 
 val StatusFilterOptions = listOf(UserStatus.INGAME, UserStatus.ONLINE, UserStatus.OFFLINE)
 
+/**
+ * Narrows a list of traders by presence, one chip per status. None chosen means everyone.
+ * Offline covers invisible players, who look offline to everyone else.
+ */
+@Composable
+fun StatusFilterChips(selected: Set<String>, onChange: (Set<String>) -> Unit, modifier: Modifier = Modifier) {
+    LazyRow(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(StatusFilterOptions) { option ->
+            val on = option.wire in selected
+            FilterChip(
+                selected = on,
+                onClick = { onChange(if (on) selected - option.wire else selected + option.wire) },
+                label = { Text(option.label) },
+                leadingIcon = { StatusDotIcon(option.wire) },
+            )
+        }
+    }
+}
+
