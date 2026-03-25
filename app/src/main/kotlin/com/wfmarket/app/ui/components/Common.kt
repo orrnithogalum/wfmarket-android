@@ -581,3 +581,14 @@ fun StatusLabel(status: String?, modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+fun SmallTag(text: String, modifier: Modifier = Modifier, container: Color = MaterialTheme.colorScheme.surfaceContainerHighest, content: Color = MaterialTheme.colorScheme.onSurfaceVariant) {
+    Text(
+        text,
+        modifier.clip(RoundedCornerShape(6.dp)).background(container).padding(horizontal = 6.dp, vertical = 2.dp),
+        style = MaterialTheme.typography.labelSmall,
+        color = content,
+        maxLines = 1,
+    )
+}
+
