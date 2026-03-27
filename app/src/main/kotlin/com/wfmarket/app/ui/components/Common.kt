@@ -634,3 +634,9 @@ fun ItemThumb(art: ItemArt, modifier: Modifier = Modifier, size: Dp = 48.dp) {
     ItemThumb(if (size > 56.dp) art.full ?: art.thumb else art.thumb ?: art.full, modifier, size, badge = art.badge)
 }
 
+/** Weapons are long and thin, so they get a landscape tile and the full-size image. */
+@Composable
+fun WeaponThumb(url: String?, modifier: Modifier = Modifier, height: Dp = 56.dp, tile: Boolean = true) {
+    ItemThumb(url, modifier, size = height, width = height * 1.6f, tile = tile)
+}
+
