@@ -592,3 +592,11 @@ fun SmallTag(text: String, modifier: Modifier = Modifier, container: Color = Mat
     )
 }
 
+@Composable
+fun PlatformTag(platform: String?, crossplay: Boolean = false) {
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        SmallTag(Platform.of(platform).label)
+        if (crossplay) SmallTag("Cross")
+    }
+}
+
