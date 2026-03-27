@@ -628,3 +628,9 @@ fun ItemThumb(url: String?, modifier: Modifier = Modifier, size: Dp = 48.dp, wid
     }
 }
 
+/** A catalogue item's thumbnail, using the sharper full image when the tile is large. */
+@Composable
+fun ItemThumb(art: ItemArt, modifier: Modifier = Modifier, size: Dp = 48.dp) {
+    ItemThumb(if (size > 56.dp) art.full ?: art.thumb else art.thumb ?: art.full, modifier, size, badge = art.badge)
+}
+
