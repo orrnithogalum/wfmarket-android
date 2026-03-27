@@ -600,3 +600,31 @@ fun PlatformTag(platform: String?, crossplay: Boolean = false) {
     }
 }
 
+/**
+ * An image on a softly lit tile. The light behind the subject is what keeps dark and thin items,
+ * like most melee weapons, from disappearing into a dark surface.
+ */
+@Composable
+fun ItemThumb(url: String?, modifier: Modifier = Modifier, size: Dp = 48.dp, width: Dp = size, badge: String? = null, tile: Boolean = true) {
+    val glow = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f)
+    // On a card the tile would be a box on a box, so there the light alone sits behind the image.
+    val backdrop = if (tile) Modifier.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh) else Modifier
+    Box(
+        modifier.size(width, size)
+            .then(backdrop)
+            .background(Brush.radialGradient(listOf(glow, Color.Transparent))),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (url != null) RemoteImage(url, Modifier.fillMaxSize().padding(3.dp))
+        // Parts of a set all share one picture, so the part's own icon tells them apart.
+        if (badge != null) {
+            AsyncImage(
+                badge,
+                null,
+                Modifier.align(Alignment.BottomEnd).padding(2.dp).size(size * 0.42f),
+                contentScale = ContentScale.Fit,
+            )
+        }
+    }
+}
+
