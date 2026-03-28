@@ -702,3 +702,10 @@ fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Rows on a bottom sheet take the sheet's color. A list item paints the page's surface by default,
+ * which on a sheet shows as a darker band behind the rows and a lighter strip below them.
+ */
+@Composable
+fun sheetListItemColors(): ListItemColors = ListItemDefaults.colors(containerColor = Color.Transparent)
+
