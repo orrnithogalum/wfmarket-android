@@ -684,3 +684,14 @@ fun SuggestionTile(
     }
 }
 
+/** A label/value pair on a tinted tile. Its 12dp corners nest in a large card with 12dp padding. */
+@Composable
+fun StatTile(label: String, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Surface(modifier, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            content()
+        }
+    }
+}
+
