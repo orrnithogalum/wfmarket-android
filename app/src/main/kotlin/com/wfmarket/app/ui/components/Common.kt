@@ -695,3 +695,10 @@ fun StatTile(label: String, modifier: Modifier = Modifier, content: @Composable 
     }
 }
 
+@Composable
+fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
+    StatTile(label, modifier) {
+        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
