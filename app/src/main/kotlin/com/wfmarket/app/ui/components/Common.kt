@@ -659,3 +659,28 @@ fun Figure(label: String, modifier: Modifier = Modifier, alignment: Alignment.Ho
     }
 }
 
+/**
+ * A tile in a row of suggestions, such as the weapons traded most last week: the picture across the
+ * top on its own soft light, the name, and a figure under it.
+ */
+@Composable
+fun SuggestionTile(
+    image: String?,
+    title: String,
+    detail: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    chosen: Boolean = false,
+    badge: String? = null,
+) {
+    val colors = MaterialTheme.colorScheme
+    val container by animateColorAsState(if (chosen) colors.secondaryContainer else colors.surfaceContainerHigh, tween(220), label = "chosen")
+    Surface(onClick = onClick, shape = MaterialTheme.shapes.large, color = container, modifier = modifier.width(136.dp)) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            ItemThumb(image, Modifier.fillMaxWidth(), size = 52.dp, width = Dp.Unspecified, badge = badge, tile = false)
+            Text(title, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (detail != null) Text(detail, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, maxLines = 1)
+        }
+    }
+}
+
