@@ -640,3 +640,13 @@ fun WeaponThumb(url: String?, modifier: Modifier = Modifier, height: Dp = 56.dp,
     ItemThumb(url, modifier, size = height, width = height * 1.6f, tile = tile)
 }
 
+@Composable
+fun SectionTitle(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+    )
+}
+
