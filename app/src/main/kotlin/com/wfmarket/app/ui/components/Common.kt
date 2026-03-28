@@ -650,3 +650,12 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier) {
     )
 }
 
+/** A key number with a small label under it, the way the profile shows reputation. */
+@Composable
+fun Figure(label: String, modifier: Modifier = Modifier, alignment: Alignment.Horizontal = Alignment.Start, content: @Composable () -> Unit) {
+    Column(modifier, horizontalAlignment = alignment) {
+        content()
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
