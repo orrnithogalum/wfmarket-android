@@ -761,3 +761,33 @@ fun <T> SearchablePickerSheet(
     }
 }
 
+/**
+ * One choice from a few, as Material 3 Expressive's connected button group: the buttons share a
+ * pill, and the chosen one rounds off. With [fill] the buttons split the width evenly.
+ */
+@Composable
+fun <T> ChoiceButtonGroup(
+    options: List<T>,
+    selected: T,
+    label: (T) -> String,
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    fill: Boolean = false,
+) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
+        options.forEachIndexed { index, option ->
+            ToggleButton(
+                checked = option == selected,
+                onCheckedChange = { onSelect(option) },
+                shapes = when (index) {
+                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                },
+                colors = ToggleButtonDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+                modifier = (if (fill) Modifier.weight(1f) else Modifier).semantics { role = Role.RadioButton },
+            ) { Text(label(option), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        }
+    }
+}
+
