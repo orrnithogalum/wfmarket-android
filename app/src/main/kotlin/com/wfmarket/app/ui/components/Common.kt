@@ -709,3 +709,55 @@ fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
 @Composable
 fun sheetListItemColors(): ListItemColors = ListItemDefaults.colors(containerColor = Color.Transparent)
 
+/** A bottom-sheet list with a filter field, for the long weapon/attribute lists. */
+@Composable
+fun <T> SearchablePickerSheet(
+    title: String,
+    options: List<T>,
+    label: (T) -> String,
+    onPick: (T) -> Unit,
+    onDismiss: () -> Unit,
+    leading: (@Composable (T) -> Unit)? = null,
+    onClear: (() -> Unit)? = null,
+) {
+    var query by remember { mutableStateOf("") }
+    val filtered = remember(query, options) {
+        if (query.isBlank()) options else options.filter { label(it).contains(query.trim(), ignoreCase = true) }
+    }
+    // The sheet slides away before the choice is acted on, rather than vanishing with it.
+    val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    var closing by remember { mutableStateOf(false) }
+    fun close(after: () -> Unit) {
+        if (closing) return
+        closing = true
+        scope.launch { sheet.hide() }.invokeOnCompletion { after() }
+    }
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet) {
+        Column(Modifier.fillMaxHeight(0.9f)) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                onClear?.let { clear -> TextButton(onClick = { close(clear) }) { Text("Clear") } }
+            }
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                placeholder = { Text("Search") },
+                leadingIcon = { Icon(Icons.Filled.Search, null) },
+                singleLine = true,
+            )
+            FadingLazyColumn(Modifier.weight(1f)) {
+                items(filtered) { option ->
+                    ListItem(
+                        colors = sheetListItemColors(),
+                        headlineContent = { Text(label(option)) },
+                        leadingContent = leading?.let { { it(option) } },
+                        modifier = Modifier.clickable { close { onPick(option) } },
+                    )
+                }
+            }
+        }
+    }
+}
+
