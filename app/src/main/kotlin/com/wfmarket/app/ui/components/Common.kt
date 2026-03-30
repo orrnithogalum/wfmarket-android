@@ -828,3 +828,5 @@ private fun parseInstant(iso: String?): Instant? = iso?.let {
         ?: runCatching { Instant.parse(it) }.getOrNull()
 }
 
+fun epochMillis(iso: String?): Long? = parseInstant(iso)?.toEpochMilli()
+
