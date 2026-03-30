@@ -791,3 +791,35 @@ fun <T> ChoiceButtonGroup(
     }
 }
 
+/** A chip that opens a menu of values; used for every list filter in the app. */
+@Composable
+fun <T> DropdownChip(
+    label: String,
+    selected: T,
+    options: List<T>,
+    optionLabel: (T) -> String,
+    onSelect: (T) -> Unit,
+    isDefault: Boolean = false,
+) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        FilterChip(
+            selected = !isDefault,
+            onClick = { open = true },
+            label = { Text(if (label.isBlank()) optionLabel(selected) else "$label: ${optionLabel(selected)}") },
+            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, null) },
+        )
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(optionLabel(option)) },
+                    onClick = {
+                        open = false
+                        onSelect(option)
+                    },
+                )
+            }
+        }
+    }
+}
+
