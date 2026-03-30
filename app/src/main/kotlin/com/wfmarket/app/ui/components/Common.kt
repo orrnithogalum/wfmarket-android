@@ -844,3 +844,8 @@ fun relativeTime(iso: String?): String {
     }
 }
 
+fun formatDate(iso: String?, pattern: String = "d MMM yyyy"): String {
+    val then = parseInstant(iso) ?: return ""
+    return DateTimeFormatter.ofPattern(pattern, Locale.getDefault()).withZone(ZoneId.systemDefault()).format(then)
+}
+
