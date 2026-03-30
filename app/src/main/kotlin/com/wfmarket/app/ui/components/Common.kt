@@ -830,3 +830,17 @@ private fun parseInstant(iso: String?): Instant? = iso?.let {
 
 fun epochMillis(iso: String?): Long? = parseInstant(iso)?.toEpochMilli()
 
+/** "5m ago" style. Returns an empty string for dates it can't parse. */
+fun relativeTime(iso: String?): String {
+    val then = parseInstant(iso) ?: return ""
+    val elapsed = Duration.between(then, Instant.now())
+    return when {
+        elapsed.toMinutes() < 1 -> "just now"
+        elapsed.toHours() < 1 -> "${elapsed.toMinutes()}m ago"
+        elapsed.toDays() < 1 -> "${elapsed.toHours()}h ago"
+        elapsed.toDays() < 30 -> "${elapsed.toDays()}d ago"
+        elapsed.toDays() < 365 -> "${elapsed.toDays() / 30}mo ago"
+        else -> "${elapsed.toDays() / 365}y ago"
+    }
+}
+
