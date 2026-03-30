@@ -823,3 +823,8 @@ fun <T> DropdownChip(
     }
 }
 
+private fun parseInstant(iso: String?): Instant? = iso?.let {
+    runCatching { OffsetDateTime.parse(it).toInstant() }.getOrNull()
+        ?: runCatching { Instant.parse(it) }.getOrNull()
+}
+
