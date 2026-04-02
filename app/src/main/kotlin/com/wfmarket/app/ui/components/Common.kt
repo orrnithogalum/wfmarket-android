@@ -849,3 +849,8 @@ fun formatDate(iso: String?, pattern: String = "d MMM yyyy"): String {
     return DateTimeFormatter.ofPattern(pattern, Locale.getDefault()).withZone(ZoneId.systemDefault()).format(then)
 }
 
+fun openUrl(context: Context, url: String) {
+    runCatching { CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(context, url.toUri()) }
+        .onFailure { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri())) } }
+}
+
