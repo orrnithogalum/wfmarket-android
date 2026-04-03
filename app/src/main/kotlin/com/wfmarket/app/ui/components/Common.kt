@@ -859,3 +859,9 @@ fun copyToClipboard(context: Context, text: String) {
     manager.setPrimaryClip(android.content.ClipData.newPlainText("Warframe whisper", text))
 }
 
+@Composable
+fun rememberOpenUrl(): (String) -> Unit {
+    val context = LocalContext.current
+    return { openUrl(context, it) }
+}
+
