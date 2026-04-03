@@ -854,3 +854,8 @@ fun openUrl(context: Context, url: String) {
         .onFailure { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri())) } }
 }
 
+fun copyToClipboard(context: Context, text: String) {
+    val manager = context.getSystemService(android.content.ClipboardManager::class.java)
+    manager.setPrimaryClip(android.content.ClipData.newPlainText("Warframe whisper", text))
+}
+
