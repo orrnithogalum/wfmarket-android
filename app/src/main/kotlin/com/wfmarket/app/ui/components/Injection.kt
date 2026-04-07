@@ -20,3 +20,10 @@ inline fun <reified VM : ViewModel> containerViewModel(key: String? = null, cros
     return viewModel(key = key, factory = viewModelFactory { initializer { create(container) } })
 }
 
+/** Navigation actions any screen can trigger, so screens don't depend on the nav graph's routes. */
+interface AppNavigator {
+    fun back()
+    fun item(slug: String)
+    fun auction(id: String)
+
+
