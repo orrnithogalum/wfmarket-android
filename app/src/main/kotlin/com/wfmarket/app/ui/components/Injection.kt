@@ -35,4 +35,7 @@ interface AppNavigator {
     fun accountSettings()
     fun signIn()
 
+    /** Saved auction searches and followed auctions. */
+    fun alerts()
+
 
