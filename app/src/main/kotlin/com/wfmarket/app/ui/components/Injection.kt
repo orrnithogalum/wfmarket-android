@@ -26,4 +26,13 @@ interface AppNavigator {
     fun item(slug: String)
     fun auction(id: String)
 
+    /** Opens an auction in place of this screen, so back skips the form that created it. */
+    fun replaceWithAuction(id: String)
+    fun editAuction(id: String?)
+    fun chat(id: String)
+    fun user(slug: String)
+    fun settings()
+    fun accountSettings()
+    fun signIn()
+
 
