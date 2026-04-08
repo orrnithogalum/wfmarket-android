@@ -42,3 +42,4 @@ interface AppNavigator {
     fun auctionSearch(search: com.wfmarket.api.model.AuctionSearch?)
 }
 
+val LocalNavigator = compositionLocalOf<AppNavigator> { error("No navigator") }
