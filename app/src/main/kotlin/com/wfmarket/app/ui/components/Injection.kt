@@ -38,4 +38,7 @@ interface AppNavigator {
     /** Saved auction searches and followed auctions. */
     fun alerts()
 
+    /** The Auctions tab, showing [search] if given, or opening its filters. */
+    fun auctionSearch(search: com.wfmarket.api.model.AuctionSearch?)
+}
 
