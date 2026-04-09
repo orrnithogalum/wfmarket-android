@@ -37,4 +37,12 @@ data class Catalog(
 ) {
     val isLoaded: Boolean get() = items.isNotEmpty()
 
+    val itemsById: Map<String, Item> by lazy { items.associateBy { it.id } }
+    val itemsBySlug: Map<String, Item> by lazy { items.associateBy { it.slug } }
+    val locationsById: Map<String, Location> by lazy { locations.associateBy { it.id } }
+    val missionsById: Map<String, NamedEntity> by lazy { missions.associateBy { it.id } }
+    val npcsById: Map<String, NamedEntity> by lazy { npcs.associateBy { it.id } }
+    val attributesBySlug: Map<String, RivenAttribute> by lazy { rivenAttributes.associateBy { it.slug } }
+    val rivenWeaponsBySlug: Map<String, RivenWeapon> by lazy { rivenWeapons.associateBy { it.slug } }
+
 
