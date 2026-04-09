@@ -45,4 +45,9 @@ data class Catalog(
     val attributesBySlug: Map<String, RivenAttribute> by lazy { rivenAttributes.associateBy { it.slug } }
     val rivenWeaponsBySlug: Map<String, RivenWeapon> by lazy { rivenWeapons.associateBy { it.slug } }
 
+    /** Warframe's own data names weapons in English, whatever language the site is read in. */
+    val rivenWeaponsByEnglishName: Map<String, RivenWeapon> by lazy {
+        rivenWeapons.mapNotNull { weapon -> weapon.i18n["en"]?.name?.lowercase()?.let { it to weapon } }.toMap()
+    }
+
 
