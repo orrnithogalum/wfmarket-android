@@ -50,4 +50,6 @@ data class Catalog(
         rivenWeapons.mapNotNull { weapon -> weapon.i18n["en"]?.name?.lowercase()?.let { it to weapon } }.toMap()
     }
 
+    fun englishName(weapon: RivenWeapon): String = weapon.i18n["en"]?.name ?: weapon.slug.humanize()
+
 
