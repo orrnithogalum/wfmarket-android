@@ -65,4 +65,6 @@ data class Catalog(
         return RivenGrading.grade(rivenClass, item.attributes, item.modRank ?: 0, weapon.disposition.takeIf { allowOldDisposition })
     }
 
+    private val setsBySlug: Map<String, Item> by lazy { items.filter { "set" in it.tags }.associateBy { it.slug } }
+
 
