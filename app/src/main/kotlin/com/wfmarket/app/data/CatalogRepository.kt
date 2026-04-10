@@ -107,4 +107,6 @@ data class Catalog(
         return resurgence.gameRefs.mapNotNull { byRef[it] }.sortedBy { if ("warframe" in it.tags) 0 else 1 }
     }
 
+    fun itemName(item: Item): String = item.i18n.localized(language)?.name ?: item.slug
+
 
