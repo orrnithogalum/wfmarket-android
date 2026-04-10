@@ -52,4 +52,17 @@ data class Catalog(
 
     fun englishName(weapon: RivenWeapon): String = weapon.i18n["en"]?.name ?: weapon.slug.humanize()
 
+    /**
+     * Grades a riven's stats, or null for one the game couldn't roll. [classes] is Warframe's word on
+     * which riven each weapon takes; the site's own is used where it has none.
+     */
+    fun rivenRolls(item: AuctionItem, classes: Map<String, RivenClass>, allowOldDisposition: Boolean = true): RivenRolls? {
+        if (item.type != AuctionType.RIVEN || item.attributes.isEmpty()) return null
+        val weapon = rivenWeaponsBySlug[item.weaponUrlName] ?: return null
+        val rivenClass = classes[englishName(weapon).lowercase()] ?: RivenClass.of(weapon) ?: return null
+        // The site still lists each weapon's disposition from before they were all set to 1.2, which
+        // is what older listings were entered at.
+        return RivenGrading.grade(rivenClass, item.attributes, item.modRank ?: 0, weapon.disposition.takeIf { allowOldDisposition })
+    }
+
 
