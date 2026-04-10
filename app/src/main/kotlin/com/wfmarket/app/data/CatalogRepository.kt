@@ -77,4 +77,17 @@ data class Catalog(
         return null
     }
 
+    /** Some set parts have no image of their own, so they borrow their set's. */
+    fun art(item: Item): ItemArt {
+        fun usable(path: String?) = path?.takeIf { it.isNotBlank() && !it.contains("unknown") }
+        val own = item.i18n.localized(language)
+        val set = if (usable(own?.icon) == null) setOf(item)?.i18n?.localized(language) else null
+        val full = usable(own?.icon) ?: usable(set?.icon)
+        return ItemArt(
+            thumb = assetUrl(usable(own?.thumb) ?: usable(set?.thumb) ?: full),
+            full = assetUrl(full),
+            badge = assetUrl(usable(own?.subIcon)),
+        )
+    }
+
 
