@@ -101,4 +101,10 @@ data class Catalog(
             .sortedBy { if ("warframe" in it.tags) 0 else 1 }
     }
 
+    /** What a Prime Resurgence offers, as far as it's tradable: frames first, then weapons. */
+    fun resurgenceItems(resurgence: PrimeResurgence): List<Item> {
+        val byRef = items.filter { "set" in it.tags }.associateBy { it.gameRef }
+        return resurgence.gameRefs.mapNotNull { byRef[it] }.sortedBy { if ("warframe" in it.tags) 0 else 1 }
+    }
+
 
