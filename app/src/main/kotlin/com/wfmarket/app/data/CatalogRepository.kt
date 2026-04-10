@@ -67,4 +67,14 @@ data class Catalog(
 
     private val setsBySlug: Map<String, Item> by lazy { items.filter { "set" in it.tags }.associateBy { it.slug } }
 
+    /** Finds a part's set from its slug: `venato_prime_blade` belongs to `venato_prime_set`. */
+    private fun setOf(item: Item): Item? {
+        var prefix = item.slug
+        while ('_' in prefix) {
+            prefix = prefix.substringBeforeLast('_')
+            setsBySlug["${prefix}_set"]?.let { return it }
+        }
+        return null
+    }
+
 
