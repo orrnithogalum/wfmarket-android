@@ -90,4 +90,15 @@ data class Catalog(
         )
     }
 
+    /**
+     * The current Prime Access, found from the catalogue itself: an id begins with its creation time,
+     * and everything in a Prime Access is added together on release day. Frame first, then gear.
+     */
+    val primeAccess: List<Item> by lazy {
+        val sets = items.filter { "prime" in it.tags && "set" in it.tags }
+        val newest = sets.filter { "warframe" in it.tags }.maxByOrNull { it.createdAtSeconds } ?: return@lazy emptyList()
+        sets.filter { kotlin.math.abs(it.createdAtSeconds - newest.createdAtSeconds) < PRIME_RELEASE_WINDOW_SECONDS }
+            .sortedBy { if ("warframe" in it.tags) 0 else 1 }
+    }
+
 
