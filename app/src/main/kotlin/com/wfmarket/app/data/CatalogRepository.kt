@@ -121,4 +121,14 @@ data class Catalog(
         return i18n?.localized(language)?.name ?: slug.humanize()
     }
 
+    /** Full size, because weapons are shown wider than the 128px thumbnails. */
+    fun weaponImage(type: String, slug: String): String? {
+        val i18n = when (type) {
+            AuctionType.RIVEN -> rivenWeapons.firstOrNull { it.slug == slug }?.i18n
+            AuctionType.LICH -> lichWeapons.firstOrNull { it.slug == slug }?.i18n
+            else -> sisterWeapons.firstOrNull { it.slug == slug }?.i18n
+        }
+        return assetUrl(i18n?.localized(language)?.icon)
+    }
+
 
