@@ -111,4 +111,14 @@ data class Catalog(
 
     fun i18n(map: Map<String, I18n>): I18n? = map.localized(language)
 
+    /** The display name for a weapon in any auction type. */
+    fun weaponName(type: String, slug: String): String {
+        val i18n = when (type) {
+            AuctionType.RIVEN -> rivenWeapons.firstOrNull { it.slug == slug }?.i18n
+            AuctionType.LICH -> lichWeapons.firstOrNull { it.slug == slug }?.i18n
+            else -> sisterWeapons.firstOrNull { it.slug == slug }?.i18n
+        }
+        return i18n?.localized(language)?.name ?: slug.humanize()
+    }
+
 
