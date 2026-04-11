@@ -131,4 +131,7 @@ data class Catalog(
         return assetUrl(i18n?.localized(language)?.icon)
     }
 
+    fun attributeName(slug: String): String =
+        attributesBySlug[slug]?.i18n?.localized(language)?.name ?: slug.humanize()
+
 
