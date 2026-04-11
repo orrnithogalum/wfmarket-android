@@ -109,4 +109,6 @@ data class Catalog(
 
     fun itemName(item: Item): String = item.i18n.localized(language)?.name ?: item.slug
 
+    fun i18n(map: Map<String, I18n>): I18n? = map.localized(language)
+
 
