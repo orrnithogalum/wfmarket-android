@@ -141,3 +141,5 @@ data class Catalog(
     }
 }
 
+data class ItemArt(val thumb: String?, val full: String?, val badge: String?)
+
