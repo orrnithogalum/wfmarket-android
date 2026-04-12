@@ -143,3 +143,6 @@ data class Catalog(
 
 data class ItemArt(val thumb: String?, val full: String?, val badge: String?)
 
+private const val PRIME_RELEASE_WINDOW_SECONDS = 3 * 24 * 3600L
+private const val REFRESH_INTERVAL_MILLIS = 60 * 60 * 1000L
+
