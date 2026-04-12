@@ -134,4 +134,10 @@ data class Catalog(
     fun attributeName(slug: String): String =
         attributesBySlug[slug]?.i18n?.localized(language)?.name ?: slug.humanize()
 
+    fun quirkName(type: String, slug: String?): String? {
+        slug ?: return null
+        val list = if (type == AuctionType.LICH) lichQuirks else sisterQuirks
+        return list.firstOrNull { it.slug == slug }?.i18n?.localized(language)?.name ?: slug.humanize()
+    }
+}
 
