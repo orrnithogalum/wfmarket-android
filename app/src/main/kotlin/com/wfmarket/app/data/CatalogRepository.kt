@@ -164,6 +164,9 @@ class CatalogRepository(
     private val dir = File(context.filesDir, "catalog").apply { mkdirs() }
     private val versionsPrefs = context.getSharedPreferences("catalog_versions", Context.MODE_PRIVATE)
 
+    private val _catalog = MutableStateFlow(Catalog())
+    val catalog: StateFlow<Catalog> = _catalog.asStateFlow()
+
     /** Set when the last load couldn't check for newer data or failed partway. */
     @Volatile private var stale = false
 
