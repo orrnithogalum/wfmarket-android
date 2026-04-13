@@ -151,3 +151,21 @@ private val Item.createdAtSeconds: Long get() = id.take(8).toLongOrNull(16) ?: 0
 
 fun String.humanize(): String = split('_', '-').joinToString(" ") { part -> part.replaceFirstChar { it.uppercase() } }
 
+/**
+ * The catalogue changes rarely and the items list alone is 1.6 MB, so responses are cached on disk
+ * and only refetched when `/v2/versions` reports a new hash for that collection.
+ */
+class CatalogRepository(
+    context: Context,
+    private val api: WfmApi,
+    private val settings: SettingsStore,
+    private val scope: CoroutineScope,
+) {
+    private val dir = File(context.filesDir, "catalog").apply { mkdirs() }
+    private val versionsPrefs = context.getSharedPreferences("catalog_versions", Context.MODE_PRIVATE)
+
+    /** Set when the last load couldn't check for newer data or failed partway. */
+    @Volatile private var stale = false
+
+    @Volatile private var lastLoadMillis = 0L
+
