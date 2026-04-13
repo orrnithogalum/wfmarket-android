@@ -149,3 +149,5 @@ private const val REFRESH_INTERVAL_MILLIS = 60 * 60 * 1000L
 /** Item ids are Mongo ObjectIds, whose first four bytes are the creation time. */
 private val Item.createdAtSeconds: Long get() = id.take(8).toLongOrNull(16) ?: 0L
 
+fun String.humanize(): String = split('_', '-').joinToString(" ") { part -> part.replaceFirstChar { it.uppercase() } }
+
