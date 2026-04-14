@@ -167,6 +167,9 @@ class CatalogRepository(
     private val _catalog = MutableStateFlow(Catalog())
     val catalog: StateFlow<Catalog> = _catalog.asStateFlow()
 
+    private val _loadError = MutableStateFlow<String?>(null)
+    val loadError: StateFlow<String?> = _loadError.asStateFlow()
+
     /** Set when the last load couldn't check for newer data or failed partway. */
     @Volatile private var stale = false
 
