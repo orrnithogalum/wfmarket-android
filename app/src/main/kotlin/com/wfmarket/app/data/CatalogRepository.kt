@@ -170,6 +170,9 @@ class CatalogRepository(
     private val _loadError = MutableStateFlow<String?>(null)
     val loadError: StateFlow<String?> = _loadError.asStateFlow()
 
+    private val _loading = MutableStateFlow(true)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
     /** Set when the last load couldn't check for newer data or failed partway. */
     @Volatile private var stale = false
 
