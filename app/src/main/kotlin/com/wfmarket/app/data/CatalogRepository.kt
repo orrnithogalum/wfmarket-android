@@ -192,3 +192,8 @@ class CatalogRepository(
         if (stale) retry()
     }
 
+    /** New releases arrive in the catalogue, and the process can outlive one by days. */
+    fun refreshIfOld() {
+        if (System.currentTimeMillis() - lastLoadMillis > REFRESH_INTERVAL_MILLIS) retry()
+    }
+
