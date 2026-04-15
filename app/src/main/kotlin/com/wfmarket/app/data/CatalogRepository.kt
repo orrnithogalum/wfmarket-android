@@ -178,3 +178,9 @@ class CatalogRepository(
 
     @Volatile private var lastLoadMillis = 0L
 
+    fun start() {
+        scope.launch {
+            settings.flow.map { it.language }.distinctUntilChanged().collect { load() }
+        }
+    }
+
