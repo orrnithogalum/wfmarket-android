@@ -188,3 +188,7 @@ class CatalogRepository(
         if (!_loading.value) scope.launch { load() }
     }
 
+    fun refreshIfStale() {
+        if (stale) retry()
+    }
+
