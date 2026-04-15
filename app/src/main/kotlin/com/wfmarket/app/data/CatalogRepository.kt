@@ -184,3 +184,7 @@ class CatalogRepository(
         }
     }
 
+    fun retry() {
+        if (!_loading.value) scope.launch { load() }
+    }
+
