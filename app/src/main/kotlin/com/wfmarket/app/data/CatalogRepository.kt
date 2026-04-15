@@ -197,3 +197,78 @@ class CatalogRepository(
         if (System.currentTimeMillis() - lastLoadMillis > REFRESH_INTERVAL_MILLIS) retry()
     }
 
+    private suspend fun load() = withContext(Dispatchers.IO) {
+        _loading.value = true
+        _loadError.value = null
+        val language = settings.current.language
+        val versions = runCatching { api.versions().collections }.getOrDefault(emptyMap())
+        stale = versions.isEmpty()
+
+        suspend fun <T> list(path: String, file: String, collection: String, serializer: KSerializer<T>): List<T> {
+            val cache = File(dir, "${file}_$language.json")
+            val versionKey = "${file}_$language"
+            val remote = versions[collection]
+            val fresh = cache.exists() && (remote == null || versionsPrefs.getString(versionKey, null) == remote)
+            val raw = if (fresh) {
+                cache.readText()
+            } else {
+                runCatching {
+                    api.rawV2(path).also { text ->
+                        cache.writeText(text)
+                        versionsPrefs.edit().putString(versionKey, remote).apply()
+                    }
+                }.getOrElse { failure ->
+                    // Stale data beats none: fall back to the old copy when offline.
+                    if (cache.exists()) cache.readText() else throw failure
+                }
+            }
+            return api.decodeList(serializer, raw)
+        }
+
+        try {
+            // Items first: the market is usable as soon as they arrive.
+            val items = list("/items", "items", "items", Item.serializer())
+            _catalog.value = _catalog.value.copy(language = language, items = items)
+
+            val results = listOf(
+                async { list("/riven/weapons", "riven_weapons", "rivens", RivenWeapon.serializer()) },
+                async { list("/riven/attributes", "riven_attributes", "rivens", RivenAttribute.serializer()) },
+                async { list("/lich/weapons", "lich_weapons", "liches", NemesisWeapon.serializer()) },
+                async { list("/lich/ephemeras", "lich_ephemeras", "liches", Ephemera.serializer()) },
+                async { list("/lich/quirks", "lich_quirks", "liches", Quirk.serializer()) },
+                async { list("/sister/weapons", "sister_weapons", "sisters", NemesisWeapon.serializer()) },
+                async { list("/sister/ephemeras", "sister_ephemeras", "sisters", Ephemera.serializer()) },
+                async { list("/sister/quirks", "sister_quirks", "sisters", Quirk.serializer()) },
+                async { list("/locations", "locations", "locations", Location.serializer()) },
+                async { list("/missions", "missions", "missions", NamedEntity.serializer()) },
+                async { list("/npcs", "npcs", "npcs", NamedEntity.serializer()) },
+                async { list("/achievements", "achievements", "achievements", Achievement.serializer()) },
+            ).awaitAll()
+
+            @Suppress("UNCHECKED_CAST")
+            _catalog.value = Catalog(
+                language = language,
+                items = items,
+                rivenWeapons = results[0] as List<RivenWeapon>,
+                rivenAttributes = results[1] as List<RivenAttribute>,
+                lichWeapons = results[2] as List<NemesisWeapon>,
+                lichEphemeras = results[3] as List<Ephemera>,
+                lichQuirks = results[4] as List<Quirk>,
+                sisterWeapons = results[5] as List<NemesisWeapon>,
+                sisterEphemeras = results[6] as List<Ephemera>,
+                sisterQuirks = results[7] as List<Quirk>,
+                locations = results[8] as List<Location>,
+                missions = results[9] as List<NamedEntity>,
+                npcs = results[10] as List<NamedEntity>,
+                achievements = results[11] as List<Achievement>,
+            )
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            stale = true
+            _loadError.value = (e as? WfmException)?.summary ?: "Couldn't load the item list."
+        } finally {
+            lastLoadMillis = System.currentTimeMillis()
+            _loading.value = false
+        }
+    }
+}
