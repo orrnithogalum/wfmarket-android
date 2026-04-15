@@ -14,3 +14,12 @@ enum class DataKind {
     SCOPE,
 }
 
+/**
+ * Says when data changed, so every screen showing it can reload, including ones waiting on the back
+ * stack. Repositories report it after each successful change, so no screen has to know who else cares.
+ */
+class DataChanges {
+    private val _flow = MutableSharedFlow<DataKind>(extraBufferCapacity = 16)
+    val flow: SharedFlow<DataKind> = _flow.asSharedFlow()
+
+
