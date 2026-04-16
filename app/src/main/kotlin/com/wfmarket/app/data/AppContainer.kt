@@ -38,3 +38,6 @@ import kotlinx.coroutines.launch
 /** Something to show on the Auctions tab once it's on screen, such as from a link or shortcut. */
 data class AuctionRequest(val search: AuctionSearch? = null, val openFilters: Boolean = false)
 
+/** What the connection and background work should be doing right now. */
+private data class Delivery(val socket: Boolean, val worker: Boolean, val service: Boolean)
+
