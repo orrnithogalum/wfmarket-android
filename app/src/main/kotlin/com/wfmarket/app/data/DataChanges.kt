@@ -27,3 +27,8 @@ class DataChanges {
     }
 }
 
+/** Short messages that have to outlive the screen that caused them, such as one that just closed. */
+class Notices {
+    private val _flow = MutableSharedFlow<String>(extraBufferCapacity = 4)
+    val flow: SharedFlow<String> = _flow.asSharedFlow()
+
