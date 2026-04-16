@@ -32,3 +32,7 @@ class Notices {
     private val _flow = MutableSharedFlow<String>(extraBufferCapacity = 4)
     val flow: SharedFlow<String> = _flow.asSharedFlow()
 
+    fun show(text: String) {
+        _flow.tryEmit(text)
+    }
+}
