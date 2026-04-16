@@ -22,4 +22,8 @@ class DataChanges {
     private val _flow = MutableSharedFlow<DataKind>(extraBufferCapacity = 16)
     val flow: SharedFlow<DataKind> = _flow.asSharedFlow()
 
+    fun mark(kind: DataKind) {
+        _flow.tryEmit(kind)
+    }
+}
 
