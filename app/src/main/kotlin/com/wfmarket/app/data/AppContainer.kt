@@ -41,3 +41,9 @@ data class AuctionRequest(val search: AuctionSearch? = null, val openFilters: Bo
 /** What the connection and background work should be doing right now. */
 private data class Delivery(val socket: Boolean, val worker: Boolean, val service: Boolean)
 
+/** Manual dependency graph: one instance of each repository for the life of the process. */
+class AppContainer(val context: Context) {
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    @Volatile private var socketWanted = false
+
