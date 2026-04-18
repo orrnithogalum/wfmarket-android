@@ -45,5 +45,15 @@ private data class Delivery(val socket: Boolean, val worker: Boolean, val servic
 class AppContainer(val context: Context) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    val settings = SettingsStore(context, scope)
+    val session = SessionStore(context)
+    private val wfmContext = AppWfmContext(settings, session) { account.onSessionExpired() }
+    val api: WfmApi = WfmApi(wfmContext)
+    val sockets: WfmSockets = WfmSockets(wfmContext, api.http)
+    val notifier = Notifier(context)
+    val connectivity = ConnectivityMonitor(context)
+    val changes = DataChanges()
+    val notices = Notices()
+
     @Volatile private var socketWanted = false
 
