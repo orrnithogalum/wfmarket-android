@@ -55,5 +55,12 @@ class AppContainer(val context: Context) {
     val changes = DataChanges()
     val notices = Notices()
 
+    val catalog = CatalogRepository(context, api, settings, scope)
+    val rivens = RivenRepository(context, api, settings, scope)
+    val account: AccountRepository = AccountRepository(api, sockets, session, settings, scope, context)
+    val chats: ChatRepository = ChatRepository(api, sockets, session, account, notifier, settings, scope)
+    val market = MarketRepository(api, changes)
+    val auctions = AuctionRepository(api, sockets, changes)
+
     @Volatile private var socketWanted = false
 
