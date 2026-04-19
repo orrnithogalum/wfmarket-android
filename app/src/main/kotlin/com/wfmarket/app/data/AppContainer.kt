@@ -62,5 +62,8 @@ class AppContainer(val context: Context) {
     val market = MarketRepository(api, changes)
     val auctions = AuctionRepository(api, sockets, changes)
 
+    private val _appForeground = MutableStateFlow(false)
+    val appForeground: StateFlow<Boolean> = _appForeground.asStateFlow()
+
     @Volatile private var socketWanted = false
 
