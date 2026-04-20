@@ -69,5 +69,8 @@ class AppContainer(val context: Context) {
 
     val auctionRequest = MutableStateFlow<AuctionRequest?>(null)
 
+    /** Set when something outside the app, like the status notification, asks for the status sheet. */
+    val statusSheetRequest = MutableStateFlow(false)
+
     @Volatile private var socketWanted = false
 
