@@ -65,5 +65,7 @@ class AppContainer(val context: Context) {
     private val _appForeground = MutableStateFlow(false)
     val appForeground: StateFlow<Boolean> = _appForeground.asStateFlow()
 
+    val alerts = AuctionAlerts(context, api, sockets, notifier, myId = { account.me.value?.id }, isAppForeground = { _appForeground.value }, scope = scope)
+
     @Volatile private var socketWanted = false
 
