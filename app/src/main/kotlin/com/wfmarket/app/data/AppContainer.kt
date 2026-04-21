@@ -94,5 +94,8 @@ class AppContainer(val context: Context) {
             }
         }.stateIn(scope, SharingStarted.Eagerly, null)
 
+    private val instantDelivery: Flow<Boolean> =
+        combine(account.isSignedIn, settings.flow) { signedIn, it -> signedIn && it.backgroundMessages && it.instantMessages }
+
     @Volatile private var socketWanted = false
 
