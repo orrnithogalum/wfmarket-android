@@ -101,5 +101,13 @@ class AppContainer(val context: Context) {
     val serviceWanted: StateFlow<Boolean> = combine(keptStatus, instantDelivery) { kept, instant -> kept != null || instant }
         .stateIn(scope, SharingStarted.Eagerly, false)
 
+    val serviceNotice: StateFlow<ServiceNotice?> = combine(keptStatus, instantDelivery, account.status) { kept, instant, status ->
+        when {
+            kept != null -> ServiceNotice(status.takeIf { it == "online" || it == "ingame" } ?: kept.status, kept.until, instant)
+            instant -> ServiceNotice(null, null, true)
+            else -> null
+        }
+    }.stateIn(scope, SharingStarted.Eagerly, null)
+
     @Volatile private var socketWanted = false
 
