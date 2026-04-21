@@ -111,3 +111,8 @@ class AppContainer(val context: Context) {
 
     @Volatile private var socketWanted = false
 
+    /** Offline is already on screen, so this only speaks up when the network is there. */
+    fun refreshFailed() {
+        if (connectivity.online.value) notices.show("Couldn't refresh. Showing the last data.")
+    }
+
