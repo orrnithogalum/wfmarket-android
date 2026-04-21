@@ -97,5 +97,9 @@ class AppContainer(val context: Context) {
     private val instantDelivery: Flow<Boolean> =
         combine(account.isSignedIn, settings.flow) { signedIn, it -> signedIn && it.backgroundMessages && it.instantMessages }
 
+    /** Whether the connection should stay open with the app closed, which takes the service. */
+    val serviceWanted: StateFlow<Boolean> = combine(keptStatus, instantDelivery) { kept, instant -> kept != null || instant }
+        .stateIn(scope, SharingStarted.Eagerly, false)
+
     @Volatile private var socketWanted = false
 
