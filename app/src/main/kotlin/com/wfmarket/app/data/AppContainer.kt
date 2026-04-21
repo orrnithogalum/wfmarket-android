@@ -72,5 +72,27 @@ class AppContainer(val context: Context) {
     /** Set when something outside the app, like the status notification, asks for the status sheet. */
     val statusSheetRequest = MutableStateFlow(false)
 
+    /**
+     * The status being kept while the app is closed, or null. It turns null on its own when a timed
+     * hold runs out, so the connection closes with it.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val keptStatus: StateFlow<HeldStatus?> =
+        combine(account.isSignedIn, settings.flow.map { it.keepStatusInBackground to it.heldStatus }) { signedIn, (keep, held) ->
+            held.takeIf { signedIn && keep }
+        }.distinctUntilChanged().flatMapLatest { held ->
+            flow {
+                if (held == null || !held.isActive()) {
+                    emit(null)
+                    return@flow
+                }
+                emit(held)
+                held.until?.let {
+                    delay(it - System.currentTimeMillis())
+                    emit(null)
+                }
+            }
+        }.stateIn(scope, SharingStarted.Eagerly, null)
+
     @Volatile private var socketWanted = false
 
