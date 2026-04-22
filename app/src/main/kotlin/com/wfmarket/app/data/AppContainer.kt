@@ -116,3 +116,82 @@ class AppContainer(val context: Context) {
         if (connectivity.online.value) notices.show("Couldn't refresh. Showing the last data.")
     }
 
+    fun start() {
+        chats.isAppForeground = { _appForeground.value }
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) { _appForeground.value = true }
+            override fun onStop(owner: LifecycleOwner) { _appForeground.value = false }
+        })
+
+        account.start()
+        chats.start()
+
+        // Only screens read the catalogue, and it's large, so a background inbox check never loads it.
+        // The riven trade figures are the same: only screens show them.
+        scope.launch {
+            appForeground.first { it }
+            catalog.start()
+            rivens.start()
+            appForeground.filter { it }.collect {
+                catalog.refreshIfOld()
+                rivens.refreshIfOld()
+            }
+        }
+
+        // A connection is kept while the app is visible. With the app closed, the inbox and auction
+        // alerts are checked periodically, unless keeping a status or instant delivery keeps the
+        // connection open too.
+        scope.launch {
+            combine(
+                appForeground,
+                account.isSignedIn,
+                settings.flow.map { it.backgroundMessages },
+                serviceWanted,
+                alerts.state.map { it.hasWork },
+            ) { visible, signedIn, background, service, alerting ->
+                // While the app is open its connection needs no service, and so no notification.
+                // Android lets an app that's just left the screen start one, so it starts then.
+                Delivery(socket = visible || service, worker = (signedIn && background) || alerting || service, service = service && !visible)
+            }.distinctUntilChanged().collect { delivery ->
+                socketWanted = delivery.socket
+                if (delivery.socket) sockets.connect() else sockets.disconnect()
+                if (delivery.worker) SyncWorker.schedule(context) else SyncWorker.cancel(context)
+                if (delivery.service) RealtimeService.start(context) else RealtimeService.stop(context)
+            }
+        }
+
+        // Followed auctions update live whenever the connection is open.
+        auctions.keepWatching = alerts::isFollowed
+        scope.launch { sockets.events.filterIsInstance<SocketEvent.ChatStreamReady>().collect { alerts.resubscribe() } }
+        scope.launch {
+            auctions.bidChanges.collect { change ->
+                if (alerts.isFollowed(change.auctionId)) runCatching { alerts.refreshFollowed(change.auctionId) }
+            }
+        }
+
+        Shortcuts.publish(context)
+
+        // Dropped connections take a long time to time out, so catch up as soon as the network returns.
+        scope.launch {
+            connectivity.reconnected.collect {
+                if (socketWanted && !sockets.state.value.chatConnected) sockets.reconnect()
+                catalog.refreshIfStale()
+                runCatching { chats.syncUnread() }
+            }
+        }
+
+        // These decide what the site returns, so anything already loaded is out of date.
+        scope.launch {
+            combine(settings.flow.map { Triple(it.platform, it.crossplay, it.language) }, account.isSignedIn) { preferences, signedIn ->
+                preferences to signedIn
+            }.distinctUntilChanged().drop(1).collect { changes.mark(DataKind.SCOPE) }
+        }
+
+        // Platform decides which socket shard and which orders we see.
+        scope.launch {
+            settings.flow.map { it.platform }.distinctUntilChanged().drop(1).collect {
+                if (socketWanted) sockets.reconnect()
+            }
+        }
+    }
+}
