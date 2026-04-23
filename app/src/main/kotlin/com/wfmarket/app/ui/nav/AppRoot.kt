@@ -82,3 +82,7 @@ private enum class TopLevel(val route: String, val label: String, val selected: 
 
 private val NavBackStackEntry.isTab: Boolean get() = TopLevel.entries.any { it.route == destination.route }
 
+private val NavigationBarHeight = 80.dp
+private val NavigationRailWidth = 80.dp
+private val OfflineBannerHeight = 28.dp
+
