@@ -102,4 +102,13 @@ private class Navigator(private val controller: NavHostController, private val c
     override fun signIn() = controller.navigate("signin")
     override fun alerts() = controller.navigate("alerts") { launchSingleTop = true }
 
+    override fun auctionSearch(search: AuctionSearch?) {
+        container.auctionRequest.value = AuctionRequest(search, openFilters = search == null)
+        // From a page opened over the Auctions tab, such as alerts or an auction, going back to it
+        // reads as returning there. Elsewhere the tab opens as usual. Either way, the tab then
+        // slides over to Search and, with no search given, raises its filters.
+        if (controller.currentDestination?.route != TopLevel.AUCTIONS.route && controller.popBackStack(TopLevel.AUCTIONS.route, inclusive = false)) return
+        openTab(TopLevel.AUCTIONS.route)
+    }
+
 
