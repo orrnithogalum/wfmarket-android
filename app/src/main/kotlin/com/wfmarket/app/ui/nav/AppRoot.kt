@@ -86,3 +86,20 @@ private val NavigationBarHeight = 80.dp
 private val NavigationRailWidth = 80.dp
 private val OfflineBannerHeight = 28.dp
 
+private class Navigator(private val controller: NavHostController, private val container: AppContainer) : AppNavigator {
+    override fun back() { controller.popBackStack() }
+    override fun item(slug: String) = controller.navigate("item/$slug")
+    override fun auction(id: String) = controller.navigate("auction/$id")
+    override fun replaceWithAuction(id: String) {
+        val current = controller.currentDestination?.id ?: return auction(id)
+        controller.navigate("auction/$id") { popUpTo(current) { inclusive = true } }
+    }
+    override fun editAuction(id: String?) = controller.navigate(if (id == null) "auction_new" else "auction_edit/$id")
+    override fun chat(id: String) = controller.navigate("chat/$id")
+    override fun user(slug: String) = controller.navigate("user/$slug")
+    override fun settings() = controller.navigate("settings")
+    override fun accountSettings() = controller.navigate("account")
+    override fun signIn() = controller.navigate("signin")
+    override fun alerts() = controller.navigate("alerts") { launchSingleTop = true }
+
+
