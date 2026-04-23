@@ -80,3 +80,5 @@ private enum class TopLevel(val route: String, val label: String, val selected: 
     PROFILE("me", "Profile", Icons.Filled.Person, Icons.Outlined.Person),
 }
 
+private val NavBackStackEntry.isTab: Boolean get() = TopLevel.entries.any { it.route == destination.route }
+
