@@ -111,4 +111,12 @@ private class Navigator(private val controller: NavHostController, private val c
         openTab(TopLevel.AUCTIONS.route)
     }
 
+    fun openTab(route: String) {
+        controller.navigate(route) {
+            popUpTo(controller.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+}
 
