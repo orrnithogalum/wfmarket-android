@@ -120,3 +120,5 @@ private class Navigator(private val controller: NavHostController, private val c
     }
 }
 
+private val KnownRoots = setOf("items", "auction", "auctions", "profile", "im", "tools", "settings")
+
