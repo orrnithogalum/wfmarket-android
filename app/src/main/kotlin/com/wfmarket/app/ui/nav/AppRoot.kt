@@ -158,3 +158,16 @@ private fun targetFor(uri: Uri): LinkTarget? {
     return route?.let(LinkTarget::Screen)
 }
 
+/**
+ * A screen, with its way in and out handed to what's on it, so shared elements can move with it.
+ * [argument] names the route's one argument, if it has one, which [content] is given.
+ */
+private fun NavGraphBuilder.screen(route: String, argument: String? = null, content: @Composable (String?) -> Unit) {
+    val arguments = listOfNotNull(argument?.let { navArgument(it) { type = NavType.StringType } })
+    composable(route, arguments) { entry ->
+        CompositionLocalProvider(LocalNavAnimatedScope provides this) {
+            content(argument?.let { entry.arguments?.getString(it) })
+        }
+    }
+}
+
