@@ -323,3 +323,12 @@ private fun OfflineBanner(height: Dp) {
     }
 }
 
+@Composable
+private fun TabIcon(top: TopLevel, selected: Boolean, unread: Int) {
+    val icon = if (selected) top.selected else top.unselected
+    if (top == TopLevel.MESSAGES && unread > 0) {
+        BadgedBox(badge = { Badge { Text(unread.toString()) } }) { Icon(icon, top.label) }
+    } else {
+        Icon(icon, top.label)
+    }
+}
