@@ -298,3 +298,28 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
     }
 }
 
+/**
+ * Sits over the top of the screen and pushes the app down by its own height. Screens keep their
+ * status bar padding, which ends up behind this, so nothing has to know the banner exists.
+ */
+@Composable
+private fun OfflineBanner(height: Dp) {
+    val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    Surface(
+        Modifier.fillMaxWidth().height(statusBar + height).graphicsLayer { alpha = height / OfflineBannerHeight }
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    ) {
+        Box(contentAlignment = Alignment.BottomCenter) {
+            Row(
+                Modifier.height(OfflineBannerHeight),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Icon(Icons.Outlined.WifiOff, null, Modifier.size(16.dp))
+                Text("You're offline", style = MaterialTheme.typography.labelMedium, maxLines = 1)
+            }
+        }
+    }
+}
+
