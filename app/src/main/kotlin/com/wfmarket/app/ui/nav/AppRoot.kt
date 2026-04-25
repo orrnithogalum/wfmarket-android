@@ -122,3 +122,10 @@ private class Navigator(private val controller: NavHostController, private val c
 
 private val KnownRoots = setOf("items", "auction", "auctions", "profile", "im", "tools", "settings")
 
+/** What a link asks for: a screen, and sometimes something to do there. */
+private sealed interface LinkTarget {
+    data class Screen(val route: String) : LinkTarget
+    data class Auctions(val search: AuctionSearch?) : LinkTarget
+    data class Status(val status: String?) : LinkTarget
+}
+
