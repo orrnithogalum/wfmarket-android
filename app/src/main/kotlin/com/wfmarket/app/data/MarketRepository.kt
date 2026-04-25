@@ -10,4 +10,6 @@ class MarketRepository(private val api: WfmApi, private val changes: DataChanges
     /** Lists can lag behind a removal, and a removed order should never come back on screen. */
     private val removedOrders = java.util.Collections.synchronizedSet(mutableSetOf<String>())
 
+    private fun List<Order>.withoutRemoved() = filterNot { it.id in removedOrders }
+
 
