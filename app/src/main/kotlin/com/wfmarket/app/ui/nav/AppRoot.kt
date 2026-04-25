@@ -171,3 +171,130 @@ private fun NavGraphBuilder.screen(route: String, argument: String? = null, cont
     }
 }
 
+@Composable
+fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
+    val container = appContainer()
+    val controller = rememberNavController()
+    val navigator = remember(controller) { Navigator(controller, container) }
+    val scope = rememberCoroutineScope()
+    val backStack by controller.currentBackStackEntryAsState()
+    val destination = backStack?.destination
+    val unread by container.chats.unread.collectAsStateWithLifecycle()
+    val onTopLevel = TopLevel.entries.any { top -> destination?.hierarchy?.any { it.route == top.route } == true }
+    val wide = LocalConfiguration.current.screenWidthDp >= 600
+
+    LaunchedEffect(deepLink, destination != null) {
+        val uri = deepLink ?: return@LaunchedEffect
+        if (destination == null) return@LaunchedEffect
+        when (val target = targetFor(uri)) {
+            is LinkTarget.Screen -> controller.navigate(target.route) { launchSingleTop = true }
+            is LinkTarget.Auctions -> navigator.auctionSearch(target.search)
+            is LinkTarget.Status -> {
+                val status = target.status
+                when {
+                    !container.account.isSignedIn.value -> navigator.signIn()
+                    status == null -> {
+                        navigator.openTab(TopLevel.PROFILE.route)
+                        container.statusSheetRequest.value = true
+                    }
+                    // A shortcut that sets a status needs no screen of its own, just the confirmation.
+                    else -> scope.launch {
+                        val label = com.wfmarket.api.model.UserStatus.of(status).label
+                        container.notices.show(
+                            if (container.account.setStatusWhenConnected(status)) "Status: $label" else "Couldn't set your status. Try again in a moment.",
+                        )
+                    }
+                }
+            }
+            null -> Unit
+        }
+        onDeepLinkHandled()
+    }
+
+    // While a page is open, the bar underneath still shows the tab that page came from.
+    val currentTab = TopLevel.entries.firstOrNull { it.route == destination?.route }
+    var lastTab by rememberSaveable { mutableStateOf(TopLevel.MARKET) }
+    LaunchedEffect(currentTab) { currentTab?.let { lastTab = it } }
+    val shownTab = currentTab ?: lastTab
+
+    val notices = remember { SnackbarHostState() }
+    LaunchedEffect(Unit) { container.notices.flow.collect { notices.showSnackbar(it) } }
+
+    val online by container.connectivity.online.collectAsStateWithLifecycle()
+    val offlineBanner by animateDpAsState(if (online) 0.dp else OfflineBannerHeight, tween(250), label = "offlineBanner")
+
+    // Tab screens leave room for the bar instead of being resized by it. If the bar took its space
+    // from the layout, every screen would jump as it comes and goes during a transition.
+    val tabPadding = if (wide) {
+        PaddingValues(start = NavigationRailWidth)
+    } else {
+        PaddingValues(bottom = NavigationBarHeight + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
+    }
+    val tab: @Composable (@Composable () -> Unit) -> Unit = { screen ->
+        Box(Modifier.fillMaxSize().padding(tabPadding).consumeWindowInsets(tabPadding)) { screen() }
+    }
+
+    // Lives as long as the app's screens, so a card's picture can fly back to it after the page closes.
+    val openedFrom = remember { OpenedFrom() }
+
+    CompositionLocalProvider(LocalNavigator provides navigator, LocalOpenedFrom provides openedFrom) {
+        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
+            Box(Modifier.fillMaxSize().padding(top = offlineBanner)) {
+                // The bar stays under every page instead of animating in and out. A page covers it,
+                // and a back gesture uncovers it along with the tab it belongs to.
+                val barSemantics = if (onTopLevel) Modifier else Modifier.clearAndSetSemantics {}
+                if (wide) {
+                    NavigationRail(Modifier.align(Alignment.CenterStart).statusBarsPadding().then(barSemantics)) {
+                        TopLevel.entries.forEach { top ->
+                            NavigationRailItem(
+                                selected = top == shownTab,
+                                onClick = { navigator.openTab(top.route) },
+                                icon = { TabIcon(top, top == shownTab, unread) },
+                                label = { Text(top.label) },
+                            )
+                        }
+                    }
+                } else {
+                    NavigationBar(Modifier.align(Alignment.BottomCenter).then(barSemantics)) {
+                        TopLevel.entries.forEach { top ->
+                            NavigationBarItem(
+                                selected = top == shownTab,
+                                onClick = { navigator.openTab(top.route) },
+                                icon = { TabIcon(top, top == shownTab, unread) },
+                                label = { Text(top.label, maxLines = 1) },
+                            )
+                        }
+                    }
+                }
+
+                // Shared elements, like an auction's picture, fly between screens across this.
+                SharedTransitionLayout {
+                CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+                NavHost(
+                    controller,
+                    startDestination = TopLevel.MARKET.route,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    screen("market") { tab { MarketScreen() } }
+                    screen("me") { tab { MyProfileScreen() } }
+                }
+                }
+                }
+
+                // Back plays when it's released instead of following the finger, and looks the same
+                // from anywhere: a tab fades to the first tab, and a page to the screen it came from.
+                BackHandler(enabled = if (onTopLevel) currentTab != TopLevel.MARKET else controller.previousBackStackEntry != null) {
+                    if (onTopLevel) navigator.openTab(TopLevel.MARKET.route) else navigator.back()
+                }
+
+                val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                SnackbarHost(
+                    notices,
+                    Modifier.align(Alignment.BottomCenter).padding(bottom = bottomInset + if (!wide && onTopLevel) NavigationBarHeight else 0.dp),
+                )
+            }
+            if (offlineBanner > 0.dp) OfflineBanner(offlineBanner)
+        }
+    }
+}
+
