@@ -129,3 +129,32 @@ private sealed interface LinkTarget {
     data class Status(val status: String?) : LinkTarget
 }
 
+/** Maps a warframe.market URL, or one of the app's own links, onto a screen. Used by notifications, shortcuts and links. */
+private fun targetFor(uri: Uri): LinkTarget? {
+    if (uri.scheme == Shortcuts.SCHEME) {
+        return when (uri.host) {
+            "auctions" -> if (uri.pathSegments.firstOrNull() == "new") LinkTarget.Screen("auction_new") else LinkTarget.Auctions(null)
+            "status" -> LinkTarget.Status(uri.pathSegments.firstOrNull())
+            else -> null
+        }
+    }
+    // Localised URLs carry a language prefix, as in /fr/items/...
+    val segments = uri.pathSegments.dropWhile { it !in KnownRoots }
+    val route = when (segments.firstOrNull()) {
+        "items" -> segments.getOrNull(1)?.let { "item/$it" }
+        "auction" -> segments.getOrNull(1)?.let { "auction/$it" }
+        "auctions" -> if (segments.getOrNull(1) == "search") {
+            val params = uri.queryParameterNames.associateWith { uri.getQueryParameter(it).orEmpty() }
+            return LinkTarget.Auctions(AuctionSearch.fromQuery(params).takeIf { it.canSearch })
+        } else {
+            "auctions"
+        }
+        "profile" -> segments.getOrNull(1)?.let { "user/$it" }
+        "im" -> if (segments.size >= 3) "chat/${segments[2]}" else "messages"
+        "tools" -> "ducanator"
+        "settings" -> "settings"
+        else -> null
+    }
+    return route?.let(LinkTarget::Screen)
+}
+
