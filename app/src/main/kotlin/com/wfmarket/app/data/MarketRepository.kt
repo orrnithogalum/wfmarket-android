@@ -27,4 +27,9 @@ class MarketRepository(private val api: WfmApi, private val changes: DataChanges
     suspend fun createOrder(order: CreateOrder) = api.createOrder(order).also { changes.mark(DataKind.ORDERS) }
     suspend fun updateOrder(id: String, patch: UpdateOrder) = api.updateOrder(id, patch).also { changes.mark(DataKind.ORDERS) }
 
+    suspend fun deleteOrder(id: String) = api.deleteOrder(id).also {
+        removedOrders += id
+        changes.mark(DataKind.ORDERS)
+    }
+
 
