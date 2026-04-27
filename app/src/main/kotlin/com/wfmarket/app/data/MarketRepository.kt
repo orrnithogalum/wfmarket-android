@@ -40,4 +40,14 @@ class MarketRepository(private val api: WfmApi, private val changes: DataChanges
     suspend fun setAllVisible(visible: Boolean, type: String?) = api.setAllOrdersVisible(visible, type).also { changes.mark(DataKind.ORDERS) }
     suspend fun myOrders() = api.myOrders().withoutRemoved()
 
+    suspend fun user(slug: String) = api.user(slug)
+    suspend fun userOrders(slug: String) = api.ordersForUser(slug).withoutRemoved()
+    suspend fun closedOrders(slug: String) = api.closedOrders(slug)
+    suspend fun removeClosedOrder(id: String) = api.removeClosedOrder(id).also { changes.mark(DataKind.HISTORY) }
+    suspend fun reviews(slug: String, page: Int = 1) = api.reviews(slug, page)
+    suspend fun createReview(slug: String, text: String, type: Int) = api.createReview(slug, text, type).also { changes.mark(DataKind.REVIEWS) }
+    suspend fun updateReview(slug: String, id: String, text: String) = api.updateReview(slug, id, text).also { changes.mark(DataKind.REVIEWS) }
+    suspend fun deleteReview(slug: String, id: String) = api.deleteReview(slug, id).also { changes.mark(DataKind.REVIEWS) }
+    suspend fun achievements(slug: String) = api.userAchievements(slug)
+}
 
