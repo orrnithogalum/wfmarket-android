@@ -32,4 +32,9 @@ class MarketRepository(private val api: WfmApi, private val changes: DataChanges
         changes.mark(DataKind.ORDERS)
     }
 
+    suspend fun closeOrder(id: String, quantity: Int) = api.closeOrder(id, quantity).also {
+        changes.mark(DataKind.ORDERS)
+        changes.mark(DataKind.HISTORY)
+    }
+
 
