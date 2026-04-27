@@ -37,4 +37,7 @@ class MarketRepository(private val api: WfmApi, private val changes: DataChanges
         changes.mark(DataKind.HISTORY)
     }
 
+    suspend fun setAllVisible(visible: Boolean, type: String?) = api.setAllOrdersVisible(visible, type).also { changes.mark(DataKind.ORDERS) }
+    suspend fun myOrders() = api.myOrders().withoutRemoved()
+
 
