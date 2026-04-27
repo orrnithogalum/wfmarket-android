@@ -20,4 +20,8 @@ class MarketRepository(private val api: WfmApi, private val changes: DataChanges
     suspend fun orders(slug: String) = api.ordersForItem(slug).withoutRemoved()
     suspend fun topOrders(slug: String) = api.topOrders(slug)
 
+    suspend fun statistics(slug: String) = api.itemStatistics(slug)
+    suspend fun dropSources(slug: String) = api.dropSources(slug)
+    suspend fun ducats() = api.ducats()
+
 
