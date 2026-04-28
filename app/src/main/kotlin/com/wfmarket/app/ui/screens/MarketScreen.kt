@@ -115,3 +115,32 @@ private val Category.shape: RoundedPolygon
         Category.MISC -> MaterialShapes.Flower
     }
 
+@Composable
+private fun CategoryTile(category: Category, selected: Boolean, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    // The chosen tile grows a little and takes the accent color, both eased rather than snapped.
+    val scale by animateFloatAsState(if (selected) 1.06f else 1f, Motion.move(250), label = "categoryScale")
+    val fill by animateColorAsState(if (selected) colors.primary else colors.secondaryContainer, Motion.fadeIn(), label = "categoryFill")
+    val ink by animateColorAsState(if (selected) colors.onPrimary else colors.onSecondaryContainer, Motion.fadeIn(), label = "categoryInk")
+    val label by animateColorAsState(if (selected) colors.primary else colors.onSurface, Motion.fadeIn(), label = "categoryLabel")
+    Column(
+        Modifier.width(76.dp).clip(MaterialTheme.shapes.medium).clickable(onClick = onClick).padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            Modifier.size(60.dp).scale(scale).clip(category.shape.toShape()).background(fill),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(category.icon, null, Modifier.size(26.dp), tint = ink)
+        }
+        Text(
+            category.label,
+            style = MaterialTheme.typography.labelMedium,
+            color = label,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
