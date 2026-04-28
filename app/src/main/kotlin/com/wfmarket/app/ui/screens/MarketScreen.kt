@@ -100,3 +100,18 @@ private enum class Category(val label: String, val tags: Set<String>, val icon: 
     fun matches(item: Item): Boolean = item.tags.any { it in tags } && item.tags.none { it in excluded }
 }
 
+/** Each category gets its own expressive shape, so the row reads as a set of distinct places. */
+private val Category.shape: RoundedPolygon
+    get() = when (this) {
+        Category.SETS -> MaterialShapes.Cookie9Sided
+        Category.PRIME -> MaterialShapes.Gem
+        Category.WARFRAMES -> MaterialShapes.Arch
+        Category.WEAPONS -> MaterialShapes.SoftBurst
+        Category.MODS -> MaterialShapes.Cookie4Sided
+        Category.ARCANES -> MaterialShapes.Sunny
+        Category.RELICS -> MaterialShapes.Cookie6Sided
+        Category.COMPANIONS -> MaterialShapes.Clover4Leaf
+        Category.SCENES -> MaterialShapes.Square
+        Category.MISC -> MaterialShapes.Flower
+    }
+
