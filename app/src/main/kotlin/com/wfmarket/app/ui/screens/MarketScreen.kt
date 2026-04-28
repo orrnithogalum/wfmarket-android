@@ -144,3 +144,7 @@ private fun CategoryTile(category: Category, selected: Boolean, onClick: () -> U
     }
 }
 
+/** The home page's lists are rounded cards split into rows, like the settings. */
+@Composable
+private fun homeRowColors() = ListItemDefaults.segmentedColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+
