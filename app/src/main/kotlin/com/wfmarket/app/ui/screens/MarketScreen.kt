@@ -148,3 +148,6 @@ private fun CategoryTile(category: Category, selected: Boolean, onClick: () -> U
 @Composable
 private fun homeRowColors() = ListItemDefaults.segmentedColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
 
+private const val REFRESH_INTERVAL_MILLIS = 15 * 60 * 1000L
+private const val ORDERS_UPDATE_MILLIS = 30_000L
+
