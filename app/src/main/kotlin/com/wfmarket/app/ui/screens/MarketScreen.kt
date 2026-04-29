@@ -161,6 +161,9 @@ class MarketViewModel(private val container: AppContainer) : ViewModel() {
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
 
+    private var lastRefreshMillis = 0L
+    private var resurgenceEnd: Job? = null
+
     init {
         refresh()
         // A failed load retries from its error box; this covers what was on screen already.
