@@ -151,3 +151,31 @@ private fun homeRowColors() = ListItemDefaults.segmentedColors(containerColor = 
 private const val REFRESH_INTERVAL_MILLIS = 15 * 60 * 1000L
 private const val ORDERS_UPDATE_MILLIS = 30_000L
 
+class MarketViewModel(private val container: AppContainer) : ViewModel() {
+    private val _showcase = MutableStateFlow<Showcase?>(null)
+    val showcase = _showcase.asStateFlow()
+    private val _resurgence = MutableStateFlow<PrimeResurgence?>(null)
+    val resurgence = _resurgence.asStateFlow()
+    private val _recent = MutableStateFlow<Load<List<Order>>>(Load.Loading)
+    val recent = _recent.asStateFlow()
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing = _refreshing.asStateFlow()
+
+    init {
+        refresh()
+        // A failed load retries from its error box; this covers what was on screen already.
+        viewModelScope.launch {
+            container.connectivity.reconnected.collect { if (_recent.value is Load.Ready) refresh() }
+        }
+        viewModelScope.launch {
+            container.changes.flow.collect { kind ->
+                when (kind) {
+                    DataKind.ORDERS -> updateOrders()
+                    DataKind.SCOPE -> refresh()
+                    else -> Unit
+                }
+            }
+        }
+    }
+
+
