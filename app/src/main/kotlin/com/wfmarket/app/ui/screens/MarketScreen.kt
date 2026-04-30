@@ -181,4 +181,11 @@ class MarketViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    /** Quietly swaps in the newest orders. A failed update just waits for the next one. */
+    fun updateOrders() {
+        viewModelScope.launch {
+            runCatching { container.market.recentOrders() }.onSuccess { _recent.value = Load.Ready(it) }
+        }
+    }
+
 
