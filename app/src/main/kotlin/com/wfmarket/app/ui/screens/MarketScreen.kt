@@ -188,4 +188,9 @@ class MarketViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    /** This screen can stay alive in the background for days, so it catches up when it's seen again. */
+    fun refreshIfOld() {
+        if (System.currentTimeMillis() - lastRefreshMillis > REFRESH_INTERVAL_MILLIS) refresh()
+    }
+
 
