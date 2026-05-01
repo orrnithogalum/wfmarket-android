@@ -457,3 +457,74 @@ private fun MarketContent(
     }
 }
 
+/**
+ * The home search, laid out as the weapon picker is: chips to narrow it to one kind of item, and the
+ * results in one rounded group. With a kind chosen and nothing typed, it lists that whole kind.
+ */
+@Composable
+private fun ItemSearchContent(
+    catalog: Catalog,
+    query: String,
+    kind: Category?,
+    onKind: (Category?) -> Unit,
+    onOpen: (Item) -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    val results = remember(query, catalog, kind) {
+        when {
+            query.isNotBlank() -> searchItems(catalog, query).let { list -> if (kind == null) list else list.filter(kind::matches) }
+            kind != null -> catalog.items.filter(kind::matches).sortedBy { catalog.itemName(it) }
+            else -> emptyList()
+        }
+    }
+    val shown = results
+    FadingLazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+        item(key = "kinds") {
+            Row(
+                Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(selected = kind == null, onClick = { onKind(null) }, label = { Text("All") })
+                Category.entries.forEach { entry ->
+                    FilterChip(selected = kind == entry, onClick = { onKind(if (kind == entry) null else entry) }, label = { Text(entry.label) })
+                }
+            }
+        }
+        // Nothing to list until something's typed or a kind is picked.
+        if (query.isBlank() && kind == null) return@FadingLazyColumn
+        item(key = "count") {
+            Text(
+                "${results.size} ${if (results.size == 1) "item" else "items"}",
+                style = MaterialTheme.typography.labelLarge,
+                color = colors.onSurfaceVariant,
+                modifier = listItemMotion().padding(horizontal = 20.dp, vertical = 8.dp),
+            )
+        }
+        if (shown.isEmpty()) item(key = "empty") { EmptyBox(if (query.isBlank()) "Nothing here" else "No items match “$query”") }
+        itemsIndexed(shown, key = { _, item -> item.id }) { index, item ->
+            SegmentedListItem(
+                onClick = { onOpen(item) },
+                shapes = ListItemDefaults.segmentedShapes(index, shown.size),
+                colors = ListItemDefaults.segmentedColors(containerColor = colors.surfaceContainerHighest),
+                modifier = listItemMotion().padding(horizontal = 16.dp).padding(bottom = ListItemDefaults.SegmentedGap),
+                verticalAlignment = Alignment.CenterVertically,
+                leadingContent = { ItemThumb(catalog.art(item)) },
+                supportingContent = {
+                    // What the row's kind doesn't already say: a mod's rarity and what it fits, a part's ducats.
+                    Text(
+                        listOfNotNull(
+                            Category.entries.firstOrNull { it != Category.SETS && it != Category.PRIME && it.matches(item) }?.takeIf { it != kind }?.label,
+                            item.rarity?.takeIf { "mod" in item.tags || "arcane_enhancement" in item.tags }?.humanize(),
+                            ItemFits.firstOrNull { it in item.tags }?.takeIf { "mod" in item.tags }?.humanize(),
+                            item.ducats?.let { "$it ducats" },
+                            if (item.vaulted == true) "vaulted" else null,
+                        ).joinToString(" · "),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+            ) { Text(catalog.itemName(item), maxLines = 2, overflow = TextOverflow.Ellipsis) }
+        }
+    }
+}
+
