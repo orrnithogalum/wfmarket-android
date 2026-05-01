@@ -193,4 +193,30 @@ class MarketViewModel(private val container: AppContainer) : ViewModel() {
         if (System.currentTimeMillis() - lastRefreshMillis > REFRESH_INTERVAL_MILLIS) refresh()
     }
 
+    fun refresh() {
+        lastRefreshMillis = System.currentTimeMillis()
+        viewModelScope.launch {
+            _refreshing.value = _recent.value !is Load.Loading
+            launch { runCatching { container.market.showcase() }.onSuccess { _showcase.value = it } }
+            launch {
+                runCatching { container.market.primeResurgence() }
+                    .onSuccess { current ->
+                        _resurgence.value = current
+                        resurgenceEnd?.cancel()
+                        resurgenceEnd = current?.let {
+                            viewModelScope.launch {
+                                delay(it.expiresAtMillis - System.currentTimeMillis())
+                                refresh()
+                            }
+                        }
+                    }
+                    .onFailure { android.util.Log.w("MarketViewModel", "Couldn't load the Prime Resurgence", it) }
+            }
+            val hadOrders = _recent.value is Load.Ready
+            val updated = _recent.accept(runCatching { container.market.recentOrders() })
+            if (hadOrders && !updated) container.refreshFailed()
+            _refreshing.value = false
+        }
+    }
+}
 
