@@ -220,3 +220,20 @@ class MarketViewModel(private val container: AppContainer) : ViewModel() {
     }
 }
 
+/** Search is ranked: name prefix, then word prefix, then anywhere. */
+private fun searchItems(catalog: Catalog, query: String): List<Item> {
+    val needle = query.trim().lowercase()
+    if (needle.isEmpty()) return emptyList()
+    val terms = needle.split(' ').filter { it.isNotBlank() }
+    return catalog.items.mapNotNull { item ->
+        val name = catalog.itemName(item).lowercase()
+        if (!terms.all { name.contains(it) }) return@mapNotNull null
+        val rank = when {
+            name.startsWith(needle) -> 0
+            name.split(' ').any { it.startsWith(terms.first()) } -> 1
+            else -> 2
+        }
+        Triple(rank, name, item)
+    }.sortedWith(compareBy({ it.first }, { it.second })).map { it.third }
+}
+
