@@ -237,3 +237,111 @@ private fun searchItems(catalog: Catalog, query: String): List<Item> {
     }.sortedWith(compareBy({ it.first }, { it.second })).map { it.third }
 }
 
+@Composable
+fun MarketScreen() {
+    val container = appContainer()
+    val viewModel = containerViewModel { MarketViewModel(it) }
+    val catalog by container.catalog.catalog.collectAsStateWithLifecycle()
+    val catalogError by container.catalog.loadError.collectAsStateWithLifecycle()
+    val catalogLoading by container.catalog.loading.collectAsStateWithLifecycle()
+    val isOnline by container.connectivity.online.collectAsStateWithLifecycle()
+    val showcase by viewModel.showcase.collectAsStateWithLifecycle()
+    val resurgence by viewModel.resurgence.collectAsStateWithLifecycle()
+    val recent by viewModel.recent.collectAsStateWithLifecycle()
+    val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
+    val onlineCount by container.account.onlineCount.collectAsStateWithLifecycle()
+    val settings by container.settings.flow.collectAsStateWithLifecycle()
+    val navigator = LocalNavigator.current
+
+    LifecycleResume(viewModel::refreshIfOld)
+
+    // Only while the screen is showing and there's a network to ask.
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                delay(ORDERS_UPDATE_MILLIS)
+                if (container.connectivity.online.value) viewModel.updateOrders()
+            }
+        }
+    }
+
+    var category by rememberSaveable { mutableStateOf<Category?>(null) }
+
+    val scope = rememberCoroutineScope()
+    val searchState = rememberSearchBarState()
+    val searchText = rememberTextFieldState()
+    val query = searchText.text.toString()
+    var searchKind by rememberSaveable { mutableStateOf<Category?>(null) }
+    val closeSearch: () -> Unit = { scope.launch { searchState.animateToCollapsed() } }
+    // However search was closed, it opens empty next time.
+    LaunchedEffect(searchState.currentValue) {
+        if (searchState.currentValue == SearchBarValue.Collapsed) {
+            searchText.clearText()
+            searchKind = null
+        }
+    }
+    val searchField = @Composable {
+        SearchBarDefaults.InputField(
+            textFieldState = searchText,
+            searchBarState = searchState,
+            onSearch = {},
+            placeholder = { Text("Search ${if (catalog.isLoaded) catalog.items.size.toString() + " items" else "items"}") },
+            leadingIcon = {
+                if (searchState.targetValue == SearchBarValue.Expanded) {
+                    IconButton(onClick = closeSearch) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Close search") }
+                } else {
+                    Icon(Icons.Filled.Search, null)
+                }
+            },
+            trailingIcon = {
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = searchText::clearText) { Icon(Icons.Filled.Close, "Clear") }
+                }
+            },
+        )
+    }
+
+    Scaffold(contentWindowInsets = WindowInsets.statusBars) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            SearchBar(searchState, searchField, Modifier.fillMaxWidth().padding(horizontal = 16.dp))
+            // Opens over the page in its own window, so the page never gets pushed around.
+            ExpandedFullScreenSearchBar(searchState, searchField) {
+                if (!catalog.isLoaded) {
+                    when (val error = catalogError) {
+                        null -> LoadingBox(Modifier.height(240.dp))
+                        else -> ErrorBox(error, onRetry = container.catalog::retry)
+                    }
+                } else {
+                    ItemSearchContent(catalog, query, searchKind, { searchKind = it }) { item ->
+                        closeSearch()
+                        navigator.item(item.slug)
+                    }
+                }
+            }
+
+            // The first load has nothing cached to show, so it says what's happening.
+            AnimatedVisibility(catalogLoading && !catalog.isLoaded) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                    Text("Loading items…", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            RefreshBox(isRefreshing = refreshing, onRefresh = viewModel::refresh, modifier = Modifier.weight(1f)) {
+                MarketContent(
+                    catalog = catalog,
+                    catalogError = catalogError,
+                    onRetryCatalog = container.catalog::retry,
+                    showcase = showcase,
+                    resurgence = resurgence,
+                    recent = recent,
+                    onRetry = viewModel::refresh,
+                    category = category,
+                    onCategory = { category = if (category == it) null else it },
+                    online = onlineCount?.connections?.takeIf { isOnline },
+                )
+            }
+        }
+    }
+}
+
