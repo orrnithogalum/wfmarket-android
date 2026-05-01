@@ -345,3 +345,115 @@ fun MarketScreen() {
     }
 }
 
+@Composable
+private fun MarketContent(
+    catalog: Catalog,
+    catalogError: String?,
+    onRetryCatalog: () -> Unit,
+    showcase: Showcase?,
+    resurgence: PrimeResurgence?,
+    recent: Load<List<Order>>,
+    onRetry: () -> Unit,
+    category: Category?,
+    onCategory: (Category) -> Unit,
+    online: Int?,
+) {
+    val navigator = LocalNavigator.current
+    var orderType by rememberSaveable { mutableStateOf(OrderType.SELL) }
+
+    FadingLazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+        // Without the catalogue nothing below can be named, so one message covers the whole page.
+        if (catalogError != null && !catalog.isLoaded) {
+            item {
+                ErrorBox(catalogError, onRetry = {
+                    onRetryCatalog()
+                    onRetry()
+                })
+            }
+            return@FadingLazyColumn
+        }
+
+        // Every item is keyed, so switching between the home page and a category fades one set of
+        // rows out and the other in, and what stays slides to its new place.
+        if (online != null && online > 0) {
+            item(key = "online") {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = listItemMotion().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Box(Modifier.size(8.dp).clip(CircleShape).background(statusColor("online")))
+                        Text(
+                            "${java.text.NumberFormat.getIntegerInstance().format(online)} tenno online",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
+
+        item(key = "categories") {
+            LazyRow(
+                listItemMotion(),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                items(Category.entries) { entry -> CategoryTile(entry, category == entry) { onCategory(entry) } }
+            }
+        }
+
+        if (category != null) {
+            val items = catalog.items
+                .filter(category::matches)
+                .sortedBy { catalog.itemName(it) }
+            if (!catalog.isLoaded) {
+                item(key = "category-loading") { LoadingBox(listItemMotion().height(240.dp)) }
+                return@FadingLazyColumn
+            }
+            item(key = "category-${category.name}") {
+                Text("${category.label} · ${items.size}", style = MaterialTheme.typography.titleLarge, modifier = listItemMotion().padding(horizontal = 16.dp, vertical = 12.dp))
+            }
+            itemsIndexed(items, key = { _, item -> item.id }) { index, item ->
+                ItemRow(catalog, item, ListItemDefaults.segmentedShapes(index, items.size), listItemMotion()) { navigator.item(item.slug) }
+            }
+            return@FadingLazyColumn
+        }
+
+        item(key = "featured") {
+            // The placeholder gives way to the carousel by fading, in the same space.
+            Crossfade(catalog.isLoaded, listItemMotion(), animationSpec = Motion.fadeIn(), label = "featured") { loaded ->
+                if (loaded) FeaturedCarousel(catalog, showcase, resurgence) else CarouselSkeleton()
+            }
+        }
+
+        item(key = "latest") {
+            Row(
+                listItemMotion().fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Latest orders", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                ChoiceButtonGroup(listOf(OrderType.SELL, OrderType.BUY), orderType, { if (it == OrderType.SELL) "Sell" else "Buy" }, { orderType = it })
+            }
+        }
+
+        when (recent) {
+            Load.Loading -> item(key = "orders-loading") { LoadingBox(listItemMotion().height(240.dp)) }
+            is Load.Failed -> item(key = "orders-failed") { ErrorBox(recent.message, listItemMotion(), onRetry = onRetry) }
+            is Load.Ready -> {
+                val orders = recent.value.filter { it.type == orderType }
+                itemsIndexed(orders, key = { _, order -> order.id }) { index, order ->
+                    RecentOrderRow(catalog, order, ListItemDefaults.segmentedShapes(index, orders.size), listItemMotion()) {
+                        catalog.itemsById[order.itemId]?.let { navigator.item(it.slug) }
+                    }
+                }
+            }
+        }
+    }
+}
+
