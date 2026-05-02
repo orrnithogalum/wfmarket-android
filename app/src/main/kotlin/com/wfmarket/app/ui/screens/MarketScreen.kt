@@ -637,3 +637,17 @@ private fun FeaturedCarousel(catalog: Catalog, showcase: Showcase?, resurgence: 
 /** How far a card can narrow, as a fraction of full width, before its text starts to fade. */
 private const val TEXT_FADE_START = 0.85f
 
+
+/** Holds the carousel's place while the catalogue loads, so the page doesn't jump when it arrives. */
+@Composable
+private fun CarouselSkeleton() {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).height(220.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SkeletonBox(Modifier.weight(5f).fillMaxHeight(), MaterialTheme.shapes.extraLarge)
+        SkeletonBox(Modifier.weight(3f).fillMaxHeight(), MaterialTheme.shapes.extraLarge)
+        SkeletonBox(Modifier.weight(1f).fillMaxHeight(), MaterialTheme.shapes.extraLarge)
+    }
+}
+
