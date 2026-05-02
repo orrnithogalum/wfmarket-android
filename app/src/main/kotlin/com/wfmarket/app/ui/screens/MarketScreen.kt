@@ -536,3 +536,14 @@ private val ItemFits = listOf("warframe", "primary", "secondary", "melee", "sent
 
 private enum class FeaturedKind(val label: String) { PRIME_ACCESS("Prime Access"), RESURGENCE("Prime Resurgence") }
 
+private data class FeaturedCard(
+    val kind: FeaturedKind,
+    val title: String,
+    /** Art that fills the card. */
+    val background: String? = null,
+    /** A cut-out item image, centred on a tinted card. */
+    val foreground: String? = null,
+    val slug: String? = null,
+    val link: String? = null,
+)
+
