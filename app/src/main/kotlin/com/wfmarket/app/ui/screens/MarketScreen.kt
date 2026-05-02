@@ -528,3 +528,8 @@ private fun ItemSearchContent(
     }
 }
 
+
+
+/** What a mod is for, as its tags say. */
+private val ItemFits = listOf("warframe", "primary", "secondary", "melee", "sentinel", "kubrow", "kavat", "archwing", "necramech", "railjack", "parazon", "stance", "aura")
+
