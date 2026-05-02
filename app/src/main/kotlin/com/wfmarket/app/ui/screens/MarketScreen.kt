@@ -634,3 +634,6 @@ private fun FeaturedCarousel(catalog: Catalog, showcase: Showcase?, resurgence: 
     }
 }
 
+/** How far a card can narrow, as a fraction of full width, before its text starts to fade. */
+private const val TEXT_FADE_START = 0.85f
+
