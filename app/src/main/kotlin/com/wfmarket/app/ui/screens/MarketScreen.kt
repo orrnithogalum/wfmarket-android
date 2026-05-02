@@ -547,3 +547,90 @@ private data class FeaturedCard(
     val link: String? = null,
 )
 
+@Composable
+private fun FeaturedCarousel(catalog: Catalog, showcase: Showcase?, resurgence: PrimeResurgence?) {
+    val navigator = LocalNavigator.current
+    val openUrl = rememberOpenUrl()
+    val cards = remember(catalog, showcase, resurgence) { featuredCards(catalog, showcase, resurgence) }
+    if (cards.isEmpty()) return
+    val colors = MaterialTheme.colorScheme
+    val accessName = catalog.primeAccess.firstOrNull()?.let { catalog.itemName(it).removeSuffix(" Set") }
+    Column(Modifier.padding(vertical = 8.dp)) {
+        accessName?.let {
+            Text("$it Access", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 16.dp))
+        }
+        resurgence?.let {
+            val names = it.headline?.substringAfter(':', "")?.trim()?.trimEnd('!')?.takeIf(String::isNotEmpty)
+            Text(
+                listOfNotNull("Prime Resurgence", names).joinToString(": ") + " · until " +
+                    DateTimeFormatter.ofPattern("d MMM", Locale.getDefault()).withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(it.expiresAtMillis)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        val carousel = rememberCarouselState { cards.size }
+        HorizontalMultiBrowseCarousel(
+            state = carousel,
+            preferredItemWidth = 230.dp,
+            itemSpacing = 8.dp,
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            modifier = Modifier.fillMaxWidth().height(220.dp),
+        ) { index ->
+            // The list can shrink while the carousel is on screen, when a Prime Resurgence ends.
+            val card = cards.getOrNull(index) ?: return@HorizontalMultiBrowseCarousel
+            val tint = if (card.kind == FeaturedKind.PRIME_ACCESS) colors.primaryContainer else colors.tertiaryContainer
+            val drawInfo = carouselItemDrawInfo
+            Box(
+                Modifier.fillMaxSize()
+                    .maskClip(MaterialTheme.shapes.extraLarge)
+                    .background(Brush.verticalGradient(listOf(tint, colors.surfaceContainerHigh)))
+                    .clickable {
+                        // Any card opens, narrowed or not: a tap on a card means that card.
+                        when {
+                            card.slug != null -> navigator.item(card.slug)
+                            card.link != null -> openUrl(card.link)
+                        }
+                    },
+            ) {
+                card.background?.let { RemoteImage(it, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, spinner = true) }
+                card.foreground?.let { RemoteImage(it, Modifier.fillMaxSize().padding(8.dp), spinner = true) }
+                Box(
+                    Modifier.fillMaxSize().background(
+                        Brush.verticalGradient(0.6f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.8f)),
+                    ),
+                )
+                // The carousel narrows cards by masking them, which would slice through this text.
+                // So it stays with the card's left edge and fades before the card gets too narrow.
+                Box(
+                    Modifier.fillMaxSize().graphicsLayer {
+                        val shown = drawInfo.size / drawInfo.maxSize.coerceAtLeast(1f)
+                        alpha = ((shown - TEXT_FADE_START) / (1f - TEXT_FADE_START)).coerceIn(0f, 1f)
+                        translationX = drawInfo.maskRect.left
+                    },
+                ) {
+                    Text(
+                        card.kind.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (card.kind == FeaturedKind.PRIME_ACCESS) colors.onPrimary else colors.onTertiary,
+                        maxLines = 1,
+                        modifier = Modifier.align(Alignment.TopStart).padding(12.dp)
+                            .clip(CircleShape)
+                            .background(if (card.kind == FeaturedKind.PRIME_ACCESS) colors.primary else colors.tertiary)
+                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                    )
+                    Text(
+                        card.title,
+                        modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
