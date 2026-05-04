@@ -651,3 +651,43 @@ private fun CarouselSkeleton() {
     }
 }
 
+private fun featuredCards(catalog: Catalog, showcase: Showcase?, resurgence: PrimeResurgence?): List<FeaturedCard> = buildList {
+    // The site's showcase art is only used when it's about the current release, since it goes stale.
+    val siteArt = showcase?.items.orEmpty().associate { it.item to it.background }
+    catalog.primeAccess.forEach { item ->
+        val art = siteArt[item.id]
+        add(
+            FeaturedCard(
+                kind = FeaturedKind.PRIME_ACCESS,
+                title = catalog.itemName(item),
+                background = assetUrl(art),
+                foreground = if (art == null) catalog.art(item).full else null,
+                slug = item.slug,
+            ),
+        )
+    }
+    if (resurgence != null) {
+        resurgence.bannerUrl?.let { banner ->
+            add(
+                FeaturedCard(
+                    kind = FeaturedKind.RESURGENCE,
+                    title = resurgence.headline?.substringAfter(':')?.trim()?.trimEnd('!') ?: "Prime Resurgence",
+                    background = banner,
+                    link = resurgence.link,
+                ),
+            )
+        }
+        catalog.resurgenceItems(resurgence).forEach { item ->
+            add(FeaturedCard(FeaturedKind.RESURGENCE, catalog.itemName(item), foreground = catalog.art(item).full, slug = item.slug))
+        }
+    }
+    // Only if the catalogue somehow has no Prime release to go on.
+    if (isEmpty()) {
+        showcase?.items.orEmpty().forEach { entry ->
+            catalog.itemsById[entry.item]?.let { item ->
+                add(FeaturedCard(FeaturedKind.PRIME_ACCESS, catalog.itemName(item), background = assetUrl(entry.background), slug = item.slug))
+            }
+        }
+    }
+}
+
