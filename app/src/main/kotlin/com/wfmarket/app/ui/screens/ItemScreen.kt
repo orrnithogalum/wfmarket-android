@@ -72,6 +72,10 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
 
+    /** Parts already visited, so going back to one shows it at once while it updates. */
+    private val visited = mutableMapOf<String, VisitedPart>()
+    private var partJob: Job? = null
+
     init {
         load()
         viewModelScope.launch {
