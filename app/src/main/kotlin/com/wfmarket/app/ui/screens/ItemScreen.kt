@@ -89,4 +89,17 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
         }
     }
 
+    /** Switches to another part of the set in place: only what differs between parts reloads. */
+    fun select(part: Item) {
+        if (part.slug == _slug.value) return
+        remember()
+        _slug.value = part.slug
+        val known = visited[part.slug]
+        _item.value = Load.Ready(known?.item ?: part)
+        _orders.value = known?.orders ?: Load.Loading
+        _statistics.value = known?.statistics ?: Load.Loading
+        _drops.value = known?.drops ?: Load.Loading
+        loadPart()
+    }
+
 
