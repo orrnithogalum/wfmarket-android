@@ -691,3 +691,42 @@ private fun featuredCards(catalog: Catalog, showcase: Showcase?, resurgence: Pri
     }
 }
 
+/** An item in a list. Given [shapes], it's a row of a rounded card, as on the home page. */
+@Composable
+fun ItemRow(catalog: Catalog, item: Item, shapes: ListItemShapes? = null, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val headline: @Composable () -> Unit = {
+        Text(catalog.itemName(item), style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    }
+    val tags: @Composable () -> Unit = {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 2.dp)) {
+            item.tags.take(3).forEach { SmallTag(it.replace('_', ' ')) }
+            if (item.vaulted == true) SmallTag("vaulted", container = MaterialTheme.colorScheme.tertiaryContainer, content = MaterialTheme.colorScheme.onTertiaryContainer)
+        }
+    }
+    val ducats: @Composable () -> Unit = {
+        item.ducats?.let { Text("$it d", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    }
+    if (shapes != null) {
+        SegmentedListItem(
+            onClick = onClick,
+            shapes = shapes,
+            colors = homeRowColors(),
+            modifier = modifier.padding(horizontal = 16.dp).padding(bottom = ListItemDefaults.SegmentedGap),
+            verticalAlignment = Alignment.CenterVertically,
+            leadingContent = { ItemThumb(catalog.art(item)) },
+            supportingContent = tags,
+            trailingContent = ducats,
+            content = headline,
+        )
+        return
+    }
+    ClickableRow(onClick, modifier) {
+        ItemThumb(catalog.art(item))
+        Column(Modifier.weight(1f)) {
+            headline()
+            tags()
+        }
+        ducats()
+    }
+}
+
