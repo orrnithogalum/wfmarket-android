@@ -730,3 +730,38 @@ fun ItemRow(catalog: Catalog, item: Item, shapes: ListItemShapes? = null, modifi
     }
 }
 
+@Composable
+private fun RecentOrderRow(catalog: Catalog, order: Order, shapes: ListItemShapes, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val item = catalog.itemsById[order.itemId]
+    SegmentedListItem(
+        onClick = onClick,
+        shapes = shapes,
+        colors = homeRowColors(),
+        modifier = modifier.padding(horizontal = 16.dp).padding(bottom = ListItemDefaults.SegmentedGap),
+        verticalAlignment = Alignment.CenterVertically,
+        leadingContent = { if (item != null) ItemThumb(catalog.art(item)) else ItemThumb(null as String?) },
+        supportingContent = {
+            // The seller opens their profile; the rest of the row opens the item.
+            val navigator = LocalNavigator.current
+            val slug = order.user?.slug
+            Row(
+                Modifier.clip(MaterialTheme.shapes.extraSmall)
+                    .clickable(enabled = slug != null, onClickLabel = "Open profile") { slug?.let(navigator::user) }
+                    .padding(vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(order.user?.ingameName.orEmpty(), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                StatusLabel(order.user?.status)
+            }
+        },
+        trailingContent = {
+            Column(horizontalAlignment = Alignment.End) {
+                Platinum(order.platinum)
+                Text(relativeTime(order.updatedAt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
+    ) {
+        Text(item?.let(catalog::itemName) ?: "…", style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
