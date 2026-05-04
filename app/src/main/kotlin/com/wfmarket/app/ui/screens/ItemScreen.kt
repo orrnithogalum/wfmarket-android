@@ -102,4 +102,9 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
         loadPart()
     }
 
+    private fun remember() {
+        val item = (_item.value as? Load.Ready)?.value ?: return
+        visited[_slug.value] = VisitedPart(item, _orders.value, _statistics.value, _drops.value)
+    }
+
 
