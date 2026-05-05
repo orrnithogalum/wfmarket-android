@@ -114,4 +114,9 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
         loadPart()
     }
 
+    private fun loadPart() {
+        partJob?.cancel()
+        partJob = viewModelScope.launch { fetchPart() }
+    }
+
 
