@@ -107,4 +107,11 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
         visited[_slug.value] = VisitedPart(item, _orders.value, _statistics.value, _drops.value)
     }
 
+    fun load() {
+        viewModelScope.launch {
+            runCatching { container.market.itemSet(_slug.value) }.onSuccess { _setItems.value = it.items }
+        }
+        loadPart()
+    }
+
 
