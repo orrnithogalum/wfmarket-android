@@ -128,4 +128,6 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
         ).awaitAll().all { it }
     }
 
+    private suspend fun fetchItem() = _item.accept(runCatching { container.market.item(_slug.value) })
+
 
