@@ -119,4 +119,13 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
         partJob = viewModelScope.launch { fetchPart() }
     }
 
+    private suspend fun fetchPart(): Boolean = coroutineScope {
+        listOf(
+            async { fetchItem() },
+            async { fetchOrders() },
+            async { fetchStatistics() },
+            async { fetchDrops() },
+        ).awaitAll().all { it }
+    }
+
 
