@@ -130,4 +130,6 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
 
     private suspend fun fetchItem() = _item.accept(runCatching { container.market.item(_slug.value) })
 
+    private suspend fun fetchOrders() = _orders.accept(runCatching { container.market.orders(_slug.value) })
+
 
