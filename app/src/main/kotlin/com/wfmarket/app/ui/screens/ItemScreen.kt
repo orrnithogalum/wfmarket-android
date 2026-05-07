@@ -134,4 +134,11 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
 
     private suspend fun fetchStatistics() = _statistics.accept(runCatching { container.market.statistics(_slug.value) })
 
+    private suspend fun fetchDrops() = _drops.accept(
+        // Items with no known sources answer 404, which simply means an empty list here.
+        runCatching { container.market.dropSources(_slug.value) }.recoverCatching { failure ->
+            if ((failure as? com.wfmarket.api.WfmException)?.kind == com.wfmarket.api.WfmErrorKind.NOT_FOUND) emptyList() else throw failure
+        },
+    )
+
 
