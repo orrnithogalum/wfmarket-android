@@ -141,4 +141,16 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
         },
     )
 
+    fun refresh() {
+        partJob?.cancel()
+        partJob = viewModelScope.launch {
+            _refreshing.value = true
+            try {
+                if (!fetchPart()) container.refreshFailed()
+            } finally {
+                _refreshing.value = false
+            }
+        }
+    }
+
 
