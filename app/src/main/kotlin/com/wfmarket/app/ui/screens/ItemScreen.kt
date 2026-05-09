@@ -153,4 +153,9 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
         }
     }
 
+    suspend fun deleteOrder(order: Order) {
+        container.market.deleteOrder(order.id)
+        _orders.update { state -> if (state is Load.Ready) Load.Ready(state.value.filterNot { it.id == order.id }) else state }
+    }
+}
 
