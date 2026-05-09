@@ -159,3 +159,10 @@ class ItemViewModel(private val container: AppContainer, slug: String) : ViewMod
     }
 }
 
+private class VisitedPart(
+    val item: Item,
+    val orders: Load<List<Order>>,
+    val statistics: Load<ItemStatistics>,
+    val drops: Load<List<DropSource>>,
+)
+
