@@ -294,3 +294,5 @@ fun ItemScreen(routeSlug: String) {
 
 private data class OrderComposer(val item: Item, val existing: Order?)
 
+private enum class ItemTab(val label: String) { ORDERS("Orders"), STATISTICS("Statistics"), INFO("Info") }
+
