@@ -166,3 +166,5 @@ private class VisitedPart(
     val drops: Load<List<DropSource>>,
 )
 
+fun <T> Result<T>.toLoad(): Load<T> = fold({ Load.Ready(it) }, { Load.Failed(it.userMessage()) })
+
