@@ -296,3 +296,17 @@ private data class OrderComposer(val item: Item, val existing: Order?)
 
 private enum class ItemTab(val label: String) { ORDERS("Orders"), STATISTICS("Statistics"), INFO("Info") }
 
+/**
+ * Prices only compare within one variant: a rank 5 arcane costs far more than a rank 0 one. So the
+ * summary uses the base variant, which is what most orders are for.
+ */
+private fun List<Order>?.bestPrice(type: String, item: Item): Int? {
+    val active = this?.filter { order ->
+        order.type == type &&
+            order.user?.status in setOf("ingame", "online") &&
+            (item.maxRank == null || order.rank == 0) &&
+            (item.subtypes.isEmpty() || order.subtype == item.subtypes.first())
+    }.orEmpty()
+    return if (type == OrderType.SELL) active.minOfOrNull { it.platinum } else active.maxOfOrNull { it.platinum }
+}
+
