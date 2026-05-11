@@ -168,3 +168,127 @@ private class VisitedPart(
 
 fun <T> Result<T>.toLoad(): Load<T> = fold({ Load.Ready(it) }, { Load.Failed(it.userMessage()) })
 
+@Composable
+fun ItemScreen(routeSlug: String) {
+    val container = appContainer()
+    val viewModel = containerViewModel(key = "item:$routeSlug") { ItemViewModel(it, routeSlug) }
+    val slug by viewModel.slug.collectAsStateWithLifecycle()
+    val itemLoad by viewModel.item.collectAsStateWithLifecycle()
+    val setItems by viewModel.setItems.collectAsStateWithLifecycle()
+    val orders by viewModel.orders.collectAsStateWithLifecycle()
+    val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
+    val statistics by viewModel.statistics.collectAsStateWithLifecycle()
+    val drops by viewModel.drops.collectAsStateWithLifecycle()
+    val catalog by container.catalog.catalog.collectAsStateWithLifecycle()
+    val me by container.account.me.collectAsStateWithLifecycle()
+    val signedIn by container.account.isSignedIn.collectAsStateWithLifecycle()
+    val navigator = LocalNavigator.current
+    val openUrl = rememberOpenUrl()
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    val pager = rememberPagerState { ItemTab.entries.size }
+    var composer by remember { mutableStateOf<OrderComposer?>(null) }
+
+    val ready = (itemLoad as? Load.Ready)?.value
+    val i18n = ready?.i18n?.localized(catalog.language)
+    // The catalogue already knows the name, so the title is there before the item has loaded.
+    val title = i18n?.name ?: catalog.itemsBySlug[slug]?.let(catalog::itemName).orEmpty()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                navigationIcon = {
+                    IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                },
+                actions = {
+                    i18n?.wikiLink?.let { link ->
+                        TextButton(onClick = { openUrl(link) }) { Text("Wiki") }
+                    }
+                    IconButton(onClick = { openUrl("https://warframe.market/items/$slug") }) {
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, "Open on warframe.market")
+                    }
+                },
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbar) },
+        floatingActionButton = {
+            if (ready != null && pager.currentPage == ItemTab.ORDERS.ordinal) {
+                ExtendedFloatingActionButton(
+                    onClick = { if (signedIn) composer = OrderComposer(ready, null) else navigator.signIn() },
+                    icon = { Icon(Icons.Filled.Add, null) },
+                    text = { Text("Place order") },
+                )
+            }
+        },
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            when (val load = itemLoad) {
+                Load.Loading -> LoadingBox()
+                is Load.Failed -> RefreshBox(isRefreshing = refreshing, onRefresh = viewModel::refresh) {
+                    PullablePage { ErrorBox(load.message, onRetry = viewModel::load) }
+                }
+                is Load.Ready -> CollapsingHeaderLayout(header = { ItemHeader(load.value, setItems, catalog, orders, viewModel::select) }) {
+                    PrimaryTabRow(selectedTabIndex = pager.currentPage) {
+                        ItemTab.entries.forEach { tab ->
+                            Tab(
+                                selected = pager.currentPage == tab.ordinal,
+                                onClick = { scope.launch { pager.animateScrollToPage(tab.ordinal) } },
+                                text = { Text(tab.label) },
+                            )
+                        }
+                    }
+                    HorizontalPager(pager, Modifier.weight(1f), key = { it }) { page ->
+                      // A part still loading shows its own spinner, so the pull spinner waits for it.
+                      RefreshBox(isRefreshing = refreshing && orders is Load.Ready, onRefresh = viewModel::refresh, modifier = Modifier.fillMaxSize()) {
+                        when (ItemTab.entries[page]) {
+                            ItemTab.ORDERS -> OrdersTab(
+                                item = load.value,
+                                orders = orders,
+                                meId = me?.id,
+                                catalog = catalog,
+                                onRetry = viewModel::refresh,
+                                onEdit = { composer = OrderComposer(load.value, it) },
+                                onDelete = { order ->
+                                    scope.launch {
+                                        runCatching { viewModel.deleteOrder(order) }
+                                            .onSuccess { snackbar.showSnackbar("Order removed") }
+                                            .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                                    }
+                                },
+                                onClose = { order, quantity ->
+                                    scope.launch {
+                                        runCatching { container.market.closeOrder(order.id, quantity) }
+                                            .onSuccess { snackbar.showSnackbar("Added to your trading history") }
+                                            .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                                    }
+                                },
+                                onMessage = { message -> scope.launch { snackbar.showSnackbar(message) } },
+                            )
+                            ItemTab.STATISTICS -> StatisticsTab(load.value, statistics, viewModel::load)
+                            ItemTab.INFO -> InfoTab(load.value, setItems, catalog, viewModel::select)
+                        }
+                      }
+                    }
+                }
+            }
+        }
+    }
+
+    composer?.let { current ->
+        OrderEditorSheet(
+            item = current.item,
+            existing = current.existing,
+            catalog = catalog,
+            bestSell = (orders as? Load.Ready)?.value.bestPrice(OrderType.SELL, current.item),
+            bestBuy = (orders as? Load.Ready)?.value.bestPrice(OrderType.BUY, current.item),
+            onDismiss = { composer = null },
+            onSaved = { message ->
+                composer = null
+                scope.launch { snackbar.showSnackbar(message) }
+            },
+        )
+    }
+}
+
