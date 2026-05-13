@@ -364,3 +364,8 @@ private fun BestPrice(price: Int?, loading: Boolean) {
     }
 }
 
+// ---------------------------------------------------------------- Orders
+
+/** Whether a trader's presence passes the chips. None chosen means everyone. */
+private fun Set<String>.admits(status: String?) = isEmpty() || sellerStatus(status) in this
+
