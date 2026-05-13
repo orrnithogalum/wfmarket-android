@@ -355,3 +355,12 @@ private fun ItemHeader(item: Item, setItems: List<Item>, catalog: Catalog, order
     }
 }
 
+@Composable
+private fun BestPrice(price: Int?, loading: Boolean) {
+    when {
+        loading -> SkeletonBox(Modifier.size(56.dp, 24.dp), RoundedCornerShape(6.dp))
+        price != null -> Platinum(price)
+        else -> Text("–", style = MaterialTheme.typography.titleMedium)
+    }
+}
+
