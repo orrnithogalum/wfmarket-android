@@ -310,3 +310,48 @@ private fun List<Order>?.bestPrice(type: String, item: Item): Int? {
     return if (type == OrderType.SELL) active.minOfOrNull { it.platinum } else active.maxOfOrNull { it.platinum }
 }
 
+@Composable
+private fun ItemHeader(item: Item, setItems: List<Item>, catalog: Catalog, orders: Load<List<Order>>, onSelectPart: (Item) -> Unit) {
+    val list = (orders as? Load.Ready)?.value
+    val loading = orders is Load.Loading
+    Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            ItemThumb(catalog.art(item), size = 64.dp)
+            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                val variant = listOfNotNull(
+                    item.maxRank?.let { "rank 0" },
+                    item.subtypes.firstOrNull()?.lowercase(),
+                ).joinToString(", ").let { if (it.isEmpty()) "" else " ($it)" }
+                StatTile("Best sell$variant", Modifier.weight(1f)) {
+                    BestPrice(list.bestPrice(OrderType.SELL, item), loading)
+                }
+                StatTile("Best buy$variant", Modifier.weight(1f)) {
+                    BestPrice(list.bestPrice(OrderType.BUY, item), loading)
+                }
+            }
+        }
+        if (setItems.size > 1) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                items(setItems, key = { it.id }) { part ->
+                    val partI18n = part.i18n.localized(catalog.language)
+                    val current = part.id == item.id
+                    FilterChip(
+                        selected = current,
+                        onClick = { onSelectPart(part) },
+                        label = {
+                            Text(
+                                partI18n?.name?.removePrefix(setItems.first { it.setRoot }.i18n.localized(catalog.language)?.name?.removeSuffix(" Set")?.plus(" ") ?: "") ?: part.slug,
+                                maxLines = 1,
+                            )
+                        },
+                        leadingIcon = {
+                            val art = catalog.art(part)
+                            AsyncImage(art.badge ?: art.thumb, null, Modifier.size(FilterChipDefaults.IconSize))
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
