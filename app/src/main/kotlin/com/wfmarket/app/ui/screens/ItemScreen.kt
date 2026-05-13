@@ -369,3 +369,20 @@ private fun BestPrice(price: Int?, loading: Boolean) {
 /** Whether a trader's presence passes the chips. None chosen means everyone. */
 private fun Set<String>.admits(status: String?) = isEmpty() || sellerStatus(status) in this
 
+/** The whisper the site copies to the clipboard for pasting into in-game chat. */
+fun whisper(order: Order, catalog: Catalog, item: Item): String {
+    val name = item.i18n["en"]?.name ?: catalog.itemName(item)
+    val details = buildList {
+        order.rank?.let { add("(rank $it)") }
+        order.charges?.let { add("(charges $it)") }
+        order.subtype?.let { add("(${it.humanize().lowercase()})") }
+        if (order.cyanStars != null || order.amberStars != null) {
+            add("(${order.cyanStars ?: 0} cyan, ${order.amberStars ?: 0} amber)")
+        }
+    }.joinToString(" ")
+    val action = if (order.type == OrderType.SELL) "buy" else "sell"
+    val per = if (order.perTrade > 1) "x${order.perTrade} " else ""
+    val who = order.user?.ingameName.orEmpty().let { if (it.contains(' ')) "\"$it\"" else it }
+    return "/w $who Hi! I want to $action: $per\"$name${if (details.isEmpty()) "" else " $details"}\" for ${order.platinum} platinum. (warframe.market)"
+}
+
