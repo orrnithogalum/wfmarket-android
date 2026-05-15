@@ -386,3 +386,109 @@ fun whisper(order: Order, catalog: Catalog, item: Item): String {
     return "/w $who Hi! I want to $action: $per\"$name${if (details.isEmpty()) "" else " $details"}\" for ${order.platinum} platinum. (warframe.market)"
 }
 
+@Composable
+private fun OrdersTab(
+    item: Item,
+    orders: Load<List<Order>>,
+    meId: String?,
+    catalog: Catalog,
+    onRetry: () -> Unit,
+    onEdit: (Order) -> Unit,
+    onDelete: (Order) -> Unit,
+    onClose: (Order, Int) -> Unit,
+    onMessage: (String) -> Unit,
+) {
+    var type by rememberSaveable { mutableStateOf(OrderType.SELL) }
+    // Players in game can trade now, so they're who the list starts with.
+    var statuses by rememberSaveable { mutableStateOf(setOf("ingame")) }
+    var rank by rememberSaveable { mutableStateOf<Int?>(null) }
+    var subtype by rememberSaveable { mutableStateOf<String?>(null) }
+    var charges by rememberSaveable { mutableStateOf<Int?>(null) }
+    var selected by remember { mutableStateOf<Order?>(null) }
+
+    val all = (orders as? Load.Ready)?.value.orEmpty()
+    val filtered = remember(all, type, statuses, rank, subtype, charges) {
+        all.asSequence()
+            .filter { it.type == type }
+            .filter { statuses.admits(it.user?.status) }
+            .filter { rank == null || it.rank == rank }
+            .filter { subtype == null || it.subtype == subtype }
+            .filter { charges == null || it.charges == charges }
+            .sortedWith(
+                if (type == OrderType.SELL) compareBy<Order> { it.platinum }.thenByDescending { it.user?.reputation ?: 0 }
+                else compareByDescending<Order> { it.platinum }.thenByDescending { it.user?.reputation ?: 0 },
+            )
+            .toList()
+    }
+
+    // A different part of a set is a different list, so it starts from the top.
+    val listState = rememberLazyListState()
+    LaunchedEffect(item.id) { listState.scrollToItem(0) }
+
+    Box {
+        FadingLazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 96.dp)) {
+            item {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ChoiceButtonGroup(
+                        listOf(OrderType.SELL, OrderType.BUY), type,
+                        { value ->
+                            val count = all.count { it.type == value && statuses.admits(it.user?.status) }
+                            "${if (value == OrderType.SELL) "Sellers" else "Buyers"} · $count"
+                        },
+                        { type = it }, Modifier.fillMaxWidth(), fill = true,
+                    )
+                    StatusFilterChips(statuses, { statuses = it })
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        item.maxRank?.let { max ->
+                            DropdownChip(
+                                "Rank", rank, listOf(null, 0, max), { it?.toString() ?: "Any" }, { rank = it }, isDefault = rank == null,
+                            )
+                        }
+                        if (item.subtypes.isNotEmpty()) {
+                            DropdownChip(
+                                "Type", subtype, listOf<String?>(null) + item.subtypes, { it?.humanize() ?: "Any" }, { subtype = it }, isDefault = subtype == null,
+                            )
+                        }
+                        item.maxCharges?.let { max ->
+                            DropdownChip(
+                                "Charges", charges, listOf<Int?>(null) + (0..max).toList(), { it?.toString() ?: "Any" }, { charges = it }, isDefault = charges == null,
+                            )
+                        }
+                    }
+                }
+            }
+            when (orders) {
+                Load.Loading -> item { LoadingBox(Modifier.height(240.dp)) }
+                is Load.Failed -> item { ErrorBox(orders.message, onRetry = onRetry) }
+                is Load.Ready -> {
+                    if (filtered.isEmpty()) {
+                        item {
+                            EmptyBox(
+                                "No matching orders",
+                                if (statuses.isNotEmpty() && statuses.size < StatusFilterOptions.size) "Try including more statuses." else null,
+                            )
+                        }
+                    }
+                    items(filtered, key = { it.id }) { order ->
+                        OrderRow(order, isMine = order.user?.id == meId) { selected = order }
+                    }
+                }
+            }
+        }
+    }
+
+    selected?.let { order ->
+        OrderActionsSheet(
+            order = order,
+            item = item,
+            catalog = catalog,
+            isMine = order.user?.id == meId,
+            onDismiss = { selected = null },
+            onEdit = { selected = null; onEdit(order) },
+            onDelete = { selected = null; onDelete(order) },
+            onClose = { quantity -> selected = null; onClose(order, quantity) },
+            onMessage = onMessage,
+        )
+    }
+}
+
