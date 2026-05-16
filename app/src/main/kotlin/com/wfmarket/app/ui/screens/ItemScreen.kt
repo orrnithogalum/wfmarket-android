@@ -492,3 +492,39 @@ private fun OrdersTab(
     }
 }
 
+@Composable
+private fun OrderRow(order: Order, isMine: Boolean, onClick: () -> Unit) {
+    val user = order.user
+    val navigator = LocalNavigator.current
+    ClickableRow(onClick) {
+        // The avatar goes straight to the profile; the row opens the order's actions.
+        UserAvatar(
+            assetUrl(user?.avatar), user?.ingameName, status = user?.status,
+            modifier = Modifier.clip(CircleShape).clickable(enabled = user?.slug != null, onClickLabel = "Open profile") { user?.slug?.let(navigator::user) },
+        )
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    user?.ingameName.orEmpty(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (isMine) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (isMine) SmallTag("You", container = MaterialTheme.colorScheme.primaryContainer, content = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                StatusLabel(user?.status)
+                Text("+${user?.reputation ?: 0}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                PlatformTag(user?.platform, user?.crossplay == true)
+            }
+            OrderDetails(order)
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            Platinum(order.platinum)
+            Text("x${order.quantity}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
