@@ -528,3 +528,20 @@ private fun OrderRow(order: Order, isMine: Boolean, onClick: () -> Unit) {
     }
 }
 
+/** The per-order attributes: rank, subtype, stars and so on. Draws nothing when there are none. */
+@Composable
+fun OrderDetails(order: Order) {
+    val tags = buildList {
+        order.rank?.let { add("Rank $it") }
+        order.charges?.let { add("$it charges") }
+        order.subtype?.let { add(it.humanize()) }
+        order.amberStars?.let { add("$it amber") }
+        order.cyanStars?.let { add("$it cyan") }
+        if (order.perTrade > 1) add("x${order.perTrade} per trade")
+        if (!order.visible) add("Hidden")
+    }
+    if (tags.isNotEmpty()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { tags.take(4).forEach { SmallTag(it) } }
+    }
+}
+
