@@ -662,3 +662,138 @@ private fun OrderActionsSheet(
     }
 }
 
+/** Creates or edits an order. Only the attributes this item actually has are offered. */
+@Composable
+fun OrderEditorSheet(
+    item: Item,
+    existing: Order?,
+    catalog: Catalog,
+    bestSell: Int?,
+    bestBuy: Int?,
+    onDismiss: () -> Unit,
+    onSaved: (String) -> Unit,
+) {
+    val container = appContainer()
+    val scope = rememberCoroutineScope()
+    var type by remember { mutableStateOf(existing?.type ?: OrderType.SELL) }
+    var platinum by remember { mutableStateOf(existing?.platinum?.toString() ?: bestSell?.toString().orEmpty()) }
+    var quantity by remember { mutableStateOf(existing?.quantity?.toString() ?: "1") }
+    var perTrade by remember { mutableStateOf(existing?.perTrade?.toString() ?: "1") }
+    var rank by remember { mutableStateOf(existing?.rank ?: 0) }
+    var charges by remember { mutableStateOf(existing?.charges ?: item.maxCharges ?: 0) }
+    var amber by remember { mutableStateOf(existing?.amberStars ?: 0) }
+    var cyan by remember { mutableStateOf(existing?.cyanStars ?: 0) }
+    var subtype by remember { mutableStateOf(existing?.subtype ?: item.subtypes.firstOrNull()) }
+    var visible by remember { mutableStateOf(existing?.visible ?: true) }
+    var busy by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(
+            Modifier.fillMaxWidth().fadingVerticalScroll().imePadding().padding(horizontal = 16.dp).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                "${if (existing == null) "New order" else "Edit order"}: ${catalog.itemName(item)}",
+                style = MaterialTheme.typography.titleLarge,
+            )
+            if (existing == null) {
+                ChoiceButtonGroup(
+                    listOf(OrderType.SELL, OrderType.BUY), type, { if (it == OrderType.SELL) "I'm selling" else "I'm buying" },
+                    { value ->
+                        type = value
+                        if (value == OrderType.SELL) bestSell?.let { platinum = it.toString() } else bestBuy?.let { platinum = it.toString() }
+                    },
+                    Modifier.fillMaxWidth(), fill = true,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                NumberField("Platinum", platinum, { platinum = it }, Modifier.weight(1f))
+                NumberField("Quantity", quantity, { quantity = it }, Modifier.weight(1f))
+                if (item.bulkTradable) NumberField("Per trade", perTrade, { perTrade = it }, Modifier.weight(1f))
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                bestSell?.let { value -> AssistChip(onClick = { platinum = value.toString() }, label = { Text("Best sell $value") }) }
+                bestBuy?.let { value -> AssistChip(onClick = { platinum = value.toString() }, label = { Text("Best buy $value") }) }
+            }
+            item.tradingTax?.let {
+                Text("Trading tax: $it credits", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            item.maxRank?.let { max -> StepSlider("Rank", rank, max) { rank = it } }
+            item.maxCharges?.let { max -> StepSlider("Charges", charges, max) { charges = it } }
+            item.maxAmberStars?.let { max -> StepSlider("Amber stars", amber, max) { amber = it } }
+            item.maxCyanStars?.let { max -> StepSlider("Cyan stars", cyan, max) { cyan = it } }
+            if (item.subtypes.isNotEmpty()) {
+                Text("Type", style = MaterialTheme.typography.labelLarge)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    item.subtypes.forEach { value ->
+                        FilterChip(selected = subtype == value, onClick = { subtype = value }, label = { Text(value.humanize()) })
+                    }
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Visible to others", style = MaterialTheme.typography.bodyLarge)
+                    Text("Hidden orders stay on your profile only", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Switch(checked = visible, onCheckedChange = { visible = it })
+            }
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
+            Button(
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    val plat = platinum.toIntOrNull()
+                    val qty = quantity.toIntOrNull()
+                    if (plat == null || plat <= 0) { error = "Enter a price of at least 1 platinum."; return@Button }
+                    if (qty == null || qty <= 0) { error = "Enter a quantity of at least 1."; return@Button }
+                    val per = if (item.bulkTradable) perTrade.toIntOrNull()?.coerceAtLeast(1) ?: 1 else null
+                    busy = true
+                    error = null
+                    scope.launch {
+                        runCatching {
+                            if (existing == null) {
+                                container.market.createOrder(
+                                    CreateOrder(
+                                        itemId = item.id,
+                                        type = type,
+                                        platinum = plat,
+                                        quantity = qty,
+                                        perTrade = per,
+                                        visible = visible,
+                                        rank = item.maxRank?.let { rank },
+                                        charges = item.maxCharges?.let { charges },
+                                        subtype = subtype,
+                                        amberStars = item.maxAmberStars?.let { amber },
+                                        cyanStars = item.maxCyanStars?.let { cyan },
+                                    ),
+                                )
+                            } else {
+                                container.market.updateOrder(
+                                    existing.id,
+                                    UpdateOrder(
+                                        platinum = plat,
+                                        quantity = qty,
+                                        perTrade = per,
+                                        visible = visible,
+                                        rank = item.maxRank?.let { rank },
+                                        charges = item.maxCharges?.let { charges },
+                                        subtype = subtype,
+                                        amberStars = item.maxAmberStars?.let { amber },
+                                        cyanStars = item.maxCyanStars?.let { cyan },
+                                    ),
+                                )
+                            }
+                        }.onSuccess {
+                            onSaved(if (existing == null) "Order placed" else "Order updated")
+                        }.onFailure {
+                            busy = false
+                            error = it.userMessage()
+                        }
+                    }
+                },
+            ) { Text(if (existing == null) "Place order" else "Save") }
+        }
+    }
+}
+
