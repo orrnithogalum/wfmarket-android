@@ -797,3 +797,15 @@ fun OrderEditorSheet(
     }
 }
 
+@Composable
+fun NumberField(label: String, value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = { new -> if (new.all(Char::isDigit) && new.length <= 7) onChange(new) },
+        label = { Text(label) },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        singleLine = true,
+        modifier = modifier,
+    )
+}
+
