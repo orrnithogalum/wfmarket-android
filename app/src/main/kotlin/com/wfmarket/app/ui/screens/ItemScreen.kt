@@ -545,3 +545,120 @@ fun OrderDetails(order: Order) {
     }
 }
 
+@Composable
+private fun OrderActionsSheet(
+    order: Order,
+    item: Item,
+    catalog: Catalog,
+    isMine: Boolean,
+    onDismiss: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onClose: (Int) -> Unit,
+    onMessage: (String) -> Unit,
+) {
+    val container = appContainer()
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+    val signedIn by container.account.isSignedIn.collectAsStateWithLifecycle()
+    var closeQuantity by remember { mutableIntStateOf(1) }
+
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(Modifier.padding(bottom = 16.dp)) {
+            Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                UserAvatar(assetUrl(order.user?.avatar), order.user?.ingameName, size = 56.dp, status = order.user?.status)
+                Column(Modifier.weight(1f)) {
+                    Text(order.user?.ingameName.orEmpty(), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Reputation +${order.user?.reputation ?: 0} · ${relativeTime(order.updatedAt)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OrderDetails(order)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Platinum(order.platinum, style = MaterialTheme.typography.titleLarge)
+                    Text("x${order.quantity}", style = MaterialTheme.typography.labelMedium)
+                }
+            }
+            HorizontalDivider()
+            if (isMine) {
+                if (order.quantity > 1) {
+                    Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Quantity traded: $closeQuantity", Modifier.weight(1f))
+                        Slider(
+                            value = closeQuantity.toFloat(),
+                            onValueChange = { closeQuantity = it.toInt() },
+                            valueRange = 1f..order.quantity.toFloat(),
+                            steps = (order.quantity - 2).coerceAtLeast(0),
+                            modifier = Modifier.weight(1.4f),
+                        )
+                    }
+                }
+                ListItem(
+                    colors = sheetListItemColors(),
+                    headlineContent = { Text(if (order.type == OrderType.SELL) "Mark as sold" else "Mark as bought") },
+                    supportingContent = { Text("Adds it to your trading history") },
+                    leadingContent = { Icon(Icons.Filled.Sell, null) },
+                    modifier = Modifier.clickable { onClose(closeQuantity) },
+                )
+                ListItem(
+                    colors = sheetListItemColors(),
+                    headlineContent = { Text("Edit order") },
+                    leadingContent = { Icon(Icons.Filled.Edit, null) },
+                    modifier = Modifier.clickable(onClick = onEdit),
+                )
+                ListItem(
+                    colors = sheetListItemColors(),
+                    headlineContent = { Text("Remove order") },
+                    leadingContent = { Icon(Icons.Filled.Delete, null) },
+                    modifier = Modifier.clickable(onClick = onDelete),
+                )
+            } else {
+                ListItem(
+                    colors = sheetListItemColors(),
+                    headlineContent = { Text("Copy whisper") },
+                    supportingContent = { Text("Paste it into in-game chat", maxLines = 1) },
+                    leadingContent = { Icon(Icons.Filled.ContentCopy, null) },
+                    modifier = Modifier.clickable {
+                        copyToClipboard(context, whisper(order, catalog, item))
+                        onMessage("Whisper copied")
+                        onDismiss()
+                    },
+                )
+                ListItem(
+                    colors = sheetListItemColors(),
+                    headlineContent = { Text("Send a message") },
+                    leadingContent = { Icon(Icons.AutoMirrored.Filled.Send, null) },
+                    modifier = Modifier.clickable {
+                        val userId = order.user?.id ?: return@clickable
+                        if (!signedIn) {
+                            onDismiss()
+                            navigator.signIn()
+                            return@clickable
+                        }
+                        scope.launch {
+                            runCatching { container.chats.openChatWith(userId) }
+                                .onSuccess {
+                                    onDismiss()
+                                    navigator.chat(it)
+                                }
+                                .onFailure { failure -> onMessage(failure.userMessage()) }
+                        }
+                    },
+                )
+            }
+            ListItem(
+                colors = sheetListItemColors(),
+                headlineContent = { Text("View profile") },
+                leadingContent = { Icon(Icons.Filled.Person, null) },
+                modifier = Modifier.clickable {
+                    onDismiss()
+                    order.user?.slug?.let(navigator::user)
+                },
+            )
+        }
+    }
+}
+
