@@ -809,3 +809,16 @@ fun NumberField(label: String, value: String, onChange: (String) -> Unit, modifi
     )
 }
 
+@Composable
+private fun StepSlider(label: String, value: Int, max: Int, onChange: (Int) -> Unit) {
+    Column {
+        Text("$label: $value / $max", style = MaterialTheme.typography.labelLarge)
+        Slider(
+            value = value.toFloat(),
+            onValueChange = { onChange(it.toInt()) },
+            valueRange = 0f..max.toFloat().coerceAtLeast(1f),
+            steps = (max - 1).coerceAtLeast(0),
+        )
+    }
+}
+
