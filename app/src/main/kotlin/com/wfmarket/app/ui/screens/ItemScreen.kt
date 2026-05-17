@@ -824,3 +824,69 @@ private fun StepSlider(label: String, value: Int, max: Int, onChange: (Int) -> U
 
 private fun percent(value: Double) = String.format(Locale.US, if (value >= 10) "%.1f%%" else "%.2f%%", value)
 
+// ---------------------------------------------------------------- Info
+
+@Composable
+private fun InfoTab(item: Item, setItems: List<Item>, catalog: Catalog, onSelectPart: (Item) -> Unit) {
+    val i18n = item.i18n.localized(catalog.language)
+    val openUrl = rememberOpenUrl()
+    Column(
+        Modifier.fillMaxSize().fadingVerticalScroll().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Box(
+            Modifier.fillMaxWidth().height(220.dp).clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center,
+        ) {
+            RemoteImage(catalog.art(item).full, Modifier.fillMaxSize().padding(16.dp), i18n?.name, spinner = true)
+        }
+        Text(i18n?.name.orEmpty(), style = MaterialTheme.typography.headlineSmall)
+        i18n?.description?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
+            item.tradingTax?.let { StatTile("Trading tax", "$it cr", Modifier.weight(1f)) }
+            item.ducats?.let { StatTile("Ducats", "$it", Modifier.weight(1f)) }
+            item.reqMasteryRank?.let { StatTile("Mastery rank", "$it", Modifier.weight(1f)) }
+            item.maxRank?.let { StatTile("Max rank", "$it", Modifier.weight(1f)) }
+            item.maxCharges?.let { StatTile("Max charges", "$it", Modifier.weight(1f)) }
+            item.rarity?.let { StatTile("Rarity", it.humanize(), Modifier.weight(1f)) }
+            item.vaulted?.let { StatTile("Vaulted", if (it) "Yes" else "No", Modifier.weight(1f)) }
+            item.quantityInSet?.let { StatTile("Quantity in set", "$it", Modifier.weight(1f)) }
+            item.maxAmberStars?.let { StatTile("Amber stars", "$it", Modifier.weight(1f)) }
+            item.maxCyanStars?.let { StatTile("Cyan stars", "$it", Modifier.weight(1f)) }
+            item.baseEndo?.let { StatTile("Base endo", "$it", Modifier.weight(1f)) }
+            item.vosfor?.let { StatTile("Vosfor", "$it", Modifier.weight(1f)) }
+        }
+
+        if (item.tags.isNotEmpty()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                item.tags.forEach { SmallTag(it.replace('_', ' ')) }
+            }
+        }
+
+        i18n?.wikiLink?.let { link ->
+            OutlinedButton(onClick = { openUrl(link) }, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.AutoMirrored.Filled.OpenInNew, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Open wiki page")
+            }
+        }
+
+        if (setItems.size > 1) {
+            Text("Set contents", style = MaterialTheme.typography.titleMedium)
+            setItems.forEach { part ->
+                val partI18n = part.i18n.localized(catalog.language)
+                Row(
+                    Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).clickable { onSelectPart(part) }.padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    ItemThumb(catalog.art(part), size = 40.dp)
+                    Text(partI18n?.name ?: part.slug, Modifier.weight(1f))
+                    part.quantityInSet?.takeIf { it > 1 }?.let { Text("x$it") }
+                    part.ducats?.let { Text("$it d", style = MaterialTheme.typography.labelMedium) }
+                }
+            }
+        }
+    }
+}
