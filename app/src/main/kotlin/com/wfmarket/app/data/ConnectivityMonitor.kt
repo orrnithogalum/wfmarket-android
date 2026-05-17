@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.asStateFlow
 class ConnectivityMonitor(context: Context) {
     private val manager = context.getSystemService(ConnectivityManager::class.java)
 
+    private val _online = MutableStateFlow(hasNetwork())
+    val online: StateFlow<Boolean> = _online.asStateFlow()
+
     init {
         manager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
