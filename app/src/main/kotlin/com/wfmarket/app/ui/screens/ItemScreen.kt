@@ -822,3 +822,5 @@ private fun StepSlider(label: String, value: Int, max: Int, onChange: (Int) -> U
     }
 }
 
+private fun percent(value: Double) = String.format(Locale.US, if (value >= 10) "%.1f%%" else "%.2f%%", value)
+
