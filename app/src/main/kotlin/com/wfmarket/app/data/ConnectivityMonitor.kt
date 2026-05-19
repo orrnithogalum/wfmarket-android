@@ -18,6 +18,9 @@ class ConnectivityMonitor(context: Context) {
     private val _online = MutableStateFlow(hasNetwork())
     val online: StateFlow<Boolean> = _online.asStateFlow()
 
+    private val _reconnected = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val reconnected: SharedFlow<Unit> = _reconnected.asSharedFlow()
+
     init {
         manager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
