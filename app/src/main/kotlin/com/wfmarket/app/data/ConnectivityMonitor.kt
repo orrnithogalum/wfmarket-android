@@ -33,3 +33,6 @@ class ConnectivityMonitor(context: Context) {
         })
     }
 
+    private fun hasNetwork(): Boolean =
+        manager.getNetworkCapabilities(manager.activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+}
