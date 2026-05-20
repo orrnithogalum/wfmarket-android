@@ -35,3 +35,9 @@ data class StatRanges(
     @SerialName("90days") val days90: List<StatPoint> = emptyList(),
 )
 
+@Serializable
+data class ItemStatistics(
+    @SerialName("statistics_closed") val closed: StatRanges = StatRanges(),
+    @SerialName("statistics_live") val live: StatRanges = StatRanges(),
+)
+
