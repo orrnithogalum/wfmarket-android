@@ -29,3 +29,9 @@ data class StatPoint(
     val charges: Int? = null,
 )
 
+@Serializable
+data class StatRanges(
+    @SerialName("48hours") val hours48: List<StatPoint> = emptyList(),
+    @SerialName("90days") val days90: List<StatPoint> = emptyList(),
+)
+
