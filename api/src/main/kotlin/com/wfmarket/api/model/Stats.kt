@@ -41,3 +41,19 @@ data class ItemStatistics(
     @SerialName("statistics_live") val live: StatRanges = StatRanges(),
 )
 
+@Serializable
+data class DucatEntry(
+    val datetime: String? = null,
+    val item: String,
+    val ducats: Int = 0,
+    val volume: Int = 0,
+    val median: Double = 0.0,
+    @SerialName("wa_price") val waPrice: Double = 0.0,
+    @SerialName("plat_worth") val platWorth: Double = 0.0,
+    @SerialName("ducats_per_platinum") val ducatsPerPlatinum: Double = 0.0,
+    @SerialName("ducats_per_platinum_wa") val ducatsPerPlatinumWa: Double = 0.0,
+    @SerialName("position_change_day") val positionChangeDay: Int = 0,
+    @SerialName("position_change_week") val positionChangeWeek: Int = 0,
+    @SerialName("position_change_month") val positionChangeMonth: Int = 0,
+)
+
