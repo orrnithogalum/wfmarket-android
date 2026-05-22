@@ -63,4 +63,14 @@ class LiveContractTest {
         assertTrue(top.sell.isNotEmpty() && top.buy.isNotEmpty())
         assertTrue(api.recentOrders().isNotEmpty())
     }
+
+    @Test fun statistics() = runBlocking {
+        val stats = api.itemStatistics("mesa_prime_set")
+        assertTrue(stats.closed.days90.isNotEmpty())
+        assertTrue(stats.closed.hours48.isNotEmpty())
+        assertNotNull(stats.closed.days90.first().openPrice)
+        assertNotNull(stats.closed.days90.first().donchTop)
+        assertTrue(stats.live.days90.any { it.orderType == "buy" })
+        assertTrue(stats.live.days90.any { it.orderType == "sell" })
+    }
 }
