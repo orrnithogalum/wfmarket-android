@@ -57,3 +57,9 @@ data class DucatEntry(
     @SerialName("position_change_month") val positionChangeMonth: Int = 0,
 )
 
+@Serializable
+data class Ducats(
+    @SerialName("previous_hour") val previousHour: List<DucatEntry> = emptyList(),
+    @SerialName("previous_day") val previousDay: List<DucatEntry> = emptyList(),
+)
+
