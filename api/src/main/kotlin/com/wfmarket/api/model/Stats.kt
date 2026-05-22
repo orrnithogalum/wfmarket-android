@@ -63,3 +63,18 @@ data class Ducats(
     @SerialName("previous_day") val previousDay: List<DucatEntry> = emptyList(),
 )
 
+/** One way to obtain an item: a relic, a mission reward or an enemy drop. */
+@Serializable
+data class DropSource(
+    val id: String = "",
+    val type: String = "",
+    val rarity: String? = null,
+    val rate: Double? = null,
+    val rates: Map<String, Double>? = null,
+    val relic: String? = null,
+    val location: String? = null,
+    val mission: String? = null,
+    val npc: String? = null,
+    val rotation: String? = null,
+    val stage: List<String> = emptyList(),
+)
