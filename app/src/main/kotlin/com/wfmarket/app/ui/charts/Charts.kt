@@ -58,3 +58,5 @@ data class Candle(
     val donchBottom: Float?,
 )
 
+data class LineSeries(val label: String, val color: Color, val values: List<Float?>)
+
