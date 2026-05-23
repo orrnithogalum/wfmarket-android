@@ -60,3 +60,5 @@ data class Candle(
 
 data class LineSeries(val label: String, val color: Color, val values: List<Float?>)
 
+data class LegendEntry(val label: String, val color: Color, val outlined: Boolean = false)
+
