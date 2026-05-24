@@ -62,3 +62,16 @@ data class LineSeries(val label: String, val color: Color, val values: List<Floa
 
 data class LegendEntry(val label: String, val color: Color, val outlined: Boolean = false)
 
+@Composable
+fun ChartLegend(entries: List<LegendEntry>, modifier: Modifier = Modifier) {
+    @OptIn(ExperimentalLayoutApi::class)
+    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        entries.forEach { entry ->
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Box(Modifier.size(10.dp).clip(CircleShape).background(entry.color))
+                Text(entry.label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
