@@ -94,3 +94,86 @@ private fun niceTicks(lo: Float, hi: Float, count: Int): List<Float> {
 private fun tickLabel(value: Float): String =
     if (abs(value) >= 1000) "${(value / 100).toInt() / 10f}k" else if (value % 1f == 0f) value.toInt().toString() else "%.1f".format(value)
 
+/**
+ * The frame shared by every chart: a recessive grid, price axis, date axis, and a crosshair driven
+ * by touch. The owning screen shows the selected values in a readout above the chart, because a
+ * floating tooltip would sit under the user's finger.
+ */
+@Composable
+private fun ChartFrame(
+    count: Int,
+    yMin: Float,
+    yMax: Float,
+    xLabels: List<Pair<Int, String>>,
+    selected: Int?,
+    onSelect: (Int?) -> Unit,
+    height: Dp,
+    description: String,
+    modifier: Modifier = Modifier,
+    tickCount: Int = 4,
+    draw: DrawScope.(x: (Int) -> Float, y: (Float) -> Float, slot: Float) -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    val measurer: TextMeasurer = rememberTextMeasurer()
+    val labelStyle: TextStyle = MaterialTheme.typography.labelSmall.copy(color = colors.onSurfaceVariant)
+    val density = LocalDensity.current
+    val ticks = remember(yMin, yMax, tickCount) { niceTicks(yMin, yMax, tickCount) }
+    val tickLayouts = remember(ticks, labelStyle) { ticks.map { measurer.measure(tickLabel(it), labelStyle) } }
+    val labelGap = with(density) { 6.dp.toPx() }
+    // As wide as the widest price label, so the labels sit at the card's edge and the plot isn't
+    // pushed right by room that short labels like "6" don't use.
+    val leftPad = (tickLayouts.maxOfOrNull { it.size.width } ?: 0) + labelGap
+    val rightPad = with(density) { 6.dp.toPx() }
+    val bottomPad = with(density) { 20.dp.toPx() }
+    val topPad = with(density) { 6.dp.toPx() }
+
+    fun indexAt(px: Float, width: Float): Int? {
+        if (count == 0) return null
+        val plot = width - leftPad - rightPad
+        return (((px - leftPad) / plot) * count).toInt().coerceIn(0, count - 1)
+    }
+
+    Canvas(
+        modifier
+            .fillMaxWidth()
+            .height(height)
+            .semantics { contentDescription = description }
+            .pointerInput(count) {
+                detectTapGestures(onTap = { onSelect(indexAt(it.x, size.width.toFloat())) })
+            }
+            .pointerInput(count) {
+                detectHorizontalDragGestures(
+                    onDragStart = { onSelect(indexAt(it.x, size.width.toFloat())) },
+                    onHorizontalDrag = { change, _ -> onSelect(indexAt(change.position.x, size.width.toFloat())) },
+                )
+            },
+    ) {
+        val plotWidth = size.width - leftPad - rightPad
+        val plotHeight = size.height - topPad - bottomPad
+        val low = min(ticks.first(), yMin)
+        val high = max(ticks.last(), yMax).let { if (it == low) low + 1 else it }
+        val slot = if (count > 0) plotWidth / count else plotWidth
+        val x: (Int) -> Float = { i -> leftPad + slot * (i + 0.5f) }
+        val y: (Float) -> Float = { v -> topPad + plotHeight * (1 - (v - low) / (high - low)) }
+
+        ticks.forEachIndexed { index, tick ->
+            val py = y(tick)
+            drawLine(colors.outlineVariant.copy(alpha = 0.5f), Offset(leftPad, py), Offset(size.width - rightPad, py), strokeWidth = 1f)
+            val layout = tickLayouts[index]
+            drawText(layout, topLeft = Offset(leftPad - layout.size.width - labelGap, py - layout.size.height / 2f))
+        }
+
+        clipRect(leftPad, topPad, size.width - rightPad, topPad + plotHeight) { draw(x, y, slot) }
+
+        xLabels.forEach { (index, label) ->
+            val layout = measurer.measure(label, labelStyle)
+            val px = (x(index) - layout.size.width / 2f).coerceIn(leftPad, size.width - rightPad - layout.size.width)
+            drawText(layout, topLeft = Offset(px, size.height - bottomPad + 6f))
+        }
+
+        selected?.takeIf { it in 0 until count }?.let { index ->
+            drawLine(colors.onSurface.copy(alpha = 0.6f), Offset(x(index), topPad), Offset(x(index), topPad + plotHeight), strokeWidth = 2f)
+        }
+    }
+}
+
