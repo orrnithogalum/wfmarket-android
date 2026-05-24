@@ -75,3 +75,19 @@ fun ChartLegend(entries: List<LegendEntry>, modifier: Modifier = Modifier) {
     }
 }
 
+/** A "nice" ascending set of about [count] tick values covering [lo]..[hi]. */
+private fun niceTicks(lo: Float, hi: Float, count: Int): List<Float> {
+    val range = (hi - lo).takeIf { it > 0f } ?: 1f
+    val rough = range / count
+    val magnitude = 10f.pow(floor(log10(rough)))
+    val step = when (rough / magnitude) {
+        in 0f..1.5f -> 1f
+        in 1.5f..3f -> 2f
+        in 3f..7f -> 5f
+        else -> 10f
+    } * magnitude
+    val first = floor(lo / step) * step
+    val last = ceil(hi / step) * step
+    return generateSequence(first) { it + step }.takeWhile { it <= last + step / 2 }.toList()
+}
+
