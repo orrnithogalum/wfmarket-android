@@ -91,3 +91,6 @@ private fun niceTicks(lo: Float, hi: Float, count: Int): List<Float> {
     return generateSequence(first) { it + step }.takeWhile { it <= last + step / 2 }.toList()
 }
 
+private fun tickLabel(value: Float): String =
+    if (abs(value) >= 1000) "${(value / 100).toInt() / 10f}k" else if (value % 1f == 0f) value.toInt().toString() else "%.1f".format(value)
+
