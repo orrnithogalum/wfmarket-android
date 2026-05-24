@@ -177,3 +177,19 @@ private fun ChartFrame(
     }
 }
 
+private fun DrawScope.drawSeriesLine(x: (Int) -> Float, y: (Float) -> Float, values: List<Float?>, color: Color, width: Float) {
+    val path = Path()
+    var started = false
+    values.forEachIndexed { index, value ->
+        if (value == null) {
+            started = false
+        } else if (!started) {
+            path.moveTo(x(index), y(value))
+            started = true
+        } else {
+            path.lineTo(x(index), y(value))
+        }
+    }
+    drawPath(path, color, style = Stroke(width = width, cap = StrokeCap.Round, join = StrokeJoin.Round))
+}
+
