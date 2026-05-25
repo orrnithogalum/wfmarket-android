@@ -193,3 +193,96 @@ private fun DrawScope.drawSeriesLine(x: (Int) -> Float, y: (Float) -> Float, val
     drawPath(path, color, style = Stroke(width = width, cap = StrokeCap.Round, join = StrokeJoin.Round))
 }
 
+/** Candles, Donchian channel and overlay lines. Volume sits in its own chart below: one axis per chart. */
+@Composable
+fun PriceChart(
+    candles: List<Candle>,
+    showCandles: Boolean,
+    showDonchian: Boolean,
+    overlays: List<LineSeries>,
+    xLabels: List<Pair<Int, String>>,
+    selected: Int?,
+    onSelect: (Int?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val semantic = LocalSemanticColors.current
+    val outline = MaterialTheme.colorScheme.onSurfaceVariant
+    val highs = buildList {
+        candles.forEach { candle ->
+            if (showCandles) add(candle.high)
+            if (showDonchian) candle.donchTop?.let(::add)
+        }
+    }
+    val lows = buildList {
+        candles.forEach { candle ->
+            if (showCandles) add(candle.low)
+            if (showDonchian) candle.donchBottom?.let(::add)
+        }
+    }
+    val lines = overlays.flatMap { it.values.filterNotNull() }
+    // One troll trade at 10x the price would otherwise flatten everything else into a line.
+    val highBound = robustBound(highs.sorted().asReversed()) { typical, extreme -> extreme > typical * 1.25f }
+    val lowBound = robustBound(lows.sorted()) { typical, extreme -> extreme < typical * 0.75f }
+    val yMin = (lines + listOfNotNull(lowBound.value)).minOrNull() ?: 0f
+    val yMax = (lines + listOfNotNull(highBound.value)).maxOrNull() ?: 1f
+    val trimmed = highBound.trimmed || lowBound.trimmed
+    val density = LocalDensity.current
+    val lineWidth = with(density) { 2.dp.toPx() }
+    val wickWidth = with(density) { 1.dp.toPx() }
+
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    ChartFrame(
+        count = candles.size,
+        yMin = yMin,
+        yMax = yMax,
+        xLabels = xLabels,
+        selected = selected,
+        onSelect = onSelect,
+        height = 240.dp,
+        description = "Price chart with ${candles.size} data points, from $yMin to $yMax platinum",
+        tickCount = 5,
+    ) { x, y, slot ->
+        if (showDonchian) {
+            val band = Path()
+            val tops = candles.mapIndexedNotNull { i, c -> c.donchTop?.let { i to it } }
+            val bottoms = candles.mapIndexedNotNull { i, c -> c.donchBottom?.let { i to it } }
+            if (tops.isNotEmpty() && bottoms.isNotEmpty()) {
+                band.moveTo(x(tops.first().first), y(tops.first().second))
+                tops.drop(1).forEach { (i, v) -> band.lineTo(x(i), y(v)) }
+                bottoms.reversed().forEach { (i, v) -> band.lineTo(x(i), y(v)) }
+                band.close()
+                drawPath(band, semantic.seriesViolet.copy(alpha = 0.13f))
+            }
+        }
+
+        if (showCandles) {
+            val bodyWidth = (slot * 0.68f).coerceAtLeast(1.5f)
+            candles.forEachIndexed { index, candle ->
+                val up = candle.close >= candle.open
+                val color = if (up) semantic.positive else semantic.negative
+                drawLine(outline.copy(alpha = 0.7f), Offset(x(index), y(candle.high)), Offset(x(index), y(candle.low)), strokeWidth = wickWidth)
+                val top = y(max(candle.open, candle.close))
+                val bottom = y(min(candle.open, candle.close))
+                val bodyHeight = (bottom - top).coerceAtLeast(wickWidth * 1.5f)
+                val topLeft = Offset(x(index) - bodyWidth / 2, top)
+                // Rising candles are hollow, so direction survives without relying on hue.
+                if (up && bodyWidth >= 4f) {
+                    drawRect(color, topLeft, Size(bodyWidth, bodyHeight), style = Stroke(wickWidth))
+                } else {
+                    drawRect(color, topLeft, Size(bodyWidth, bodyHeight))
+                }
+            }
+        }
+
+        overlays.forEach { series -> drawSeriesLine(x, y, series.values, series.color, lineWidth) }
+    }
+    if (trimmed) {
+        Text(
+            "Extreme outliers run off the chart. Touch one for its exact price.",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    }
+}
+
