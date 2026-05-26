@@ -378,3 +378,45 @@ fun DifferenceChart(
     }
 }
 
+/** Two lines with the gap between them shaded: the live buy/sell spread. */
+@Composable
+fun SpreadChart(
+    upper: LineSeries,
+    lower: LineSeries,
+    xLabels: List<Pair<Int, String>>,
+    selected: Int?,
+    onSelect: (Int?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val all = (upper.values + lower.values).filterNotNull()
+    val neutral = MaterialTheme.colorScheme.onSurfaceVariant
+    val density = LocalDensity.current
+    val lineWidth = with(density) { 2.dp.toPx() }
+    ChartFrame(
+        count = upper.values.size,
+        yMin = all.minOrNull() ?: 0f,
+        yMax = all.maxOrNull() ?: 1f,
+        xLabels = xLabels,
+        selected = selected,
+        onSelect = onSelect,
+        height = 200.dp,
+        description = "${upper.label} and ${lower.label} over time",
+        modifier = modifier,
+    ) { x, y, _ ->
+        val pairs = upper.values.indices.mapNotNull { i ->
+            val top = upper.values[i]
+            val bottom = lower.values.getOrNull(i)
+            if (top != null && bottom != null) Triple(i, top, bottom) else null
+        }
+        if (pairs.size > 1) {
+            val band = Path()
+            band.moveTo(x(pairs.first().first), y(pairs.first().second))
+            pairs.drop(1).forEach { (i, top, _) -> band.lineTo(x(i), y(top)) }
+            pairs.reversed().forEach { (i, _, bottom) -> band.lineTo(x(i), y(bottom)) }
+            band.close()
+            drawPath(band, neutral.copy(alpha = 0.14f))
+        }
+        drawSeriesLine(x, y, upper.values, upper.color, lineWidth)
+        drawSeriesLine(x, y, lower.values, lower.color, lineWidth)
+    }
+}
