@@ -23,3 +23,15 @@ import java.util.Locale
 
 private enum class Range(val label: String) { HOURS_48("48 hours"), DAYS_90("90 days") }
 
+/** Rank, subtype and stars split an item's statistics into separate series. */
+private data class Variant(val rank: Int?, val subtype: String?, val amber: Int?, val cyan: Int?, val charges: Int?) {
+    val label: String
+        get() = listOfNotNull(
+            rank?.let { "Rank $it" },
+            subtype?.humanize(),
+            amber?.let { "$it amber" },
+            cyan?.let { "$it cyan" },
+            charges?.let { "$it charges" },
+        ).joinToString(" · ").ifEmpty { "All" }
+}
+
