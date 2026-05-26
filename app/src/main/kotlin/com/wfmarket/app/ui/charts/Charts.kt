@@ -299,3 +299,41 @@ private fun robustBound(ordered: List<Float>, isOutlier: (typical: Float, extrem
     return if (isOutlier(typical, extreme)) Bound(typical, true) else Bound(extreme, false)
 }
 
+/** Thin rounded bars rising from zero, e.g. traded volume. */
+@Composable
+fun VolumeChart(
+    values: List<Float>,
+    xLabels: List<Pair<Int, String>>,
+    selected: Int?,
+    onSelect: (Int?) -> Unit,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+) {
+    ChartFrame(
+        count = values.size,
+        yMin = 0f,
+        yMax = values.maxOrNull()?.coerceAtLeast(1f) ?: 1f,
+        xLabels = xLabels,
+        selected = selected,
+        onSelect = onSelect,
+        height = 130.dp,
+        description = "Volume bars for ${values.size} periods",
+        modifier = modifier,
+        tickCount = 3,
+    ) { x, y, slot ->
+        val barWidth = (slot * 0.68f).coerceAtLeast(1.5f)
+        val radius = CornerRadius(min(barWidth / 2, 4.dp.toPx()))
+        val zero = y(0f)
+        values.forEachIndexed { index, value ->
+            if (value <= 0f) return@forEachIndexed
+            val top = y(value)
+            drawRoundRect(
+                color = if (selected == index) color else color.copy(alpha = 0.72f),
+                topLeft = Offset(x(index) - barWidth / 2, top),
+                size = Size(barWidth, zero - top),
+                cornerRadius = radius,
+            )
+        }
+    }
+}
+
