@@ -337,3 +337,44 @@ fun VolumeChart(
     }
 }
 
+/** Bars above and below a neutral zero line: price change per period, or the buy/sell gap. */
+@Composable
+fun DifferenceChart(
+    values: List<Float?>,
+    xLabels: List<Pair<Int, String>>,
+    selected: Int?,
+    onSelect: (Int?) -> Unit,
+    modifier: Modifier = Modifier,
+    positive: Color = LocalSemanticColors.current.positive,
+    negative: Color = LocalSemanticColors.current.negative,
+) {
+    val zeroLine = MaterialTheme.colorScheme.onSurfaceVariant
+    val present = values.filterNotNull()
+    val reach = present.maxOfOrNull { abs(it) }?.coerceAtLeast(1f) ?: 1f
+    ChartFrame(
+        count = values.size,
+        yMin = present.minOrNull()?.coerceAtMost(0f) ?: -reach,
+        yMax = present.maxOrNull()?.coerceAtLeast(0f) ?: reach,
+        xLabels = xLabels,
+        selected = selected,
+        onSelect = onSelect,
+        height = 150.dp,
+        description = "Difference bars for ${values.size} periods",
+        modifier = modifier,
+        tickCount = 4,
+    ) { x, y, slot ->
+        val barWidth = (slot * 0.68f).coerceAtLeast(1.5f)
+        val zero = y(0f)
+        values.forEachIndexed { index, value ->
+            if (value == null || value == 0f) return@forEachIndexed
+            val end = y(value)
+            drawRect(
+                color = if (value > 0) positive else negative,
+                topLeft = Offset(x(index) - barWidth / 2, min(zero, end)),
+                size = Size(barWidth, abs(end - zero)),
+            )
+        }
+        drawLine(zeroLine, Offset(x(0) - slot / 2, zero), Offset(x(values.lastIndex.coerceAtLeast(0)) + slot / 2, zero), strokeWidth = 2f)
+    }
+}
+
