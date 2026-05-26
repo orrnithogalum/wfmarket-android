@@ -286,3 +286,5 @@ fun PriceChart(
     }
 }
 
+private data class Bound(val value: Float?, val trimmed: Boolean)
+
