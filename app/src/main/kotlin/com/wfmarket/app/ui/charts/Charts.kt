@@ -288,3 +288,14 @@ fun PriceChart(
 
 private data class Bound(val value: Float?, val trimmed: Boolean)
 
+/**
+ * [ordered] runs from most to least extreme. Uses the 97th percentile as the axis limit when the
+ * values beyond it are far enough away for [isOutlier], and the true extreme otherwise.
+ */
+private fun robustBound(ordered: List<Float>, isOutlier: (typical: Float, extreme: Float) -> Boolean): Bound {
+    val extreme = ordered.firstOrNull() ?: return Bound(null, false)
+    if (ordered.size < 10) return Bound(extreme, false)
+    val typical = ordered[(ordered.size * 0.03f).toInt() + 1]
+    return if (isOutlier(typical, extreme)) Bound(typical, true) else Bound(extreme, false)
+}
+
