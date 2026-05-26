@@ -35,3 +35,5 @@ private data class Variant(val rank: Int?, val subtype: String?, val amber: Int?
         ).joinToString(" · ").ifEmpty { "All" }
 }
 
+private fun StatPoint.variant() = Variant(modRank, subtype, amberStars, cyanStars, charges)
+
