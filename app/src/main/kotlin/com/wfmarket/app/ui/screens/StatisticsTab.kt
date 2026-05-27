@@ -253,3 +253,15 @@ private fun ChartCard(title: String, subtitle: String, content: @Composable Colu
     }
 }
 
+@Composable
+private fun Readout(point: StatPoint?, range: Range, text: (StatPoint) -> String) {
+    if (point == null) {
+        Text("Touch a chart for exact values", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    } else {
+        Text(
+            "${formatDate(point.datetime, if (range == Range.HOURS_48) "d MMM HH:mm" else "d MMM yyyy")}: ${text(point)}",
+            style = MaterialTheme.typography.labelMedium,
+        )
+    }
+}
+
