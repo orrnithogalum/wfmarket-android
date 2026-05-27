@@ -37,3 +37,10 @@ private data class Variant(val rank: Int?, val subtype: String?, val amber: Int?
 
 private fun StatPoint.variant() = Variant(modRank, subtype, amberStars, cyanStars, charges)
 
+private fun xLabels(points: List<StatPoint>, range: Range): List<Pair<Int, String>> {
+    if (points.isEmpty()) return emptyList()
+    val pattern = if (range == Range.HOURS_48) "HH:mm" else "d MMM"
+    val indices = if (points.size < 4) points.indices.toList() else listOf(0, points.size / 3, points.size * 2 / 3, points.lastIndex)
+    return indices.map { it to formatDate(points[it].datetime, pattern) }
+}
+
