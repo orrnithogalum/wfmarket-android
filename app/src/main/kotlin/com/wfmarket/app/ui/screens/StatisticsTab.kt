@@ -241,3 +241,15 @@ private fun SummaryTiles(closed: List<StatPoint>) {
     }
 }
 
+@Composable
+private fun ChartCard(title: String, subtitle: String, content: @Composable ColumnScope.() -> Unit) {
+    // Wide enough padding that axis labels clear the rounded corners.
+    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            content()
+        }
+    }
+}
+
