@@ -50,3 +50,136 @@ private fun num(value: Double?): String = when {
     else -> String.format(Locale.US, "%.1f", value)
 }
 
+@Composable
+fun StatisticsTab(item: Item, statistics: Load<ItemStatistics>, onRetry: () -> Unit) {
+    LoadContent(statistics, onRetry) { stats ->
+        var range by rememberSaveable { mutableStateOf(Range.DAYS_90) }
+        val closedAll = if (range == Range.HOURS_48) stats.closed.hours48 else stats.closed.days90
+        val liveAll = if (range == Range.HOURS_48) stats.live.hours48 else stats.live.days90
+
+        val variants = remember(closedAll) { closedAll.map { it.variant() }.distinct().sortedWith(compareBy({ it.rank ?: -1 }, { it.subtype ?: "" }, { it.amber ?: -1 }, { it.cyan ?: -1 }, { it.charges ?: -1 })) }
+        var variant by remember(variants) { mutableStateOf(variants.firstOrNull()) }
+        val closed = remember(closedAll, variant) { closedAll.filter { it.variant() == variant }.sortedBy { it.datetime } }
+        val live = remember(liveAll, variant) { liveAll.filter { it.variant() == variant }.sortedBy { it.datetime } }
+
+        var selected by remember(closed) { mutableStateOf<Int?>(null) }
+        var showCandles by rememberSaveable { mutableStateOf(true) }
+        var showDonchian by rememberSaveable { mutableStateOf(true) }
+        var showMedian by rememberSaveable { mutableStateOf(true) }
+        var showSma by rememberSaveable { mutableStateOf(false) }
+        var showAverage by rememberSaveable { mutableStateOf(false) }
+        var showTable by rememberSaveable { mutableStateOf(false) }
+
+        val semantic = LocalSemanticColors.current
+        val labels = remember(closed, range) { xLabels(closed, range) }
+
+        FadingLazyColumn(
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            item {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    ChoiceButtonGroup(Range.entries, range, { it.label }, { range = it })
+                    if (variants.size > 1) {
+                        DropdownChip("", variant, variants, { it?.label ?: "All" }, { variant = it })
+                    }
+                }
+            }
+
+            if (closed.isEmpty()) {
+                item { EmptyBox("No trades recorded", "Nobody has closed an order for this in the last ${range.label}.") }
+            } else {
+                item { SummaryTiles(closed) }
+
+                item {
+                    ChartCard("Price", "Closed trades, per ${if (range == Range.HOURS_48) "hour" else "day"}") {
+                        Readout(closed.getOrNull(selected ?: -1), range) { point ->
+                            "Open ${num(point.openPrice)} · Close ${num(point.closedPrice)} · Low ${num(point.minPrice)} · High ${num(point.maxPrice)} · Median ${num(point.median)}"
+                        }
+                        val overlays = buildList {
+                            if (showMedian) add(LineSeries("Median", semantic.seriesBlue, closed.map { it.median.toFloat() }))
+                            if (showSma) add(LineSeries("SMA", semantic.seriesOrange, closed.map { it.movingAvg?.toFloat() }))
+                            if (showAverage) add(LineSeries("Average", semantic.seriesAqua, closed.map { it.avgPrice.toFloat() }))
+                        }
+                        PriceChart(
+                            candles = closed.map {
+                                Candle(
+                                    open = (it.openPrice ?: it.avgPrice).toFloat(),
+                                    close = (it.closedPrice ?: it.avgPrice).toFloat(),
+                                    low = it.minPrice.toFloat(),
+                                    high = it.maxPrice.toFloat(),
+                                    median = it.median.toFloat(),
+                                    average = it.avgPrice.toFloat(),
+                                    sma = it.movingAvg?.toFloat(),
+                                    donchTop = it.donchTop?.toFloat(),
+                                    donchBottom = it.donchBot?.toFloat(),
+                                )
+                            },
+                            showCandles = showCandles,
+                            showDonchian = showDonchian,
+                            overlays = overlays,
+                            xLabels = labels,
+                            selected = selected,
+                            onSelect = { selected = it },
+                        )
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            ToggleChip("Candles", showCandles) { showCandles = it }
+                            ToggleChip("Donchian", showDonchian) { showDonchian = it }
+                            ToggleChip("Median", showMedian) { showMedian = it }
+                            ToggleChip("SMA", showSma) { showSma = it }
+                            ToggleChip("Average", showAverage) { showAverage = it }
+                        }
+                        ChartLegend(
+                            buildList {
+                                if (showCandles) {
+                                    add(LegendEntry("Close above open", semantic.positive))
+                                    add(LegendEntry("Close below open", semantic.negative))
+                                }
+                                if (showDonchian) add(LegendEntry("Donchian channel", semantic.seriesViolet))
+                                overlays.forEach { add(LegendEntry(it.label, it.color)) }
+                            },
+                        )
+                    }
+                }
+
+                item {
+                    ChartCard("Volume", "Items traded in each period") {
+                        Readout(closed.getOrNull(selected ?: -1), range) { "${it.volume} traded" }
+                        VolumeChart(closed.map { it.volume.toFloat() }, labels, selected, { selected = it })
+                    }
+                }
+
+                item {
+                    ChartCard("Price change", "Close minus open in each period") {
+                        Readout(closed.getOrNull(selected ?: -1), range) { point ->
+                            val change = (point.closedPrice ?: 0.0) - (point.openPrice ?: 0.0)
+                            "${if (change > 0) "+" else ""}${num(change)} platinum"
+                        }
+                        DifferenceChart(
+                            closed.map { point ->
+                                val open = point.openPrice
+                                val close = point.closedPrice
+                                if (open != null && close != null) (close - open).toFloat() else null
+                            },
+                            labels, selected, { selected = it },
+                        )
+                    }
+                }
+            }
+
+            spreadSection(this, live, range)
+
+            if (closed.isNotEmpty()) {
+                item {
+                    TextButton(onClick = { showTable = !showTable }) { Text(if (showTable) "Hide data table" else "Show data table") }
+                }
+                if (showTable) {
+                    item { TableHeader() }
+                    items(closed.reversed(), key = { it.datetime + it.variant().label }) { point -> TableRow(point, range) }
+                }
+            }
+        }
+    }
+}
+
