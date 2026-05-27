@@ -44,3 +44,9 @@ private fun xLabels(points: List<StatPoint>, range: Range): List<Pair<Int, Strin
     return indices.map { it to formatDate(points[it].datetime, pattern) }
 }
 
+private fun num(value: Double?): String = when {
+    value == null -> "–"
+    value % 1.0 == 0.0 -> value.toInt().toString()
+    else -> String.format(Locale.US, "%.1f", value)
+}
+
