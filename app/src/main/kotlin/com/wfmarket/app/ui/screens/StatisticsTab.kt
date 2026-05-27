@@ -183,3 +183,41 @@ fun StatisticsTab(item: Item, statistics: Load<ItemStatistics>, onRetry: () -> U
     }
 }
 
+/** Live order prices: the gap between what sellers ask and what buyers offer. */
+private fun spreadSection(scope: androidx.compose.foundation.lazy.LazyListScope, live: List<StatPoint>, range: Range) {
+    val sell = live.filter { it.orderType == OrderType.SELL }.associateBy { it.datetime }
+    val buy = live.filter { it.orderType == OrderType.BUY }.associateBy { it.datetime }
+    val times = (sell.keys + buy.keys).sorted()
+    if (times.isEmpty()) return
+    scope.item {
+        val semantic = LocalSemanticColors.current
+        var selected by remember(times) { mutableStateOf<Int?>(null) }
+        val ordered = times.map { sell[it] ?: buy.getValue(it) }
+        val labels = remember(times, range) { xLabels(ordered, range) }
+        val upper = LineSeries("Sell orders (median)", semantic.seriesOrange, times.map { sell[it]?.median?.toFloat() })
+        val lower = LineSeries("Buy orders (median)", semantic.seriesBlue, times.map { buy[it]?.median?.toFloat() })
+        val gaps = times.map { time ->
+            val s = sell[time]?.median
+            val b = buy[time]?.median
+            if (s != null && b != null) (s - b).toFloat() else null
+        }
+
+        ChartCard("Buy/sell spread", "What sellers ask against what buyers offer on open orders") {
+            val index = selected
+            if (index != null && index in times.indices) {
+                val time = times[index]
+                Text(
+                    "${formatDate(time, if (range == Range.HOURS_48) "d MMM HH:mm" else "d MMM yyyy")}: sell ${num(sell[time]?.median)}, buy ${num(buy[time]?.median)}, gap ${gaps[index]?.let { num(it.toDouble()) } ?: "–"}",
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            } else {
+                Text("Touch a chart for exact values", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            SpreadChart(upper, lower, labels, selected, { selected = it })
+            ChartLegend(listOf(LegendEntry(upper.label, upper.color), LegendEntry(lower.label, lower.color)))
+            Text("Gap between them", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 4.dp))
+            DifferenceChart(gaps, labels, selected, { selected = it }, positive = semantic.seriesViolet, negative = semantic.negative)
+        }
+    }
+}
+
