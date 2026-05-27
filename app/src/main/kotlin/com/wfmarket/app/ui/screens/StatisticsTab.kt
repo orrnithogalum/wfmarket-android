@@ -221,3 +221,23 @@ private fun spreadSection(scope: androidx.compose.foundation.lazy.LazyListScope,
     }
 }
 
+@Composable
+private fun SummaryTiles(closed: List<StatPoint>) {
+    val last = closed.last()
+    val first = closed.first()
+    val change = last.median - first.median
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        StatTile("Latest median", Modifier.weight(1f)) { Platinum(last.median) }
+        StatTile("Change", Modifier.weight(1f)) {
+            val semantic = LocalSemanticColors.current
+            Text(
+                "${if (change > 0) "▲ +" else if (change < 0) "▼ " else ""}${num(change)}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = if (change > 0) semantic.positive else if (change < 0) semantic.negative else MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        StatTile("Volume", closed.sumOf { it.volume }.toString(), Modifier.weight(1f))
+    }
+}
+
