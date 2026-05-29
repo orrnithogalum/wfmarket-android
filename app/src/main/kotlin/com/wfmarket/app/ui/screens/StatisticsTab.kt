@@ -279,3 +279,13 @@ private fun TableHeader() {
     }
 }
 
+@Composable
+private fun TableRow(point: StatPoint, range: Range) {
+    Row(Modifier.fillMaxWidth()) {
+        Text(formatDate(point.datetime, if (range == Range.HOURS_48) "d MMM HH:mm" else "d MMM yy"), Modifier.weight(1.6f), style = MaterialTheme.typography.bodySmall)
+        Text(point.volume.toString(), Modifier.weight(0.8f), style = MaterialTheme.typography.bodySmall)
+        Text(num(point.minPrice), Modifier.weight(0.8f), style = MaterialTheme.typography.bodySmall)
+        Text(num(point.median), Modifier.weight(0.8f), style = MaterialTheme.typography.bodySmall)
+        Text(num(point.maxPrice), Modifier.weight(0.8f), style = MaterialTheme.typography.bodySmall)
+    }
+}
