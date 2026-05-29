@@ -270,3 +270,12 @@ private fun ToggleChip(label: String, checked: Boolean, onChange: (Boolean) -> U
     FilterChip(selected = checked, onClick = { onChange(!checked) }, label = { Text(label) })
 }
 
+@Composable
+private fun TableHeader() {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        listOf("Date" to 1.6f, "Vol" to 0.8f, "Low" to 0.8f, "Med" to 0.8f, "High" to 0.8f).forEach { (label, weight) ->
+            Text(label, Modifier.weight(weight), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
