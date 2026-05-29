@@ -265,3 +265,8 @@ private fun Readout(point: StatPoint?, range: Range, text: (StatPoint) -> String
     }
 }
 
+@Composable
+private fun ToggleChip(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    FilterChip(selected = checked, onClick = { onChange(!checked) }, label = { Text(label) })
+}
+
