@@ -1,0 +1,20 @@
+package com.wfmarket.app.data
+
+import android.content.Context
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import android.util.Base64
+import java.security.KeyStore
+import java.util.UUID
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
+
+/**
+ * Holds the session token, encrypted with an AES key that lives in the Android Keystore and can't
+ * leave it. The password itself is never stored.
+ */
+class SessionStore(context: Context) {
+    private val prefs = context.getSharedPreferences("session", Context.MODE_PRIVATE)
+
