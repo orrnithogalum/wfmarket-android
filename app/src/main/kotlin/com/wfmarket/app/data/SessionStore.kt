@@ -18,3 +18,7 @@ import javax.crypto.spec.GCMParameterSpec
 class SessionStore(context: Context) {
     private val prefs = context.getSharedPreferences("session", Context.MODE_PRIVATE)
 
+    @Volatile
+    var token: String? = decrypt(prefs.getString(KEY_TOKEN, null))
+        private set
+
