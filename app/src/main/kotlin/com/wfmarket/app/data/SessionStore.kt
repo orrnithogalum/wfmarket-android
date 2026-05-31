@@ -27,3 +27,8 @@ class SessionStore(context: Context) {
             prefs.edit().putString(KEY_DEVICE, it).apply()
         }
 
+    fun save(newToken: String) {
+        token = newToken
+        prefs.edit().putString(KEY_TOKEN, encrypt(newToken)).apply()
+    }
+
