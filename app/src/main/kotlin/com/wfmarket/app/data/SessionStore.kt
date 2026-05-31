@@ -22,3 +22,8 @@ class SessionStore(context: Context) {
     var token: String? = decrypt(prefs.getString(KEY_TOKEN, null))
         private set
 
+    val deviceId: String
+        get() = prefs.getString(KEY_DEVICE, null) ?: UUID.randomUUID().toString().also {
+            prefs.edit().putString(KEY_DEVICE, it).apply()
+        }
+
