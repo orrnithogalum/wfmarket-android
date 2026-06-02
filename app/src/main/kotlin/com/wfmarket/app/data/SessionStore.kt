@@ -32,3 +32,8 @@ class SessionStore(context: Context) {
         prefs.edit().putString(KEY_TOKEN, encrypt(newToken)).apply()
     }
 
+    fun clear() {
+        token = null
+        prefs.edit().remove(KEY_TOKEN).apply()
+    }
+
