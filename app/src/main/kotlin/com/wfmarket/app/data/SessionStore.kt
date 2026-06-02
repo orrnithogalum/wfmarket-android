@@ -56,3 +56,13 @@ class SessionStore(context: Context) {
         return Base64.encodeToString(data, Base64.NO_WRAP)
     }
 
+    private fun decrypt(stored: String?): String? = stored?.let {
+        runCatching {
+            val data = Base64.decode(it, Base64.NO_WRAP)
+            val cipher = Cipher.getInstance(TRANSFORM).apply {
+                init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, data, 0, IV_BYTES))
+            }
+            String(cipher.doFinal(data, IV_BYTES, data.size - IV_BYTES))
+        }.getOrNull()
+    }
+
