@@ -50,3 +50,9 @@ class SessionStore(context: Context) {
         }.generateKey()
     }
 
+    private fun encrypt(plain: String): String {
+        val cipher = Cipher.getInstance(TRANSFORM).apply { init(Cipher.ENCRYPT_MODE, key()) }
+        val data = cipher.iv + cipher.doFinal(plain.toByteArray())
+        return Base64.encodeToString(data, Base64.NO_WRAP)
+    }
+
