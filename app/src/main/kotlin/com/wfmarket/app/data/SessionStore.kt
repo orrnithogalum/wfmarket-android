@@ -66,3 +66,12 @@ class SessionStore(context: Context) {
         }.getOrNull()
     }
 
+    private companion object {
+        const val KEYSTORE = "AndroidKeyStore"
+        const val ALIAS = "wfm_session"
+        const val TRANSFORM = "AES/GCM/NoPadding"
+        const val IV_BYTES = 12
+        const val KEY_TOKEN = "token"
+        const val KEY_DEVICE = "device_id"
+    }
+}
