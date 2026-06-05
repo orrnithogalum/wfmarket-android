@@ -35,6 +35,9 @@ class AccountRepository(
     private val _isSignedIn = MutableStateFlow(session.token != null)
     val isSignedIn: StateFlow<Boolean> = _isSignedIn.asStateFlow()
 
+    private val _me = MutableStateFlow<User?>(null)
+    val me: StateFlow<User?> = _me.asStateFlow()
+
     /** Mirrors [AppSettings.heldStatus], whose writes land a moment later. */
     @Volatile private var held: HeldStatus? = settings.current.heldStatus
 
