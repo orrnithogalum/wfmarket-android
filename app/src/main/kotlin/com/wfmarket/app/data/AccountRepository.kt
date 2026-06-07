@@ -38,6 +38,9 @@ class AccountRepository(
     private val _me = MutableStateFlow<User?>(null)
     val me: StateFlow<User?> = _me.asStateFlow()
 
+    private val _status = MutableStateFlow("offline")
+    val status: StateFlow<String> = _status.asStateFlow()
+
     /** Mirrors [AppSettings.heldStatus], whose writes land a moment later. */
     @Volatile private var held: HeldStatus? = settings.current.heldStatus
 
