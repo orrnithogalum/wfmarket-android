@@ -44,6 +44,9 @@ class AccountRepository(
     private val _statusUntil = MutableStateFlow<String?>(null)
     val statusUntil: StateFlow<String?> = _statusUntil.asStateFlow()
 
+    private val _onlineCount = MutableStateFlow<SocketEvent.OnlineCount?>(null)
+    val onlineCount: StateFlow<SocketEvent.OnlineCount?> = _onlineCount.asStateFlow()
+
     /** Mirrors [AppSettings.heldStatus], whose writes land a moment later. */
     @Volatile private var held: HeldStatus? = settings.current.heldStatus
 
