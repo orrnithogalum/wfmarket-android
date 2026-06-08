@@ -56,4 +56,29 @@ class AccountRepository(
     /** What the site last reported, which can differ from what's shown while it's being put right. */
     @Volatile private var reported: String? = null
 
+    fun start() {
+        scope.launch {
+            sockets.events.collect { event ->
+                when (event) {
+                    is SocketEvent.StatusChanged -> onStatusChanged(event)
+                    is SocketEvent.OnlineCount -> _onlineCount.value = event
+                    else -> Unit
+                }
+            }
+        }
+        scope.launch {
+            sockets.state.map { it.statusConnected to it.statusAuthorized }.distinctUntilChanged().collectLatest { (connected, authorized) ->
+                when {
+                    authorized -> {
+                        openingUntil = System.currentTimeMillis() + OPENING_WINDOW_MS
+                        delay(OPENING_WINDOW_MS)
+                        restoreHeldStatus()
+                    }
+                    connected -> openingUntil = System.currentTimeMillis() + SIGN_IN_WINDOW_MS
+                }
+            }
+        }
+        if (session.token != null) scope.launch { runCatching { refresh() } }
+    }
+
 
