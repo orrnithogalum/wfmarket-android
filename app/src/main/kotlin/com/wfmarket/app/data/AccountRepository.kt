@@ -81,4 +81,29 @@ class AccountRepository(
         if (session.token != null) scope.launch { runCatching { refresh() } }
     }
 
+    private fun onStatusChanged(event: SocketEvent.StatusChanged) {
+        reported = event.status
+        // The site gives each new connection a status of its own (invisible, when tried), whatever
+        // was chosen before. restoreHeldStatus puts the choice back, so this mustn't replace it,
+        // and there's no point flashing it on screen in the meantime.
+        val opening = System.currentTimeMillis() < openingUntil
+        val kept = held?.takeIf { it.isActive() }
+        if (opening && kept != null) {
+            _status.value = kept.status
+            return
+        }
+        _status.value = event.status
+        _statusUntil.value = event.until
+        if (opening) return
+        val current = held
+        if (event.status == current?.status) return
+        if (current?.until != null && System.currentTimeMillis() >= current.until - EXPIRY_SLACK_MS) {
+            // The hold ran out and the site has moved on from it. That isn't a new choice to keep.
+            hold(null)
+            return
+        }
+        // Changed somewhere else, such as on the website, so that's the status to keep now.
+        hold(HeldStatus(event.status, event.until?.let(::parseMillis)))
+    }
+
 
