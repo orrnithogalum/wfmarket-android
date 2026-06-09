@@ -124,4 +124,12 @@ class AccountRepository(
         settings.setHeldStatus(value)
     }
 
+    suspend fun refresh(): User? {
+        if (session.token == null) return null
+        val user = api.me()
+        _me.value = user
+        adoptAccountPreferences(user)
+        return user
+    }
+
 
