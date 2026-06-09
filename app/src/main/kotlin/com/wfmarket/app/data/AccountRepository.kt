@@ -106,4 +106,17 @@ class AccountRepository(
         hold(HeldStatus(event.status, event.until?.let(::parseMillis)))
     }
 
+    private fun restoreHeldStatus() {
+        val wanted = held?.takeIf { it.isActive() } ?: return
+        if (reported == wanted.status) return
+        val remaining = wanted.until?.let { ((it - System.currentTimeMillis()) / 1000).toInt() }
+        // The site offers fixed holds, so the rest of one rounds up to the next it accepts.
+        val duration = remaining?.let { left -> StatusDurations.filterNotNull().firstOrNull { it >= left } ?: StatusDurations.filterNotNull().last() }
+        if (sockets.setStatus(wanted.status, duration)) {
+            _status.value = wanted.status
+        } else {
+            reported?.let { _status.value = it }
+        }
+    }
+
 
