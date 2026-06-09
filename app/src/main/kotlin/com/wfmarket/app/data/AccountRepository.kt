@@ -119,4 +119,9 @@ class AccountRepository(
         }
     }
 
+    private fun hold(value: HeldStatus?) {
+        held = value
+        settings.setHeldStatus(value)
+    }
+
 
