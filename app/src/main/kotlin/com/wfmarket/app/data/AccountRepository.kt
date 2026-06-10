@@ -132,4 +132,10 @@ class AccountRepository(
         return user
     }
 
+    /** The site's account language and platform become the app's, as they do on the website. */
+    private fun adoptAccountPreferences(user: User) {
+        settings.setPlatform(user.platform)
+        settings.setCrossplay(user.crossplay)
+    }
+
 
