@@ -138,4 +138,17 @@ class AccountRepository(
         settings.setCrossplay(user.crossplay)
     }
 
+    suspend fun signIn(email: String, password: String) {
+        val result = api.signIn(email.trim(), password, session.deviceId)
+        session.save(result.token)
+        _isSignedIn.value = true
+        try {
+            refresh()
+        } catch (e: WfmException) {
+            // Signed in but /me failed: treat it as a failed sign-in rather than half a session.
+            if (e.kind == WfmErrorKind.UNAUTHORIZED) throw e
+        }
+        sockets.reconnect()
+    }
+
 
