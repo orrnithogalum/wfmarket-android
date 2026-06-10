@@ -151,4 +151,10 @@ class AccountRepository(
         sockets.reconnect()
     }
 
+    /** Signs out on this device even if the site can't be told, such as with no network. */
+    suspend fun signOut() {
+        runCatching { api.signOut() }
+        clearSession()
+    }
+
 
