@@ -204,4 +204,8 @@ class AccountRepository(
         }
     }
 
+    suspend fun updateAbout(about: String) {
+        _me.value = api.updateMe(UpdateMe(about = about))
+    }
+
 
