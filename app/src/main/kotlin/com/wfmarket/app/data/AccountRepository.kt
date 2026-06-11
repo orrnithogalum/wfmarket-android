@@ -157,4 +157,8 @@ class AccountRepository(
         clearSession()
     }
 
+    fun onSessionExpired() {
+        if (session.token != null) clearSession()
+    }
+
 
