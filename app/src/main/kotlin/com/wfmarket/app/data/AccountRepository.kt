@@ -208,4 +208,8 @@ class AccountRepository(
         _me.value = api.updateMe(UpdateMe(about = about))
     }
 
+    suspend fun uploadAvatar(bytes: ByteArray, fileName: String, mimeType: String) {
+        _me.value = api.uploadAvatar(bytes, fileName, mimeType)
+    }
+
 
