@@ -161,4 +161,13 @@ class AccountRepository(
         if (session.token != null) clearSession()
     }
 
+    private fun clearSession() {
+        session.clear()
+        _isSignedIn.value = false
+        _me.value = null
+        _status.value = "offline"
+        hold(null)
+        sockets.reconnect()
+    }
+
 
