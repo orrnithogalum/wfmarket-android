@@ -189,4 +189,9 @@ class AccountRepository(
         return setStatus(status, settings.current.statusDurationOption)
     }
 
+    /** Invisible to everyone, and nothing to keep the connection open for. */
+    fun goOffline() {
+        if (!setStatus("invisible", 0)) hold(HeldStatus("invisible", null))
+    }
+
 
