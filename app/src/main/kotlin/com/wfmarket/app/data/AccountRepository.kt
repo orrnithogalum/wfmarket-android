@@ -194,4 +194,14 @@ class AccountRepository(
         if (!setStatus("invisible", 0)) hold(HeldStatus("invisible", null))
     }
 
+    /** Applies preference changes locally at once, and to the account when signed in. */
+    suspend fun updatePreferences(platform: String? = null, crossplay: Boolean? = null, locale: String? = null) {
+        platform?.let(settings::setPlatform)
+        crossplay?.let(settings::setCrossplay)
+        locale?.let(settings::setLanguage)
+        if (session.token != null) {
+            _me.value = api.updateMe(UpdateMe(platform = platform, crossplay = crossplay, locale = locale))
+        }
+    }
+
 
