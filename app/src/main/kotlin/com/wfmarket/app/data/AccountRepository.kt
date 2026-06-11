@@ -170,4 +170,14 @@ class AccountRepository(
         sockets.reconnect()
     }
 
+    fun setStatus(status: String, durationOption: Int): Boolean {
+        val duration = if (status == "invisible") null else StatusDurations.getOrNull(durationOption)
+        val sent = sockets.setStatus(status, duration)
+        if (sent) {
+            _status.value = status
+            hold(HeldStatus(status, duration?.let { System.currentTimeMillis() + it * 1000L }))
+        }
+        return sent
+    }
+
 
