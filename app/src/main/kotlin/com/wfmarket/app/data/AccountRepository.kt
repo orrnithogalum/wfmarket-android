@@ -180,4 +180,13 @@ class AccountRepository(
         return sent
     }
 
+    /** For a shortcut or notification, which can run before the connection is up. */
+    suspend fun setStatusWhenConnected(status: String): Boolean {
+        sockets.connect()
+        withTimeoutOrNull(15_000) { sockets.state.first { it.statusAuthorized } } ?: return false
+        // Let the new connection's opening report go by, or it would undo this.
+        delay((openingUntil - System.currentTimeMillis()).coerceAtLeast(0))
+        return setStatus(status, settings.current.statusDurationOption)
+    }
+
 
