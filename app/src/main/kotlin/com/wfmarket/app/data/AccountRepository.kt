@@ -212,4 +212,8 @@ class AccountRepository(
         _me.value = api.uploadAvatar(bytes, fileName, mimeType)
     }
 
+    suspend fun uploadBackground(bytes: ByteArray, fileName: String, mimeType: String) {
+        _me.value = api.uploadBackground(bytes, fileName, mimeType)
+    }
+
 
