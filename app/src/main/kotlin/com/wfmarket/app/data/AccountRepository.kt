@@ -216,4 +216,6 @@ class AccountRepository(
         _me.value = api.uploadBackground(bytes, fileName, mimeType)
     }
 
+    suspend fun changePassword(current: String, new: String, confirm: String) = api.changePassword(current, new, confirm)
+
 
