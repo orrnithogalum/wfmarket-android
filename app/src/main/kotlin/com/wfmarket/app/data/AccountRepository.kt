@@ -220,4 +220,9 @@ class AccountRepository(
 
     suspend fun changeEmail(current: String, newEmail: String) = api.changeEmail(current, newEmail)
 
+    suspend fun unlinkAccount(service: String) {
+        api.unlinkAccount(service)
+        refresh()
+    }
+
 
