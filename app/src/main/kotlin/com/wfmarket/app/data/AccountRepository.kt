@@ -225,4 +225,9 @@ class AccountRepository(
         refresh()
     }
 
+    suspend fun requestDeletion() {
+        api.requestAccountDeletion()
+        refresh()
+    }
+
 
