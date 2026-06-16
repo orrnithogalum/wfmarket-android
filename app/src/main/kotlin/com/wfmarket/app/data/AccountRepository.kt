@@ -230,4 +230,9 @@ class AccountRepository(
         refresh()
     }
 
+    suspend fun cancelDeletion() {
+        api.cancelAccountDeletion()
+        refresh()
+    }
+}
 
