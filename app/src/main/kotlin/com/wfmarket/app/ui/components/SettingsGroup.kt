@@ -47,3 +47,20 @@ fun SettingsGroup(title: String? = null, modifier: Modifier = Modifier, content:
 /** The page behind [SettingsGroup]s. */
 val settingsBackground: Color @Composable get() = MaterialTheme.colorScheme.surface
 
+fun SettingsGroupScope.switchRow(
+    title: String,
+    subtitle: String? = null,
+    checked: Boolean,
+    enabled: Boolean = true,
+    icon: ImageVector? = null,
+    onChange: (Boolean) -> Unit,
+) = row {
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = subtitle?.let { { Text(it) } },
+        leadingContent = icon?.let { { Icon(it, null) } },
+        trailingContent = { Switch(checked = checked, onCheckedChange = null, enabled = enabled) },
+        modifier = Modifier.clickable(enabled = enabled) { onChange(!checked) },
+    )
+}
+
