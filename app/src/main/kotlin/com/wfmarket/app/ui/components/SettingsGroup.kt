@@ -25,3 +25,22 @@ class SettingsGroupScope {
     }
 }
 
+/** A titled run of settings, separated from the next by a divider. */
+@Composable
+fun SettingsGroup(title: String? = null, modifier: Modifier = Modifier, content: SettingsGroupScope.() -> Unit) {
+    val rows = SettingsGroupScope().apply(content).rows
+    if (rows.isEmpty()) return
+    Column(modifier.fillMaxWidth()) {
+        if (title != null) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 4.dp),
+            )
+        }
+        rows.forEach { it() }
+        HorizontalDivider(Modifier.padding(top = 8.dp))
+    }
+}
+
