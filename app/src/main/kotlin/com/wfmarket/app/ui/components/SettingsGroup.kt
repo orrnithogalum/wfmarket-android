@@ -44,3 +44,6 @@ fun SettingsGroup(title: String? = null, modifier: Modifier = Modifier, content:
     }
 }
 
+/** The page behind [SettingsGroup]s. */
+val settingsBackground: Color @Composable get() = MaterialTheme.colorScheme.surface
+
