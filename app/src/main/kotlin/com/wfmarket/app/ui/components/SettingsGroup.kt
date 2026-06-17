@@ -20,4 +20,8 @@ import androidx.compose.ui.unit.dp
 class SettingsGroupScope {
     internal val rows = mutableListOf<@Composable () -> Unit>()
 
+    fun row(content: @Composable () -> Unit) {
+        rows += content
+    }
+}
 
