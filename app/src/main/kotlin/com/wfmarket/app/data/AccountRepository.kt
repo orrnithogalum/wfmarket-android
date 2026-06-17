@@ -236,3 +236,7 @@ class AccountRepository(
     }
 }
 
+private const val SIGN_IN_WINDOW_MS = 15_000L
+private const val OPENING_WINDOW_MS = 2_500L
+private const val EXPIRY_SLACK_MS = 60_000L
+
