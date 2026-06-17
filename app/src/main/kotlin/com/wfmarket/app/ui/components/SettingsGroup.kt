@@ -64,3 +64,20 @@ fun SettingsGroupScope.switchRow(
     )
 }
 
+/** A row that opens something, or with no [onClick], one that only informs. */
+fun SettingsGroupScope.valueRow(
+    title: String,
+    value: String? = null,
+    icon: ImageVector? = null,
+    destructive: Boolean = false,
+    trailing: (@Composable () -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
+) = row {
+    ListItem(
+        headlineContent = { if (destructive) Text(title, color = MaterialTheme.colorScheme.error) else Text(title) },
+        supportingContent = value?.let { { Text(it) } },
+        leadingContent = icon?.let { { Icon(it, null) } },
+        trailingContent = trailing,
+        modifier = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier,
+    )
+}
