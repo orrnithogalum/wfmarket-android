@@ -48,3 +48,17 @@ private fun BackBar(title: String, container: Color = MaterialTheme.colorScheme.
     )
 }
 
+@Composable
+private fun <T> ChoiceDialog(title: String, options: List<T>, selected: T, label: (T) -> String, onDismiss: () -> Unit, onSelect: (T) -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(Modifier.fadingVerticalScroll()) {
+                options.forEach { option -> ChoiceRow(label(option), option == selected) { onSelect(option) } }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
+}
+
