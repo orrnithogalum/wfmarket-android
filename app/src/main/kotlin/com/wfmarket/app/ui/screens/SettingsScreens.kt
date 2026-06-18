@@ -202,3 +202,22 @@ fun SettingsScreen() {
     }
 }
 
+@Composable
+private fun PasswordField(label: String, value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    var show by remember { mutableStateOf(false) }
+    OutlinedTextField(
+        value,
+        onChange,
+        label = { Text(label) },
+        singleLine = true,
+        visualTransformation = if (show) VisualTransformation.None else PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        trailingIcon = {
+            IconButton(onClick = { show = !show }) {
+                Icon(if (show) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, if (show) "Hide password" else "Show password")
+            }
+        },
+        modifier = modifier.fillMaxWidth(),
+    )
+}
+
