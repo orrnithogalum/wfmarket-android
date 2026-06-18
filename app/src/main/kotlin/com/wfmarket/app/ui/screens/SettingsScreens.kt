@@ -62,3 +62,16 @@ private fun <T> ChoiceDialog(title: String, options: List<T>, selected: T, label
     )
 }
 
+@Composable
+private fun ChoiceRow(label: String, selected: Boolean, onClick: () -> Unit) {
+    // The minimum touch height, with nothing added: the dialog's own padding does the spacing.
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 44.dp).clip(MaterialTheme.shapes.medium).clickable(onClick = onClick).padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Text(label)
+    }
+}
+
