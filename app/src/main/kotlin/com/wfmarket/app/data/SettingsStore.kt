@@ -48,3 +48,5 @@ data class AppSettings(
     val heldStatus: HeldStatus? = null,
 )
 
+private val Context.dataStore by preferencesDataStore("settings")
+
