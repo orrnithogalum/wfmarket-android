@@ -69,5 +69,21 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         val heldStatusUntil = longPreferencesKey("held_status_until")
     }
 
+    private fun Preferences.toSettings() = AppSettings(
+        platform = this[Keys.platform] ?: "pc",
+        crossplay = this[Keys.crossplay] ?: true,
+        language = this[Keys.language] ?: defaultLanguage(),
+        theme = this[Keys.theme]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM,
+        dynamicColor = this[Keys.dynamicColor] ?: true,
+        amoled = this[Keys.amoled] ?: false,
+        backgroundMessages = this[Keys.backgroundMessages] ?: true,
+        instantMessages = this[Keys.instantMessages] ?: false,
+        notifyAuctions = this[Keys.notifyAuctions] ?: true,
+        statusDurationOption = this[Keys.statusDurationOption] ?: 0,
+        batteryPromptDismissed = this[Keys.batteryPromptDismissed] ?: false,
+        keepStatusInBackground = this[Keys.keepStatusInBackground] ?: true,
+        heldStatus = this[Keys.heldStatus]?.let { HeldStatus(it, this[Keys.heldStatusUntil]) },
+    )
+
 
 
