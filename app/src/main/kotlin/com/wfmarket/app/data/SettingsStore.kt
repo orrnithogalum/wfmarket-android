@@ -50,3 +50,24 @@ data class AppSettings(
 
 private val Context.dataStore by preferencesDataStore("settings")
 
+/** User preferences. Read synchronously by the API layer, so the first load blocks once at startup. */
+class SettingsStore(private val context: Context, private val scope: CoroutineScope) {
+    private object Keys {
+        val platform = stringPreferencesKey("platform")
+        val crossplay = booleanPreferencesKey("crossplay")
+        val language = stringPreferencesKey("language")
+        val theme = stringPreferencesKey("theme")
+        val dynamicColor = booleanPreferencesKey("dynamic_color")
+        val amoled = booleanPreferencesKey("amoled")
+        val backgroundMessages = booleanPreferencesKey("background_messages")
+        val instantMessages = booleanPreferencesKey("instant_messages")
+        val notifyAuctions = booleanPreferencesKey("notify_auctions")
+        val statusDurationOption = intPreferencesKey("status_duration_option")
+        val batteryPromptDismissed = booleanPreferencesKey("battery_prompt_dismissed")
+        val keepStatusInBackground = booleanPreferencesKey("keep_status_in_background")
+        val heldStatus = stringPreferencesKey("held_status")
+        val heldStatusUntil = longPreferencesKey("held_status_until")
+    }
+
+
+
