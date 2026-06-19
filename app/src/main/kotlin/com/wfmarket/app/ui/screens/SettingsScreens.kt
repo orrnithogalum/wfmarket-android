@@ -221,3 +221,65 @@ private fun PasswordField(label: String, value: String, onChange: (String) -> Un
     )
 }
 
+@Composable
+fun SignInScreen() {
+    val container = appContainer()
+    val navigator = LocalNavigator.current
+    val openUrl = rememberOpenUrl()
+    val scope = rememberCoroutineScope()
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    fun submit() {
+        if (email.isBlank() || password.isEmpty() || busy) return
+        busy = true
+        error = null
+        scope.launch {
+            runCatching { container.account.signIn(email, password) }
+                .onSuccess { navigator.back() }
+                .onFailure {
+                    busy = false
+                    error = it.userMessage()
+                }
+        }
+    }
+
+    Scaffold(topBar = { BackBar("Sign in") }) { padding ->
+        Column(
+            Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding().fadingVerticalScroll().padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("Your warframe.market account", style = MaterialTheme.typography.headlineSmall)
+            OutlinedTextField(
+                email,
+                { email = it },
+                label = { Text("Email") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            PasswordField("Password", password, { password = it })
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            Button(onClick = ::submit, enabled = !busy && email.isNotBlank() && password.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
+                if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) else Text("Sign in")
+            }
+            Text(
+                "Your password goes only to warframe.market and isn't stored on this phone.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
+            Text(
+                "Creating an account and resetting a password need a reCAPTCHA check, so they open on the website. If you log in with Steam, Xbox or Discord, add an email and password under Settings › Account on the website first.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = { openUrl("https://warframe.market/auth/register") }, modifier = Modifier.weight(1f)) { Text("Create account") }
+                OutlinedButton(onClick = { openUrl("https://warframe.market/auth/restore") }, modifier = Modifier.weight(1f)) { Text("Forgot password") }
+            }
+        }
+    }
+}
