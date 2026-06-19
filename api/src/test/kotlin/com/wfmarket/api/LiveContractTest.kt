@@ -81,4 +81,9 @@ class LiveContractTest {
         assertEquals(WfmErrorKind.VALIDATION, failure.kind)
         assertEquals("Email not registered.", failure.summary)
     }
+
+    @Test fun authenticatedRouteRejectsAnonymous() = runBlocking {
+        val failure = runCatching { api.me() }.exceptionOrNull() as WfmException
+        assertEquals(WfmErrorKind.UNAUTHORIZED, failure.kind)
+    }
 }
