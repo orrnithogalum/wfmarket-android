@@ -20,3 +20,15 @@ import kotlinx.coroutines.runBlocking
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+
+/**
+ * The status last chosen, here or on another device, and when its hold runs out. The site drops
+ * you to offline whenever the connection closes and doesn't restore your choice when it reopens,
+ * so the app keeps this to put it back.
+ */
+data class HeldStatus(val status: String, val until: Long?) {
+    /** Online and in game are the statuses worth staying connected for. Invisible looks like offline. */
+    fun isActive(now: Long = System.currentTimeMillis()): Boolean =
+        (status == "online" || status == "ingame") && (until == null || now < until)
+}
+
