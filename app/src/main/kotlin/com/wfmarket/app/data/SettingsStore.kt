@@ -32,3 +32,19 @@ data class HeldStatus(val status: String, val until: Long?) {
         (status == "online" || status == "ingame") && (until == null || now < until)
 }
 
+data class AppSettings(
+    val platform: String = "pc",
+    val crossplay: Boolean = true,
+    val language: String = "en",
+    val theme: ThemeMode = ThemeMode.SYSTEM,
+    val dynamicColor: Boolean = true,
+    val amoled: Boolean = false,
+    val backgroundMessages: Boolean = true,
+    val instantMessages: Boolean = false,
+    val notifyAuctions: Boolean = true,
+    val statusDurationOption: Int = 0,
+    val batteryPromptDismissed: Boolean = false,
+    val keepStatusInBackground: Boolean = true,
+    val heldStatus: HeldStatus? = null,
+)
+
