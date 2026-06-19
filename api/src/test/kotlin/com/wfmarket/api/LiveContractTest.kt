@@ -73,4 +73,12 @@ class LiveContractTest {
         assertTrue(stats.live.days90.any { it.orderType == "buy" })
         assertTrue(stats.live.days90.any { it.orderType == "sell" })
     }
+
+    @Test fun signInReportsReadableErrors() = runBlocking {
+        val failure = runCatching {
+            api.signIn("nobody-wfm-probe@example.invalid", "probe-not-a-real-password", "contract-test")
+        }.exceptionOrNull() as WfmException
+        assertEquals(WfmErrorKind.VALIDATION, failure.kind)
+        assertEquals("Email not registered.", failure.summary)
+    }
 }
