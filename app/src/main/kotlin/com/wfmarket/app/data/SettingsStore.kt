@@ -86,4 +86,14 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
     )
 
 
+    private fun defaultLanguage(): String {
+        val locale = context.resources.configuration.locales[0]
+        val tag = when {
+            locale.language == "zh" && (locale.script == "Hant" || locale.country in setOf("TW", "HK", "MO")) -> "zh-hant"
+            locale.language == "zh" -> "zh-hans"
+            else -> locale.language
+        }
+        return com.wfmarket.api.model.Language.entries.firstOrNull { it.wire == tag }?.wire ?: "en"
+    }
+
 
