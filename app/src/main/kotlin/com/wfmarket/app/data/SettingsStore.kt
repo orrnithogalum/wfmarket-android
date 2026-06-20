@@ -100,4 +100,6 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         .map { it.toSettings() }
         .stateIn(scope, SharingStarted.Eagerly, runBlocking { context.dataStore.data.first().toSettings() })
 
+    val current: AppSettings get() = flow.value
+
 
