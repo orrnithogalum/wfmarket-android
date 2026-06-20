@@ -96,4 +96,8 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         return com.wfmarket.api.model.Language.entries.firstOrNull { it.wire == tag }?.wire ?: "en"
     }
 
+    val flow: StateFlow<AppSettings> = context.dataStore.data
+        .map { it.toSettings() }
+        .stateIn(scope, SharingStarted.Eagerly, runBlocking { context.dataStore.data.first().toSettings() })
+
 
