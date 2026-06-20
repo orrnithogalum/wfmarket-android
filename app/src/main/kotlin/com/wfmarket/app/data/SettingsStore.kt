@@ -115,4 +115,14 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
     fun dismissBatteryPrompt() = edit { it[Keys.batteryPromptDismissed] = true }
     fun setKeepStatusInBackground(value: Boolean) = edit { it[Keys.keepStatusInBackground] = value }
 
+    fun setHeldStatus(value: HeldStatus?) = edit {
+        if (value == null) {
+            it.remove(Keys.heldStatus)
+            it.remove(Keys.heldStatusUntil)
+        } else {
+            it[Keys.heldStatus] = value.status
+            if (value.until == null) it.remove(Keys.heldStatusUntil) else it[Keys.heldStatusUntil] = value.until
+        }
+    }
+
 
