@@ -278,6 +278,7 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                     screen("market") { tab { MarketScreen() } }
                     screen("me") { tab { MyProfileScreen() } }
                     screen("item/{slug}", "slug") { ItemScreen(it.orEmpty()) }
+                    screen("user/{slug}", "slug") { ProfileScreen(it.orEmpty()) }
                     screen("settings") { SettingsScreen() }
                     screen("signin") { SignInScreen() }
                 }
