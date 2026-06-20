@@ -102,4 +102,17 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
 
     val current: AppSettings get() = flow.value
 
+    fun setPlatform(value: String) = edit { it[Keys.platform] = value }
+    fun setCrossplay(value: Boolean) = edit { it[Keys.crossplay] = value }
+    fun setLanguage(value: String) = edit { it[Keys.language] = value }
+    fun setTheme(value: ThemeMode) = edit { it[Keys.theme] = value.name }
+    fun setDynamicColor(value: Boolean) = edit { it[Keys.dynamicColor] = value }
+    fun setAmoled(value: Boolean) = edit { it[Keys.amoled] = value }
+    fun setBackgroundMessages(value: Boolean) = edit { it[Keys.backgroundMessages] = value }
+    fun setInstantMessages(value: Boolean) = edit { it[Keys.instantMessages] = value }
+    fun setNotifyAuctions(value: Boolean) = edit { it[Keys.notifyAuctions] = value }
+    fun setStatusDurationOption(value: Int) = edit { it[Keys.statusDurationOption] = value }
+    fun dismissBatteryPrompt() = edit { it[Keys.batteryPromptDismissed] = true }
+    fun setKeepStatusInBackground(value: Boolean) = edit { it[Keys.keepStatusInBackground] = value }
+
 
