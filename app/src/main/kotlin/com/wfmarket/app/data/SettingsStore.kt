@@ -125,4 +125,8 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         }
     }
 
+    private fun edit(block: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {
+        scope.launch { context.dataStore.edit(block) }
+    }
+}
 
