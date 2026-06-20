@@ -91,6 +91,9 @@ class ProfileViewModel(private val container: AppContainer, private val slug: St
     private val _achievements = MutableStateFlow<Load<List<Achievement>>>(Load.Loading)
     val achievements = _achievements.asStateFlow()
 
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing = _refreshing.asStateFlow()
+
     init {
         load()
         // Stays current while waiting behind another screen, such as one closing an auction.
