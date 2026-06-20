@@ -130,3 +130,16 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
     }
 }
 
+/** Bridges app state into the framework-free API layer. */
+class AppWfmContext(
+    private val settings: SettingsStore,
+    private val session: SessionStore,
+    private val onExpired: () -> Unit,
+) : WfmContext {
+    override val platform: String get() = settings.current.platform
+    override val language: String get() = settings.current.language
+    // Switch players aren't on crossplay, so the site disables the toggle for them.
+    override val crossplay: Boolean get() = settings.current.crossplay && platform != "switch"
+    override val token: String? get() = session.token
+    override fun onSessionExpired() = onExpired()
+}
