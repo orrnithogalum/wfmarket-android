@@ -116,4 +116,6 @@ class ProfileViewModel(private val container: AppContainer, private val slug: St
         }
     }
 
+    private suspend fun fetchUser() = _user.accept(runCatching { container.market.user(slug) })
+
 
