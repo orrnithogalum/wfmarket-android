@@ -94,6 +94,9 @@ class ProfileViewModel(private val container: AppContainer, private val slug: St
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
 
+    /** The public lists leave out whatever is hidden, so your own profile reads the private ones. */
+    private val isMe: Boolean get() = container.account.me.value?.slug == slug
+
     init {
         load()
         // Stays current while waiting behind another screen, such as one closing an auction.
