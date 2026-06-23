@@ -118,4 +118,8 @@ class ProfileViewModel(private val container: AppContainer, private val slug: St
 
     private suspend fun fetchUser() = _user.accept(runCatching { container.market.user(slug) })
 
+    private suspend fun fetchOrders() = _orders.accept(
+        runCatching { if (isMe) container.market.myOrders() else container.market.userOrders(slug) },
+    )
+
 
