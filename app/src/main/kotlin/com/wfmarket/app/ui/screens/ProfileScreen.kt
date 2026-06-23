@@ -128,4 +128,6 @@ class ProfileViewModel(private val container: AppContainer, private val slug: St
 
     private suspend fun fetchHistory() = _history.accept(runCatching { container.market.closedOrders(slug) })
 
+    private suspend fun fetchReviews() = _reviews.accept(runCatching { container.market.reviews(slug) })
+
 
