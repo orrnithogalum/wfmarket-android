@@ -132,4 +132,15 @@ class ProfileViewModel(private val container: AppContainer, private val slug: St
 
     private suspend fun fetchAchievements() = _achievements.accept(runCatching { container.market.achievements(slug) })
 
+    private suspend fun fetchAll(): Boolean = coroutineScope {
+        listOf(
+            async { fetchUser() },
+            async { fetchOrders() },
+            async { fetchAuctions() },
+            async { fetchHistory() },
+            async { fetchReviews() },
+            async { fetchAchievements() },
+        ).awaitAll().all { it }
+    }
+
 
