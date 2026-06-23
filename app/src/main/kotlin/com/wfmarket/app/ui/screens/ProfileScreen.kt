@@ -130,4 +130,6 @@ class ProfileViewModel(private val container: AppContainer, private val slug: St
 
     private suspend fun fetchReviews() = _reviews.accept(runCatching { container.market.reviews(slug) })
 
+    private suspend fun fetchAchievements() = _achievements.accept(runCatching { container.market.achievements(slug) })
+
 
