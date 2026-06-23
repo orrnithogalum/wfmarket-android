@@ -122,4 +122,8 @@ class ProfileViewModel(private val container: AppContainer, private val slug: St
         runCatching { if (isMe) container.market.myOrders() else container.market.userOrders(slug) },
     )
 
+    private suspend fun fetchAuctions() = _auctions.accept(
+        runCatching { if (isMe) container.auctions.mine() else container.auctions.ofUser(slug) },
+    )
+
 
