@@ -143,4 +143,8 @@ class ProfileViewModel(private val container: AppContainer, private val slug: St
         ).awaitAll().all { it }
     }
 
+    fun load() {
+        viewModelScope.launch { fetchAll() }
+    }
+
 
