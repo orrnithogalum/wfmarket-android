@@ -157,3 +157,66 @@ class ProfileViewModel(private val container: AppContainer, private val slug: St
     }
 }
 
+/** The signed-in user's own profile, from the bottom bar. */
+@Composable
+fun MyProfileScreen() {
+    val container = appContainer()
+    val signedIn by container.account.isSignedIn.collectAsStateWithLifecycle()
+    val me by container.account.me.collectAsStateWithLifecycle()
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(signedIn) {
+        if (signedIn && me == null) runCatching { container.account.refresh() }
+    }
+
+    val slug = me?.slug?.takeIf { it.isNotBlank() }
+    when {
+        !signedIn -> Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Profile") },
+                    actions = { IconButton(onClick = navigator::settings) { Icon(Icons.Filled.Settings, "Settings") } },
+                )
+            },
+            contentWindowInsets = WindowInsets.statusBars,
+        ) { padding ->
+            MessageBox(
+                Icons.Filled.Person,
+                "You're browsing without an account",
+                "Sign in to post orders, message traders, bid on auctions and see your history.",
+                Modifier.padding(padding),
+            ) { Button(onClick = navigator::signIn) { Text("Sign in") } }
+        }
+        slug != null -> ProfileScreen(slug, topLevel = true)
+        else -> Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Profile") },
+                    actions = { IconButton(onClick = navigator::settings) { Icon(Icons.Filled.Settings, "Settings") } },
+                )
+            },
+            contentWindowInsets = WindowInsets.statusBars,
+        ) { padding ->
+            var failed by remember { mutableStateOf<String?>(null) }
+            LaunchedEffect(Unit) { runCatching { container.account.refresh() }.onFailure { failed = it.userMessage() } }
+            if (me != null && slug == null) {
+                // A signed-in account with no in-game name yet: it hasn't been verified.
+                MessageBox(
+                    Icons.Filled.Person,
+                    "Verify your account",
+                    "Verifying links your in-game name, which your profile needs.",
+                    Modifier.padding(padding),
+                ) { Button(onClick = navigator::accountSettings) { Text("Verify") } }
+            } else if (failed != null) {
+                ErrorBox(failed!!, Modifier.padding(padding)) {
+                    failed = null
+                    scope.launch { runCatching { container.account.refresh() }.onFailure { failed = it.userMessage() } }
+                }
+            } else {
+                LoadingBox(Modifier.padding(padding))
+            }
+        }
+    }
+}
+
