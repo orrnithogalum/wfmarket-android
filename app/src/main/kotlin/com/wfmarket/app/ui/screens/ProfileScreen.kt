@@ -147,4 +147,13 @@ class ProfileViewModel(private val container: AppContainer, private val slug: St
         viewModelScope.launch { fetchAll() }
     }
 
+    fun refresh() {
+        viewModelScope.launch {
+            _refreshing.value = true
+            if (isMe) runCatching { container.account.refresh() }
+            if (!fetchAll()) container.refreshFailed()
+            _refreshing.value = false
+        }
+    }
+}
 
