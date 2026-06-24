@@ -442,3 +442,8 @@ private fun ProfileHeader(backgroundHeight: Dp?, user: User, isMe: Boolean, mySt
 private const val BACKGROUND_RATIO = 1920f / 820f
 private val MAX_BACKGROUND_HEIGHT = 220.dp
 
+/** A bar button's backing over a picture: a disc of the page's color, gone once the bar is filled in. */
+@Composable
+private fun overPicture(barFill: Float): IconButtonColors =
+    IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f * (1 - barFill)))
+
