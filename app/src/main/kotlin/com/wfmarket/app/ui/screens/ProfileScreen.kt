@@ -220,3 +220,7 @@ fun MyProfileScreen() {
     }
 }
 
+private enum class ProfileTab(val label: String) {
+    ORDERS("Orders"), AUCTIONS("Auctions"), HISTORY("History"), REVIEWS("Reviews"), ABOUT("About")
+}
+
