@@ -387,3 +387,54 @@ fun ProfileScreen(slug: String, topLevel: Boolean = false) {
     }
 }
 
+/** [backgroundHeight] is how much of the profile's background shows below the bar, or null without one. */
+@Composable
+private fun ProfileHeader(backgroundHeight: Dp?, user: User, isMe: Boolean, myStatus: String, onStatus: () -> Unit, onMessage: () -> Unit) {
+    val status = if (isMe) myStatus else user.status
+    Box {
+        // The background itself is behind the whole screen. The header leaves it room, and the
+        // avatar sits over the foot of it, where it fades into the page.
+        Column(
+            Modifier.padding(horizontal = 16.dp).padding(top = backgroundHeight?.let { it * 0.5f } ?: 8.dp, bottom = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                UserAvatar(assetUrl(user.avatar), user.ingameName, size = 80.dp, status = status, shape = MaterialShapes.Cookie12Sided.toShape())
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    StatusLabel(status)
+                    if (status == "offline" && !isMe) {
+                        user.lastSeen?.let {
+                            Text("Last seen ${relativeTime(it)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        PlatformTag(user.platform, user.crossplay)
+                        SmallTag(Language.of(user.locale).label)
+                        user.masteryRank?.takeIf { it > 0 }?.let { SmallTag("MR $it") }
+                        user.tier?.takeIf { it != "none" }?.let { SmallTag(it.humanize()) }
+                    }
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("+${user.reputation}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                    Text("reputation", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (isMe) {
+                FilledTonalButton(onClick = onStatus, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) { Text("Status: ${UserStatus.of(status).label}") }
+            } else {
+                Button(onClick = onMessage, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.AutoMirrored.Filled.Send, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Message")
+                }
+            }
+            if (user.banned) {
+                Text("Banned${user.banMessage?.let { ": $it" } ?: ""}", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+            if (user.warned) {
+                Text("Warned${user.warnMessage?.let { ": $it" } ?: ""}", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
