@@ -438,3 +438,7 @@ private fun ProfileHeader(backgroundHeight: Dp?, user: User, isMe: Boolean, mySt
     }
 }
 
+/** The site asks for backgrounds at 1920×820. */
+private const val BACKGROUND_RATIO = 1920f / 820f
+private val MAX_BACKGROUND_HEIGHT = 220.dp
+
