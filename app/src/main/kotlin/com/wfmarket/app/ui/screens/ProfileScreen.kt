@@ -447,3 +447,6 @@ private val MAX_BACKGROUND_HEIGHT = 220.dp
 private fun overPicture(barFill: Float): IconButtonColors =
     IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f * (1 - barFill)))
 
+/** How far the header scrolls before the bar over a background is filled in. */
+private val BAR_FILL_DISTANCE = 96.dp
+
