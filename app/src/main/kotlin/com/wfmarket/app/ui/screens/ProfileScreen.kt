@@ -224,3 +224,166 @@ private enum class ProfileTab(val label: String) {
     ORDERS("Orders"), AUCTIONS("Auctions"), HISTORY("History"), REVIEWS("Reviews"), ABOUT("About")
 }
 
+@Composable
+fun ProfileScreen(slug: String, topLevel: Boolean = false) {
+    val container = appContainer()
+    val viewModel = containerViewModel(key = "profile:$slug") { ProfileViewModel(it, slug) }
+    val userLoad by viewModel.user.collectAsStateWithLifecycle()
+    val orders by viewModel.orders.collectAsStateWithLifecycle()
+    val auctions by viewModel.auctions.collectAsStateWithLifecycle()
+    val history by viewModel.history.collectAsStateWithLifecycle()
+    val reviews by viewModel.reviews.collectAsStateWithLifecycle()
+    val achievements by viewModel.achievements.collectAsStateWithLifecycle()
+    val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
+    val catalog by container.catalog.catalog.collectAsStateWithLifecycle()
+    val me by container.account.me.collectAsStateWithLifecycle()
+    val signedIn by container.account.isSignedIn.collectAsStateWithLifecycle()
+    val myStatus by container.account.status.collectAsStateWithLifecycle()
+    val navigator = LocalNavigator.current
+    val openUrl = rememberOpenUrl()
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val pager = rememberPagerState { ProfileTab.entries.size }
+    var statusSheet by remember { mutableStateOf(false) }
+    var editAbout by remember { mutableStateOf(false) }
+
+    val isMe = me?.slug == slug
+    // The status notification opens the sheet straight away.
+    val sheetRequested by container.statusSheetRequest.collectAsStateWithLifecycle()
+    LaunchedEffect(sheetRequested, isMe) {
+        if (sheetRequested && isMe) {
+            statusSheet = true
+            container.statusSheetRequest.value = false
+        }
+    }
+    val fresh = (userLoad as? Load.Ready)?.value
+    // Your own record updates immediately; the public one lags until refetched.
+    val user = if (isMe) me ?: fresh else fresh
+
+    val header = rememberCollapsingHeaderState()
+    var backgroundFailed by remember(user?.background) { mutableStateOf(false) }
+    val background = assetUrl(user?.background).takeUnless { backgroundFailed }
+    // Over a background the bar is see-through, and fills in as the picture scrolls away under it.
+    val fillDistance = with(LocalDensity.current) { BAR_FILL_DISTANCE.toPx() }
+    val barFill by remember(background, fillDistance) {
+        derivedStateOf { if (background == null) 1f else (-header.offset / fillDistance).coerceIn(0f, 1f) }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = barFill)),
+                title = {
+                    val name: @Composable () -> Unit = { Text(user?.ingameName ?: "Profile", maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    if (background == null) {
+                        name()
+                    } else {
+                        // Over a picture, back and the name share one pill of the page's color, so
+                        // both read on any part of it, white included, in either theme. The pill is
+                        // drawn slimmer than the row, which keeps back's full touch target.
+                        val pill = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f * (1 - barFill))
+                        Row(
+                            Modifier.heightIn(min = 48.dp).drawBehind {
+                                val inset = 6.dp.toPx()
+                                val height = size.height - 2 * inset
+                                drawRoundRect(pill, Offset(0f, inset), Size(size.width, height), CornerRadius(height / 2))
+                            }.padding(start = if (topLevel) 14.dp else 0.dp, end = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (!topLevel) IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", Modifier.size(20.dp)) }
+                            Text(user?.ingameName ?: "Profile", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                },
+                navigationIcon = {
+                    // With a background, back is in the title's pill instead.
+                    if (!topLevel && background == null) IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                },
+                actions = {
+                    IconButton(onClick = { openUrl("https://warframe.market/profile/$slug") }, colors = overPicture(barFill)) {
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, "Open on warframe.market")
+                    }
+                    if (isMe) IconButton(onClick = navigator::settings, colors = overPicture(barFill)) { Icon(Icons.Filled.Settings, "Settings") }
+                },
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbar) },
+        contentWindowInsets = if (topLevel) WindowInsets.statusBars else ScaffoldDefaults.contentWindowInsets,
+    ) { padding ->
+      BoxWithConstraints(Modifier.fillMaxSize()) {
+        val backgroundHeight = (maxWidth / BACKGROUND_RATIO).coerceAtMost(MAX_BACKGROUND_HEIGHT)
+        if (user != null && background != null) {
+            // Drawn from the top of the screen, under the bar, which the page's content is laid out below.
+            ProfileBackdrop(background, padding.calculateTopPadding() + backgroundHeight, header) { backgroundFailed = true }
+        }
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            if (user == null) {
+                LoadContent(userLoad, viewModel::load) {}
+                return@Column
+            }
+            CollapsingHeaderLayout(state = header, header = {
+                ProfileHeader(
+                    backgroundHeight = backgroundHeight.takeIf { background != null },
+                    user = user,
+                    isMe = isMe,
+                    myStatus = myStatus,
+                    onStatus = { statusSheet = true },
+                    onMessage = {
+                        if (!signedIn) {
+                            navigator.signIn()
+                        } else {
+                            scope.launch {
+                                runCatching { container.chats.openChatWith(user.id) }
+                                    .onSuccess(navigator::chat)
+                                    .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                            }
+                        }
+                    },
+                )
+            }) {
+            PrimaryScrollableTabRow(selectedTabIndex = pager.currentPage, edgePadding = 8.dp) {
+                ProfileTab.entries.forEachIndexed { index, tab ->
+                    Tab(selected = pager.currentPage == index, onClick = { scope.launch { pager.animateScrollToPage(index) } }, text = { Text(tab.label) })
+                }
+            }
+            HorizontalPager(pager, Modifier.weight(1f), key = { it }) { page ->
+              RefreshBox(isRefreshing = refreshing, onRefresh = viewModel::refresh, modifier = Modifier.fillMaxSize()) {
+                when (ProfileTab.entries[page]) {
+                    ProfileTab.ORDERS -> ProfileOrders(orders, catalog, isMe, viewModel, snackbar)
+                    ProfileTab.AUCTIONS -> LoadContent(auctions, viewModel::load) { list ->
+                        FadingLazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp)) {
+                            if (list.isEmpty()) item { EmptyBox("No auctions") }
+                            itemsIndexed(list, key = { _, auction -> auction.id }) { index, auction ->
+                                AuctionCard(
+                                    auction, catalog,
+                                    shape = ListItemDefaults.segmentedShapes(index, list.size).shape,
+                                    modifier = listItemMotion().padding(bottom = ListItemDefaults.SegmentedGap),
+                                    transitionKey = "profile",
+                                ) { navigator.auction(auction.id) }
+                            }
+                        }
+                    }
+                    ProfileTab.HISTORY -> HistoryTab(history, catalog, isMe, viewModel, snackbar)
+                    ProfileTab.REVIEWS -> ReviewsTab(reviews, slug, isMe, signedIn, viewModel, snackbar)
+                    ProfileTab.ABOUT -> AboutTab(user, isMe, (fresh ?: user).canSetBackground, { editAbout = true }, snackbar)
+                }
+              }
+            }
+            }
+        }
+      }
+    }
+
+    if (statusSheet) StatusSheet { statusSheet = false }
+    if (editAbout) {
+        EditAboutDialog(me?.aboutText ?: user?.about.orEmpty(), { editAbout = false }) { text ->
+            editAbout = false
+            scope.launch {
+                runCatching { container.account.updateAbout(text) }
+                    .onSuccess { snackbar.showSnackbar("Profile updated") }
+                    .onFailure { snackbar.showSnackbar(it.userMessage()) }
+            }
+        }
+    }
+}
+
