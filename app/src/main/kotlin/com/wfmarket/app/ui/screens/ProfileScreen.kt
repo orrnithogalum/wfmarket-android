@@ -450,3 +450,6 @@ private fun overPicture(barFill: Float): IconButtonColors =
 /** How far the header scrolls before the bar over a background is filled in. */
 private val BAR_FILL_DISTANCE = 96.dp
 
+/** How much slower than the header the picture moves as it scrolls away. */
+private const val PARALLAX = 0.35f
+
