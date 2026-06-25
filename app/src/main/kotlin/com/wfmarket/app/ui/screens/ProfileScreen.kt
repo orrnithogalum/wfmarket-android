@@ -881,3 +881,49 @@ private fun ReviewsTab(reviews: Load<ReviewsPage>, slug: String, isMe: Boolean, 
     }
 }
 
+@Composable
+private fun AboutTab(user: User, isMe: Boolean, canSetBackground: Boolean, onEdit: () -> Unit, snackbar: SnackbarHostState) {
+    val container = appContainer()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    fun upload(uri: Uri?, background: Boolean) {
+        uri ?: return
+        scope.launch {
+            runCatching {
+                val mime = context.contentResolver.getType(uri) ?: "image/jpeg"
+                val bytes = withContext(Dispatchers.IO) { context.contentResolver.openInputStream(uri)!!.use { it.readBytes() } }
+                require(bytes.size <= 10_000_000) { "Images must be under 10 MB." }
+                val name = "upload.${mime.substringAfter('/')}"
+                if (background) container.account.uploadBackground(bytes, name, mime) else container.account.uploadAvatar(bytes, name, mime)
+            }.onSuccess { snackbar.showSnackbar("Image updated") }
+                .onFailure { snackbar.showSnackbar(it.userMessage()) }
+        }
+    }
+
+    val avatarPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { upload(it, background = false) }
+    val backgroundPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { upload(it, background = true) }
+    val text: AnnotatedString = remember(user.about) { AnnotatedString.fromHtml(user.about.orEmpty()) }
+
+    Column(Modifier.fillMaxSize().fadingVerticalScroll().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (text.isBlank()) {
+            Text("Nothing here yet.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            Text(text, style = MaterialTheme.typography.bodyMedium)
+        }
+        user.createdAt?.let { Text("Member since ${formatDate(it)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        if (isMe) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = onEdit) { Text("Edit about") }
+                OutlinedButton(onClick = { avatarPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Text("Change avatar") }
+                if (canSetBackground) {
+                    OutlinedButton(onClick = { backgroundPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Text("Change background") }
+                }
+            }
+            if (canSetBackground) {
+                Text("Backgrounds look best at 1920×820.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
