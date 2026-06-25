@@ -707,3 +707,92 @@ private fun ProfileOrders(orders: Load<List<Order>>, catalog: Catalog, isMe: Boo
     }
 }
 
+@Composable
+private fun HistoryTab(history: Load<List<ClosedOrder>>, catalog: Catalog, isMe: Boolean, viewModel: ProfileViewModel, snackbar: SnackbarHostState) {
+    val container = appContainer()
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+    val semantic = LocalSemanticColors.current
+    var filter by rememberSaveable { mutableStateOf<String?>(null) }
+    var removing by remember { mutableStateOf<ClosedOrder?>(null) }
+
+    removing?.let { closed ->
+        AlertDialog(
+            onDismissRequest = { removing = null },
+            title = { Text("Remove from your history?") },
+            text = { Text("This trade won't count towards your totals any more. It can't be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    removing = null
+                    scope.launch {
+                        runCatching { container.market.removeClosedOrder(closed.id) }
+                            .onSuccess { snackbar.showSnackbar("Removed from history") }
+                            .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                    }
+                }) { Text("Remove") }
+            },
+            dismissButton = { TextButton(onClick = { removing = null }) { Text("Keep") } },
+        )
+    }
+
+    LoadContent(history, viewModel::load) { list ->
+        val sold = list.filter { it.orderType == OrderType.SELL }
+        val bought = list.filter { it.orderType == OrderType.BUY }
+        val rows = list.filter { filter == null || it.orderType == filter }.sortedByDescending { it.closedDate }
+        FadingLazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+            item {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        StatTile("Platinum received", Modifier.weight(1f)) { Platinum(sold.sumOf { it.platinum * it.quantity }) }
+                        StatTile("Platinum spent", Modifier.weight(1f)) { Platinum(bought.sumOf { it.platinum * it.quantity }) }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        StatTile("Items sold", sold.sumOf { it.quantity }.toString(), Modifier.weight(1f))
+                        StatTile("Items bought", bought.sumOf { it.quantity }.toString(), Modifier.weight(1f))
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(null to "All", OrderType.SELL to "Sold", OrderType.BUY to "Bought").forEach { (value, label) ->
+                            FilterChip(selected = filter == value, onClick = { filter = value }, label = { Text(label) })
+                        }
+                    }
+                }
+            }
+            if (rows.isEmpty()) item { EmptyBox("No trades recorded") }
+            itemsIndexed(rows, key = { _, closed -> closed.id }) { index, closed ->
+                val item = catalog.itemsById[closed.item.id]
+                SegmentedListItem(
+                    onClick = { item?.let { navigator.item(it.slug) } },
+                    shapes = ListItemDefaults.segmentedShapes(index, rows.size),
+                    colors = ListItemDefaults.segmentedColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                    modifier = listItemMotion().padding(horizontal = 12.dp).padding(bottom = ListItemDefaults.SegmentedGap),
+                    verticalAlignment = Alignment.CenterVertically,
+                    leadingContent = { if (item != null) ItemThumb(catalog.art(item)) else ItemThumb(assetUrl(closed.item.thumb)) },
+                    supportingContent = {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                            SmallTag(
+                                if (closed.orderType == OrderType.SELL) "Sold" else "Bought",
+                                container = (if (closed.orderType == OrderType.SELL) semantic.positive else semantic.seriesBlue).copy(alpha = 0.18f),
+                                content = MaterialTheme.colorScheme.onSurface,
+                            )
+                            closed.modRank?.let { SmallTag("Rank $it") }
+                            closed.subtype?.let { SmallTag(it.humanize()) }
+                            Text(formatDate(closed.closedDate), style = MaterialTheme.typography.labelSmall)
+                        }
+                    },
+                    trailingContent = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(horizontalAlignment = Alignment.End) {
+                                Platinum(closed.platinum)
+                                Text("x${closed.quantity}", style = MaterialTheme.typography.labelMedium)
+                            }
+                            if (isMe) IconButton(onClick = { removing = closed }) { Icon(Icons.Filled.Delete, "Remove from history") }
+                        }
+                    },
+                ) {
+                    Text(item?.let(catalog::itemName) ?: closed.item.urlName.humanize(), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
+}
+
