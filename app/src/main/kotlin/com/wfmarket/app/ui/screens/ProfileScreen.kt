@@ -796,3 +796,88 @@ private fun HistoryTab(history: Load<List<ClosedOrder>>, catalog: Catalog, isMe:
     }
 }
 
+@Composable
+private fun ReviewsTab(reviews: Load<ReviewsPage>, slug: String, isMe: Boolean, signedIn: Boolean, viewModel: ProfileViewModel, snackbar: SnackbarHostState) {
+    val container = appContainer()
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+    var compose by remember { mutableStateOf(false) }
+
+    LoadContent(reviews, viewModel::load) { page ->
+        FadingLazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (!isMe && signedIn) {
+                item {
+                    val own = page.ownReview
+                    if (own != null) {
+                        Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
+                            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text("Your review", style = MaterialTheme.typography.labelLarge)
+                                    Text(own.text.ifBlank { "No comment" }, style = MaterialTheme.typography.bodyMedium)
+                                }
+                                TextButton(onClick = { compose = true }) { Text("Edit") }
+                                TextButton(onClick = {
+                                    scope.launch {
+                                        runCatching { container.market.deleteReview(slug, own.id) }
+                                            .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                                    }
+                                }) { Text("Remove") }
+                            }
+                        }
+                    } else {
+                        FilledTonalButton(onClick = { compose = true }, modifier = Modifier.fillMaxWidth()) { Text("Write a review") }
+                    }
+                }
+            }
+            page.totalReviewCount?.let { count -> item { Text("$count reviews", style = MaterialTheme.typography.labelLarge) } }
+            if (page.reviews.isEmpty()) item { EmptyBox("No reviews yet") }
+            items(page.reviews, key = { it.id }) { review ->
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    modifier = Modifier.fillMaxWidth().clickable { review.userFrom.slug?.let(navigator::user) },
+                ) {
+                    Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        UserAvatar(assetUrl(review.userFrom.avatar), review.userFrom.ingameName, size = 36.dp)
+                        Column(Modifier.weight(1f)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(review.userFrom.ingameName.orEmpty(), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                                SmallTag(if (review.reviewType == 1) "+1" else "Report")
+                                Text(relativeTime(review.date), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            if (review.text.isNotBlank()) Text(review.text, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        }
+
+        if (compose) {
+            var text by remember { mutableStateOf(page.ownReview?.text.orEmpty()) }
+            AlertDialog(
+                onDismissRequest = { compose = false },
+                title = { Text(if (page.ownReview == null) "Write a review" else "Edit your review") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("A positive review adds +1 to this player's reputation.", style = MaterialTheme.typography.bodySmall)
+                        OutlinedTextField(text, { text = it }, label = { Text("Comment (optional)") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        compose = false
+                        scope.launch {
+                            runCatching {
+                                val own = page.ownReview
+                                if (own == null) container.market.createReview(slug, text, 1) else container.market.updateReview(slug, own.id, text)
+                            }.onSuccess { snackbar.showSnackbar("Review saved") }
+                                .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                        }
+                    }) { Text("Save") }
+                },
+                dismissButton = { TextButton(onClick = { compose = false }) { Text("Cancel") } },
+            )
+        }
+    }
+}
+
