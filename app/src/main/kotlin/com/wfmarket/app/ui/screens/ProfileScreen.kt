@@ -453,3 +453,33 @@ private val BAR_FILL_DISTANCE = 96.dp
 /** How much slower than the header the picture moves as it scrolls away. */
 private const val PARALLAX = 0.35f
 
+/**
+ * A profile's background, edge to edge from the top of the screen, behind the bar. It scrolls away
+ * with the header, a little slower than the header's content, so it reads as being behind the page
+ * rather than on it. A veil of the page's own color at the top keeps the bar readable over any
+ * picture, and the foot fades into the page, which suits every theme, AMOLED black included.
+ */
+@Composable
+private fun ProfileBackdrop(url: String, height: Dp, header: CollapsingHeaderState, onError: () -> Unit) {
+    val surface = MaterialTheme.colorScheme.surface
+    Box(Modifier.fillMaxWidth().height(height).graphicsLayer { translationY = header.offset }.clipToBounds()) {
+        AsyncImage(
+            url, null,
+            Modifier.fillMaxSize().graphicsLayer { translationY = -header.offset * PARALLAX },
+            contentScale = ContentScale.Crop,
+            onError = { onError() },
+        )
+        Box(
+            Modifier.matchParentSize().background(
+                Brush.verticalGradient(
+                    0f to surface.copy(alpha = 0.7f),
+                    0.4f to Color.Transparent,
+                    0.5f to Color.Transparent,
+                    0.78f to surface.copy(alpha = 0.75f),
+                    1f to surface,
+                ),
+            ),
+        )
+    }
+}
+
