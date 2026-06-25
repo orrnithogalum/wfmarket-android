@@ -548,3 +548,162 @@ fun StatusSheet(onDismiss: () -> Unit) {
     }
 }
 
+@Composable
+private fun ProfileOrders(orders: Load<List<Order>>, catalog: Catalog, isMe: Boolean, viewModel: ProfileViewModel, snackbar: SnackbarHostState) {
+    val container = appContainer()
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+    var type by rememberSaveable { mutableStateOf(OrderType.SELL) }
+    var acting by remember { mutableStateOf<Order?>(null) }
+    var editing by remember { mutableStateOf<Order?>(null) }
+
+    fun act(message: String, block: suspend () -> Unit) {
+        scope.launch {
+            runCatching { block() }
+                .onSuccess { snackbar.showSnackbar(message) }
+                .onFailure { snackbar.showSnackbar(it.userMessage()) }
+        }
+    }
+
+    LoadContent(orders, viewModel::load) { list ->
+        val shown = list.filter { it.type == type }.sortedByDescending { it.updatedAt }
+        val allVisible = shown.all { it.visible }
+        FadingLazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+            item {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ChoiceButtonGroup(
+                        listOf(OrderType.SELL, OrderType.BUY), type,
+                        { value -> "${if (value == OrderType.SELL) "Selling" else "Buying"} · ${list.count { it.type == value }}" },
+                        { type = it }, Modifier.fillMaxWidth(), fill = true,
+                    )
+                    val total = shown.sumOf { it.platinum * it.quantity }
+                    if (shown.isNotEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text("Total", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Platinum(total, style = MaterialTheme.typography.bodyMedium)
+                            }
+                            if (isMe) {
+                                TextButton(onClick = {
+                                    act(if (allVisible) "All hidden" else "All visible") {
+                                        container.market.setAllVisible(!allVisible, type)
+                                    }
+                                }) { Text(if (allVisible) "Hide all" else "Show all") }
+                            }
+                        }
+                    }
+                }
+            }
+            if (shown.isEmpty()) item { EmptyBox("No orders") }
+            // One grouped list, like the home page's orders: round outer corners, tight inner ones.
+            itemsIndexed(shown, key = { _, order -> order.id }) { index, order ->
+                val item = catalog.itemsById[order.itemId]
+                SegmentedListItem(
+                    onClick = { if (isMe) acting = order else item?.let { navigator.item(it.slug) } },
+                    shapes = ListItemDefaults.segmentedShapes(index, shown.size),
+                    colors = ListItemDefaults.segmentedColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                    modifier = listItemMotion().padding(horizontal = 12.dp).padding(bottom = ListItemDefaults.SegmentedGap),
+                    verticalAlignment = Alignment.CenterVertically,
+                    leadingContent = { if (item != null) ItemThumb(catalog.art(item)) else ItemThumb(null as String?) },
+                    supportingContent = {
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(relativeTime(order.updatedAt), style = MaterialTheme.typography.labelSmall)
+                            OrderDetails(order)
+                        }
+                    },
+                    trailingContent = {
+                        Column(horizontalAlignment = Alignment.End) {
+                            Platinum(order.platinum)
+                            Text("x${order.quantity}", style = MaterialTheme.typography.labelMedium)
+                        }
+                    },
+                ) { Text(item?.let(catalog::itemName) ?: "…", style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            }
+        }
+    }
+
+    acting?.let { order ->
+        val item = catalog.itemsById[order.itemId]
+        var quantity by remember(order.id) { mutableIntStateOf(1) }
+        ModalBottomSheet(onDismissRequest = { acting = null }) {
+            Column(Modifier.padding(bottom = 16.dp)) {
+                Text(item?.let(catalog::itemName).orEmpty(), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                if (order.quantity > 1) {
+                    Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Traded: $quantity", Modifier.weight(1f))
+                        Slider(
+                            value = quantity.toFloat(),
+                            onValueChange = { quantity = it.toInt() },
+                            valueRange = 1f..order.quantity.toFloat(),
+                            steps = (order.quantity - 2).coerceAtLeast(0),
+                            modifier = Modifier.weight(1.4f),
+                        )
+                    }
+                }
+                ListItem(
+                    colors = sheetListItemColors(),
+                    headlineContent = { Text(if (order.type == OrderType.SELL) "Mark as sold" else "Mark as bought") },
+                    supportingContent = { Text("Adds it to your trading history") },
+                    leadingContent = { Icon(Icons.Filled.Sell, null) },
+                    modifier = Modifier.clickable {
+                        acting = null
+                        act("Added to your trading history") { container.market.closeOrder(order.id, quantity) }
+                    },
+                )
+                ListItem(
+                    colors = sheetListItemColors(),
+                    headlineContent = { Text("Edit") },
+                    leadingContent = { Icon(Icons.Filled.Edit, null) },
+                    modifier = Modifier.clickable { acting = null; editing = order },
+                )
+                ListItem(
+                    colors = sheetListItemColors(),
+                    headlineContent = { Text(if (order.visible) "Hide" else "Show") },
+                    leadingContent = { Icon(if (order.visible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, null) },
+                    modifier = Modifier.clickable {
+                        acting = null
+                        act(if (order.visible) "Order hidden" else "Order visible") {
+                            container.market.updateOrder(order.id, UpdateOrder(visible = !order.visible))
+                        }
+                    },
+                )
+                ListItem(
+                    colors = sheetListItemColors(),
+                    headlineContent = { Text("Remove") },
+                    leadingContent = { Icon(Icons.Filled.Delete, null) },
+                    modifier = Modifier.clickable {
+                        acting = null
+                        act("Order removed") { container.market.deleteOrder(order.id) }
+                    },
+                )
+                ListItem(
+                    colors = sheetListItemColors(),
+                    headlineContent = { Text("View item") },
+                    leadingContent = { Icon(Icons.Filled.Image, null) },
+                    modifier = Modifier.clickable {
+                        acting = null
+                        item?.let { navigator.item(it.slug) }
+                    },
+                )
+            }
+        }
+    }
+
+    editing?.let { order ->
+        catalog.itemsById[order.itemId]?.let { item ->
+            OrderEditorSheet(
+                item = item,
+                existing = order,
+                catalog = catalog,
+                bestSell = null,
+                bestBuy = null,
+                onDismiss = { editing = null },
+                onSaved = { message ->
+                    editing = null
+                    scope.launch { snackbar.showSnackbar(message) }
+                },
+            )
+        }
+    }
+}
+
