@@ -483,3 +483,68 @@ private fun ProfileBackdrop(url: String, height: Dp, header: CollapsingHeaderSta
     }
 }
 
+/** Status as on the website: three states, optionally held for a fixed time. */
+@Composable
+fun StatusSheet(onDismiss: () -> Unit) {
+    val container = appContainer()
+    val status by container.account.status.collectAsStateWithLifecycle()
+    val settings by container.settings.flow.collectAsStateWithLifecycle()
+    val state by container.sockets.state.collectAsStateWithLifecycle()
+    val until by container.account.statusUntil.collectAsStateWithLifecycle()
+    var failed by remember { mutableStateOf(false) }
+
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Your status", style = MaterialTheme.typography.titleLarge)
+            val options = listOf(UserStatus.INGAME, UserStatus.ONLINE, UserStatus.INVISIBLE)
+            Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
+                options.forEachIndexed { index, option ->
+                    SegmentedListItem(
+                        selected = status == option.wire,
+                        onClick = { failed = !container.account.setStatus(option.wire, settings.statusDurationOption) },
+                        shapes = ListItemDefaults.segmentedShapes(index, options.size),
+                        colors = ListItemDefaults.segmentedColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        ),
+                        leadingContent = { Box(Modifier.size(12.dp).clip(CircleShape).background(statusColor(option.wire))) },
+                        trailingContent = { RadioButton(selected = status == option.wire, onClick = null) },
+                        supportingContent = {
+                            Text(
+                                when (option) {
+                                    UserStatus.INGAME -> "Ready to trade now"
+                                    UserStatus.ONLINE -> "Around, but not in the game"
+                                    else -> "Shown as offline"
+                                },
+                            )
+                        },
+                    ) { Text(option.label) }
+                }
+            }
+            Text("Keep status for", style = MaterialTheme.typography.labelLarge)
+            val labels = listOf("∞", "30m", "1h", "2h", "4h")
+            ChoiceButtonGroup(labels.indices.toList(), settings.statusDurationOption, { labels[it] }, { index ->
+                container.settings.setStatusDurationOption(index)
+                if (status != "invisible" && status != "offline") {
+                    failed = !container.account.setStatus(status, index)
+                }
+            }, Modifier.fillMaxWidth(), fill = true)
+            until?.let { Text("Expires ${formatDate(it, "HH:mm")}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            if (status == "online" || status == "ingame") {
+                Text(
+                    if (settings.keepStatusInBackground) "Stays on when you close the app. Change this in Settings." else "You'll show as offline once you close the app. Change this in Settings.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (failed || !state.statusAuthorized) {
+                Text(
+                    if (state.statusConnected) "Connecting to your account…" else "Connecting…",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
