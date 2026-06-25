@@ -927,3 +927,7 @@ private fun AboutTab(user: User, isMe: Boolean, canSetBackground: Boolean, onEdi
     }
 }
 
+/** A perk of the Silver supporter tier and up. It's the site's own rule, and the server refuses everyone else. */
+private val User.canSetBackground: Boolean
+    get() = role in setOf("moderator", "admin") || tier in setOf("silver", "gold", "platinum", "diamond")
+
