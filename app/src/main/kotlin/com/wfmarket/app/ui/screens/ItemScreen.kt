@@ -267,6 +267,7 @@ fun ItemScreen(routeSlug: String) {
                                 onMessage = { message -> scope.launch { snackbar.showSnackbar(message) } },
                             )
                             ItemTab.STATISTICS -> StatisticsTab(load.value, statistics, viewModel::load)
+                            ItemTab.DROPS -> DropsTab(drops, catalog, viewModel::load)
                             ItemTab.INFO -> InfoTab(load.value, setItems, catalog, viewModel::select)
                         }
                       }
@@ -294,7 +295,7 @@ fun ItemScreen(routeSlug: String) {
 
 private data class OrderComposer(val item: Item, val existing: Order?)
 
-private enum class ItemTab(val label: String) { ORDERS("Orders"), STATISTICS("Statistics"), INFO("Info") }
+private enum class ItemTab(val label: String) { ORDERS("Orders"), STATISTICS("Statistics"), DROPS("Drops"), INFO("Info") }
 
 /**
  * Prices only compare within one variant: a rank 5 arcane costs far more than a rank 0 one. So the
@@ -819,6 +820,90 @@ private fun StepSlider(label: String, value: Int, max: Int, onChange: (Int) -> U
             valueRange = 0f..max.toFloat().coerceAtLeast(1f),
             steps = (max - 1).coerceAtLeast(0),
         )
+    }
+}
+
+// ---------------------------------------------------------------- Drops
+
+private val RelicRefinements = listOf("intact", "exceptional", "flawless", "radiant")
+
+@Composable
+private fun DropsTab(drops: Load<List<DropSource>>, catalog: Catalog, onRetry: () -> Unit) {
+    val navigator = LocalNavigator.current
+    LoadContent(drops, onRetry) { sources ->
+        if (sources.isEmpty()) {
+            EmptyBox("No known drop sources", "This item doesn't drop anywhere the site tracks.")
+            return@LoadContent
+        }
+        val relics = sources.filter { it.type == "relic" }.sortedByDescending { it.rates?.get("radiant") ?: 0.0 }
+        val missions = sources.filter { it.type == "mission" }.sortedByDescending { it.rate ?: 0.0 }
+        val npcs = sources.filter { it.type == "npc" }.sortedByDescending { it.rate ?: 0.0 }
+        FadingLazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+            if (relics.isNotEmpty()) {
+                item { SectionTitle("Relics · ${relics.size}") }
+                items(relics, key = { it.id }) { source ->
+                    val relic = catalog.itemsById[source.relic]
+                    ClickableRow({ relic?.let { navigator.item(it.slug) } }) {
+                        if (relic != null) ItemThumb(catalog.art(relic), size = 40.dp) else ItemThumb(null as String?, size = 40.dp)
+                        Column(Modifier.weight(1f)) {
+                            Text(relic?.let(catalog::itemName) ?: "Unknown relic", style = MaterialTheme.typography.bodyLarge)
+                            source.rarity?.let { Text(it.humanize(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 4.dp)) {
+                                RelicRefinements.forEach { level ->
+                                    source.rates?.get(level)?.let { SmallTag("${level.take(3).humanize()} ${percent(it)}") }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (missions.isNotEmpty()) {
+                item { SectionTitle("Missions · ${missions.size}") }
+                items(missions, key = { it.id }) { source -> MissionRow(source, catalog) }
+            }
+            if (npcs.isNotEmpty()) {
+                item { SectionTitle("Enemies · ${npcs.size}") }
+                items(npcs, key = { it.id }) { source ->
+                    val npc = catalog.npcsById[source.npc]
+                    val i18n = npc?.i18n?.localized(catalog.language)
+                    DropRow(i18n?.name ?: "Unknown enemy", source.rarity?.humanize(), assetUrl(i18n?.thumb), source.rate)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MissionRow(source: DropSource, catalog: Catalog) {
+    val location = catalog.locationsById[source.location]
+    val locationI18n = location?.i18n?.localized(catalog.language)
+    val mission = catalog.missionsById[source.mission]
+    val missionI18n = mission?.i18n?.localized(catalog.language)
+    val where = listOfNotNull(locationI18n?.nodeName, locationI18n?.systemName).joinToString(", ")
+    val details = listOfNotNull(
+        where.takeIf { it.isNotBlank() },
+        source.rotation?.let { "Rotation ${it.uppercase()}" },
+        source.stage.takeIf { it.isNotEmpty() }?.let { "Stage ${it.joinToString(", ")}" },
+        source.rarity?.humanize(),
+    ).joinToString(" · ")
+    DropRow(missionI18n?.name ?: mission?.slug?.humanize() ?: "Mission", details, assetUrl(missionI18n?.thumb), source.rate)
+}
+
+@Composable
+private fun DropRow(title: String, subtitle: String?, thumb: String?, rate: Double?) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        ItemThumb(thumb, size = 40.dp)
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            if (!subtitle.isNullOrBlank()) {
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        rate?.let { Text(percent(it), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold) }
     }
 }
 
