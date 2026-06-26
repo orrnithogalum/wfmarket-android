@@ -74,6 +74,17 @@ class LiveContractTest {
         assertTrue(stats.live.days90.any { it.orderType == "sell" })
     }
 
+    @Test fun profiles() = runBlocking {
+        val slug = api.ordersForItem("mesa_prime_set").first().user!!.slug
+        assertEquals(slug, api.user(slug).slug)
+        assertTrue(api.ordersForUser(slug).isNotEmpty())
+        api.closedOrders(slug)
+        api.reviews(slug)
+        api.userAuctions(slug)
+        api.userAchievements(slug)
+        Unit
+    }
+
     @Test fun signInReportsReadableErrors() = runBlocking {
         val failure = runCatching {
             api.signIn("nobody-wfm-probe@example.invalid", "probe-not-a-real-password", "contract-test")
