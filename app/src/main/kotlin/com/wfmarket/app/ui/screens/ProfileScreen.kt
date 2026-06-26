@@ -931,3 +931,22 @@ private fun AboutTab(user: User, isMe: Boolean, canSetBackground: Boolean, onEdi
 private val User.canSetBackground: Boolean
     get() = role in setOf("moderator", "admin") || tier in setOf("silver", "gold", "platinum", "diamond")
 
+@Composable
+private fun EditAboutDialog(initial: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    var text by remember { mutableStateOf(initial) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("About you") },
+        text = {
+            OutlinedTextField(
+                text,
+                { if (it.length <= 300) text = it },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 4,
+                supportingText = { Text("${text.length}/300 · Markdown is supported") },
+            )
+        },
+        confirmButton = { TextButton(onClick = { onSave(text) }) { Text("Save") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
+}
