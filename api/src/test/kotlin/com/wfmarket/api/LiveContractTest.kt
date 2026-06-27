@@ -74,6 +74,14 @@ class LiveContractTest {
         assertTrue(stats.live.days90.any { it.orderType == "sell" })
     }
 
+    @Test fun dropSources() = runBlocking {
+        val relic = api.dropSources("mesa_prime_chassis_blueprint")
+        assertTrue(relic.any { it.type == "relic" && it.rates != null && it.relic != null })
+        val mixed = api.dropSources("arcane_energize")
+        assertTrue(mixed.any { it.type == "mission" && it.location != null && it.mission != null })
+        assertTrue(mixed.any { it.type == "npc" && it.npc != null })
+    }
+
     @Test fun profiles() = runBlocking {
         val slug = api.ordersForItem("mesa_prime_set").first().user!!.slug
         assertEquals(slug, api.user(slug).slug)
