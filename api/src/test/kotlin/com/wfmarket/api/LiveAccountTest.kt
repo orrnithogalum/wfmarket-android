@@ -66,4 +66,27 @@ class LiveAccountTest {
             println("reviews: ${api.reviews(me.slug).reviews.size}")
         }
     }
+
+    @Test fun orderLifecycle() = runBlocking {
+        signIn()
+        val item = api.item("maiming_strike")
+        val created = try {
+            api.createOrder(
+                CreateOrder(itemId = item.id, type = OrderType.BUY, platinum = 1, quantity = 1, visible = false, rank = 0),
+            )
+        } catch (e: WfmException) {
+            println("rejected: fields=${e.fieldErrors} messages=${e.messages}")
+            throw e
+        }
+        try {
+            assertEquals(false, created.visible)
+            assertTrue(api.me().id.isNotBlank())
+            val updated = api.updateOrder(created.id, UpdateOrder(platinum = 2))
+            assertEquals(2, updated.platinum)
+            assertTrue(api.myOrders().any { it.id == created.id })
+        } finally {
+            api.deleteOrder(created.id)
+        }
+        assertTrue(api.myOrders().none { it.id == created.id })
+    }
 }
