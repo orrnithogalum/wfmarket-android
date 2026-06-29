@@ -27,3 +27,20 @@ data class ChatMessage(
 
 private val HtmlEntity = Regex("&(?:#(\\d+)|#[xX]([0-9a-fA-F]+)|(amp|lt|gt|quot|apos|nbsp));")
 
+/** Decodes in one pass, so text that really contained `&#39;` (sent as `&amp;#39;`) comes back intact. */
+internal fun decodeHtmlEntities(text: String): String = HtmlEntity.replace(text) { match ->
+    val (decimal, hex, name) = match.destructured
+    when {
+        decimal.isNotEmpty() -> decimal.toIntOrNull()?.toCodePointString()
+        hex.isNotEmpty() -> hex.toIntOrNull(16)?.toCodePointString()
+        else -> when (name) {
+            "amp" -> "&"
+            "lt" -> "<"
+            "gt" -> ">"
+            "quot" -> "\""
+            "apos" -> "'"
+            else -> " "
+        }
+    } ?: match.value
+}
+
