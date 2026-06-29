@@ -21,3 +21,10 @@ export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 | `app/ui` | Compose screens, charts, theme, navigation | Yes |
 
 Screens talk only to repositories. All knowledge of the site's API lives in `api`.
+
+## Testing
+
+`./gradlew :api:test` runs contract tests against the live public API, including both websockets.
+Set `WFM_EMAIL` and `WFM_PASSWORD` to also run the signed-in tests. They sign in once, and anything
+they create (one hidden order, one hidden auction) is removed again.
+Debug builds add a shell-only hook for testing notifications; see `DebugNotificationReceiver`.
