@@ -44,3 +44,6 @@ internal fun decodeHtmlEntities(text: String): String = HtmlEntity.replace(text)
     } ?: match.value
 }
 
+private fun Int.toCodePointString(): String? =
+    if (Character.isValidCodePoint(this)) String(Character.toChars(this)) else null
+
