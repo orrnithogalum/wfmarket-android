@@ -221,7 +221,7 @@ fun MyProfileScreen() {
 }
 
 private enum class ProfileTab(val label: String) {
-    ORDERS("Orders"), AUCTIONS("Auctions"), HISTORY("History"), REVIEWS("Reviews"), ABOUT("About")
+    ORDERS("Orders"), AUCTIONS("Auctions"), HISTORY("History"), REVIEWS("Reviews"), ACHIEVEMENTS("Achievements"), ABOUT("About")
 }
 
 @Composable
@@ -365,6 +365,7 @@ fun ProfileScreen(slug: String, topLevel: Boolean = false) {
                     }
                     ProfileTab.HISTORY -> HistoryTab(history, catalog, isMe, viewModel, snackbar)
                     ProfileTab.REVIEWS -> ReviewsTab(reviews, slug, isMe, signedIn, viewModel, snackbar)
+                    ProfileTab.ACHIEVEMENTS -> AchievementsTab(achievements, catalog, viewModel::load)
                     ProfileTab.ABOUT -> AboutTab(user, isMe, (fresh ?: user).canSetBackground, { editAbout = true }, snackbar)
                 }
               }
@@ -877,6 +878,33 @@ private fun ReviewsTab(reviews: Load<ReviewsPage>, slug: String, isMe: Boolean, 
                 },
                 dismissButton = { TextButton(onClick = { compose = false }) { Text("Cancel") } },
             )
+        }
+    }
+}
+
+@Composable
+private fun AchievementsTab(achievements: Load<List<Achievement>>, catalog: Catalog, onRetry: () -> Unit) {
+    LoadContent(achievements, onRetry) { list ->
+        val definitions = remember(catalog) { catalog.achievements.associateBy { it.id } }
+        FadingLazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (list.isEmpty()) item { EmptyBox("No achievements yet") }
+            items(list, key = { it.id.ifBlank { it.slug } }) { achievement ->
+                val definition = definitions[achievement.id] ?: achievement
+                val i18n = catalog.i18n(definition.i18n.ifEmpty { achievement.i18n })
+                Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
+                    Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        ItemThumb(assetUrl(i18n?.thumb ?: i18n?.icon))
+                        Column(Modifier.weight(1f)) {
+                            Text(i18n?.name ?: achievement.slug.humanize(), style = MaterialTheme.typography.titleSmall)
+                            i18n?.description?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                            achievement.state?.completedAt?.let {
+                                Text("Earned ${formatDate(it)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                        definition.reputationBonus?.takeIf { it > 0 }?.let { SmallTag("+$it rep") }
+                    }
+                }
+            }
         }
     }
 }
