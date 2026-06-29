@@ -47,3 +47,13 @@ internal fun decodeHtmlEntities(text: String): String = HtmlEntity.replace(text)
 private fun Int.toCodePointString(): String? =
     if (Character.isValidCodePoint(this)) String(Character.toChars(this)) else null
 
+@Serializable
+data class Chat(
+    val id: String = "",
+    @SerialName("chat_name") val chatName: String = "",
+    /** The site expands these to user objects, and the parser also accepts plain ids. */
+    @SerialName("chat_with") val chatWith: List<@Serializable(with = V1UserOrIdSerializer::class) V1User> = emptyList(),
+    @SerialName("unread_count") val unreadCount: Int = 0,
+    @SerialName("last_update") val lastUpdate: String? = null,
+    val messages: List<ChatMessage> = emptyList(),
+)
