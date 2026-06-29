@@ -25,3 +25,5 @@ data class ChatMessage(
     val text: String get() = (rawMessage ?: message).let { if (pending || failed) it else decodeHtmlEntities(it) }
 }
 
+private val HtmlEntity = Regex("&(?:#(\\d+)|#[xX]([0-9a-fA-F]+)|(amp|lt|gt|quot|apos|nbsp));")
+
