@@ -52,3 +52,11 @@ sealed interface SocketEvent {
     data object ChatStreamReady : SocketEvent
 }
 
+data class SocketState(
+    /** The legacy socket carrying chat and auctions. */
+    val chatConnected: Boolean = false,
+    /** The newer socket carrying presence. */
+    val statusConnected: Boolean = false,
+    val statusAuthorized: Boolean = false,
+)
+
