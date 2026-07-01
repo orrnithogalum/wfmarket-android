@@ -60,3 +60,25 @@ data class SocketState(
     val statusAuthorized: Boolean = false,
 )
 
+/**
+ * warframe.market runs two websockets and the site uses both, so this client does too:
+ *
+ * - `wss://warframe.market/socket` (legacy): chat, auctions. Authenticated by the JWT cookie.
+ *   Frames look like `{"type": "@WS/...", "payload": ...}`.
+ * - `wss://ws.warframe.market/socket`, subprotocol `wfm`: presence and account events.
+ *   Authenticated by a sign-in command. Frames look like `{"route": "@wfm|...", "payload": ...}`.
+ */
+class WfmSockets(
+    private val context: WfmContext,
+    private val http: OkHttpClient,
+    private val userAgent: String = WfmApi.DEFAULT_USER_AGENT,
+) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val _events = MutableSharedFlow<SocketEvent>(extraBufferCapacity = 128)
+    private val _state = MutableStateFlow(SocketState())
+
+    // ---------------------------------------------------------------- Commands
+
+    // ---------------------------------------------------------------- Incoming frames
+
+
