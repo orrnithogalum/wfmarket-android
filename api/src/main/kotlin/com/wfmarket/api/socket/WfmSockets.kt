@@ -77,6 +77,9 @@ class WfmSockets(
     private val _events = MutableSharedFlow<SocketEvent>(extraBufferCapacity = 128)
     private val _state = MutableStateFlow(SocketState())
 
+    val events: SharedFlow<SocketEvent> = _events.asSharedFlow()
+    val state: StateFlow<SocketState> = _state.asStateFlow()
+
     // ---------------------------------------------------------------- Commands
 
     // ---------------------------------------------------------------- Incoming frames
