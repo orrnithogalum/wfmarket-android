@@ -103,6 +103,25 @@ class WfmSockets(
         onFrame = ::onLegacyFrame,
     )
 
+    private val presence = ReconnectingSocket(
+        name = "presence",
+        requestFactory = {
+            Request.Builder()
+                .url("https://ws.warframe.market/socket")
+                .header("User-Agent", userAgent)
+                .header("Sec-WebSocket-Protocol", "wfm")
+                .build()
+        },
+        onOpened = {
+            _state.update { it.copy(statusConnected = true, statusAuthorized = false) }
+            context.token?.let { token ->
+                sendRoute("@wfm|cmd/auth/signIn", buildJsonObject { put("token", token) })
+            }
+        },
+        onClosed = { _state.update { it.copy(statusConnected = false, statusAuthorized = false) } },
+        onFrame = ::onPresenceFrame,
+    )
+
     // ---------------------------------------------------------------- Commands
 
     // ---------------------------------------------------------------- Incoming frames
