@@ -83,6 +83,26 @@ class WfmSockets(
     /** Receives the type of every incoming frame, never its content. For diagnostics. */
     var frameObserver: ((source: String, type: String) -> Unit)? = null
 
+    private val chat = ReconnectingSocket(
+        name = "chat",
+        requestFactory = {
+            val token = context.token
+            Request.Builder()
+                .url("https://warframe.market/socket?platform=${context.platform}")
+                .header("User-Agent", userAgent)
+                .apply {
+                    if (token != null) {
+                        header("Cookie", "JWT=$token")
+                        header("Authorization", "JWT $token")
+                    }
+                }
+                .build()
+        },
+        onOpened = { _state.update { it.copy(chatConnected = true) }; _events.tryEmit(SocketEvent.ChatStreamReady) },
+        onClosed = { _state.update { it.copy(chatConnected = false) } },
+        onFrame = ::onLegacyFrame,
+    )
+
     // ---------------------------------------------------------------- Commands
 
     // ---------------------------------------------------------------- Incoming frames
