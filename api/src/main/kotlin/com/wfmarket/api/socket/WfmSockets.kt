@@ -80,6 +80,9 @@ class WfmSockets(
     val events: SharedFlow<SocketEvent> = _events.asSharedFlow()
     val state: StateFlow<SocketState> = _state.asStateFlow()
 
+    /** Receives the type of every incoming frame, never its content. For diagnostics. */
+    var frameObserver: ((source: String, type: String) -> Unit)? = null
+
     // ---------------------------------------------------------------- Commands
 
     // ---------------------------------------------------------------- Incoming frames
