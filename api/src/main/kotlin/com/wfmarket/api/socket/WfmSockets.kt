@@ -156,6 +156,13 @@ class WfmSockets(
         sendLegacy("@WS/chats/MESSAGE_WAS_READ", buildJsonObject { put("message_id", messageId) })
     }
 
+    /** Sets the presence status. [durationSeconds] null keeps it until changed. */
+    fun setStatus(status: String, durationSeconds: Int?): Boolean =
+        sendRoute("@wfm|cmd/status/set", buildJsonObject {
+            put("status", status)
+            put("duration", durationSeconds)
+        })
+
     // ---------------------------------------------------------------- Incoming frames
 
 
