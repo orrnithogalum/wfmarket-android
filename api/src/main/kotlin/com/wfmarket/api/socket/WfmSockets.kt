@@ -141,6 +141,17 @@ class WfmSockets(
 
     // ---------------------------------------------------------------- Commands
 
+    /** Sends a chat message and returns the temporary id that [SocketEvent.MessageSent] will echo. */
+    fun sendChatMessage(chatId: String, text: String): String? {
+        val tempId = newObjectId()
+        val sent = sendLegacy("@WS/chats/SEND_MESSAGE", buildJsonObject {
+            put("chat_id", chatId)
+            put("message", text)
+            put("temp_id", tempId)
+        })
+        return if (sent) tempId else null
+    }
+
     // ---------------------------------------------------------------- Incoming frames
 
 
