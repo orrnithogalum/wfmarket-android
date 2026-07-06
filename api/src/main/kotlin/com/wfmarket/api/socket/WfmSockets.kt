@@ -122,6 +122,12 @@ class WfmSockets(
         onFrame = ::onPresenceFrame,
     )
 
+    /** Idempotent; each socket keeps itself alive until [disconnect]. */
+    fun connect() {
+        chat.start(http, scope)
+        presence.start(http, scope)
+    }
+
     // ---------------------------------------------------------------- Commands
 
     // ---------------------------------------------------------------- Incoming frames
