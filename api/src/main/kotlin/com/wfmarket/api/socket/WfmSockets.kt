@@ -163,6 +163,14 @@ class WfmSockets(
             put("duration", durationSeconds)
         })
 
+    /** Places a bid, or raises the bid [existingBidId]. */
+    fun setBid(auctionId: String, value: Int, existingBidId: String? = null): Boolean =
+        sendLegacy("@WS/rpc/auctions/bid/SET", buildJsonObject {
+            put("auction_id", auctionId)
+            put("bid_id", existingBidId ?: newObjectId())
+            put("value", value)
+        })
+
     // ---------------------------------------------------------------- Incoming frames
 
 
