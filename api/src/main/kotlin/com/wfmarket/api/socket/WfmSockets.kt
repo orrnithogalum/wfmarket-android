@@ -133,6 +133,12 @@ class WfmSockets(
         presence.stop()
     }
 
+    /** Re-establish both connections, e.g. after signing in or switching platform. */
+    fun reconnect() {
+        disconnect()
+        connect()
+    }
+
     // ---------------------------------------------------------------- Commands
 
     // ---------------------------------------------------------------- Incoming frames
