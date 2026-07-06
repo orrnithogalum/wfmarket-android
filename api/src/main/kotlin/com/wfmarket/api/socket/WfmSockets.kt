@@ -152,6 +152,10 @@ class WfmSockets(
         return if (sent) tempId else null
     }
 
+    fun markMessageRead(messageId: String) {
+        sendLegacy("@WS/chats/MESSAGE_WAS_READ", buildJsonObject { put("message_id", messageId) })
+    }
+
     // ---------------------------------------------------------------- Incoming frames
 
 
