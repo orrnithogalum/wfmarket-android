@@ -128,6 +128,11 @@ class WfmSockets(
         presence.start(http, scope)
     }
 
+    fun disconnect() {
+        chat.stop()
+        presence.stop()
+    }
+
     // ---------------------------------------------------------------- Commands
 
     // ---------------------------------------------------------------- Incoming frames
