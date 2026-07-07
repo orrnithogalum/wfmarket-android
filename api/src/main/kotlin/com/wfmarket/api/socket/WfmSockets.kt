@@ -171,6 +171,12 @@ class WfmSockets(
             put("value", value)
         })
 
+    fun removeBid(auctionId: String, bidId: String): Boolean =
+        sendLegacy("@WS/rpc/auctions/bid/REMOVE", buildJsonObject {
+            put("auction_id", auctionId)
+            put("bid_id", bidId)
+        })
+
     // ---------------------------------------------------------------- Incoming frames
 
 
