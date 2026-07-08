@@ -181,6 +181,10 @@ class WfmSockets(
         sendLegacy("@WS/SUBSCRIBE/AUCTION", buildJsonObject { put("auction_id", auctionId) })
     }
 
+    fun unsubscribeAuction(auctionId: String) {
+        sendLegacy("@WS/UNSUBSCRIBE/AUCTION", buildJsonObject { put("auction_id", auctionId) })
+    }
+
     // ---------------------------------------------------------------- Incoming frames
 
 
