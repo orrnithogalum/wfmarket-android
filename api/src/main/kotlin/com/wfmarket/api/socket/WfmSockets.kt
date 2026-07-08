@@ -185,6 +185,9 @@ class WfmSockets(
         sendLegacy("@WS/UNSUBSCRIBE/AUCTION", buildJsonObject { put("auction_id", auctionId) })
     }
 
+    private fun sendLegacy(type: String, payload: JsonElement): Boolean =
+        chat.send(buildJsonObject { put("type", type); put("payload", payload) }.toString())
+
     // ---------------------------------------------------------------- Incoming frames
 
 
