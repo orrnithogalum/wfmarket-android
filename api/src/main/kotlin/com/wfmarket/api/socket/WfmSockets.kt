@@ -197,4 +197,42 @@ class WfmSockets(
 
     // ---------------------------------------------------------------- Incoming frames
 
+    private fun onLegacyFrame(text: String) {
+        val frame = runCatching { WfmJson.parseToJsonElement(text).jsonObject }.getOrNull() ?: return
+        val type = frame["type"]?.jsonPrimitive?.contentOrNull ?: return
+        frameObserver?.invoke("chat", type)
+        val payload = frame["payload"]
+        when (type) {
+            "@WS/chats/NEW_MESSAGE" -> decodeMessage(payload)?.let { _events.tryEmit(SocketEvent.NewMessage(it)) }
+            "@WS/chats/MESSAGE_SENT" -> {
+                val body = payload as? JsonObject ?: return
+                // The echoed message may be nested or be the payload itself, depending on the route's version.
+                val message = decodeMessage(body["message"] as? JsonObject ?: body) ?: return
+                val tempId = (body["temp_id"] ?: (body["message"] as? JsonObject)?.get("temp_id"))
+                    ?.jsonPrimitive?.contentOrNull
+                _events.tryEmit(SocketEvent.MessageSent(tempId, message))
+            }
+            "@WS/chats/MESSAGE_WAS_READ" -> (payload as? JsonObject)?.get("message_id")?.jsonPrimitive?.contentOrNull
+                ?.let { _events.tryEmit(SocketEvent.MessageRead(it)) }
+            "@WS/USER/SET_STATUS" -> (payload as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull
+                ?.let { _events.tryEmit(SocketEvent.StatusChanged(it, null)) }
+            "@WS/notification/NEW" -> {
+                val body = payload as? JsonObject ?: return
+                _events.tryEmit(SocketEvent.AuctionNotification(
+                    title = body.string("title"),
+                    body = body.string("body") ?: body.string("message"),
+                    auctionId = body.string("url")?.substringAfter("/auction/", "")?.takeIf { it.isNotBlank() }
+                        ?: (body["extra_data"] as? JsonObject)?.let { it.string("auction_id") ?: it.string("id") },
+                ))
+            }
+            "@WS/auctions/entry/BID_SET", "@WS/auctions/yourBids/SET" -> emitBid(payload, removed = false)
+            "@WS/auctions/entry/BID_REMOVED", "@WS/auctions/yourBids/REMOVED" -> emitBid(payload, removed = true)
+            "@WS/rpc/auctions/bid/SET:SUCCESS", "@WS/rpc/auctions/bid/REMOVE:SUCCESS" ->
+                _events.tryEmit(SocketEvent.BidResult(true, null))
+            "@WS/rpc/auctions/bid/SET:ERROR", "@WS/rpc/auctions/bid/REMOVE:ERROR" ->
+                _events.tryEmit(SocketEvent.BidResult(false, payload?.let(::errorText)))
+            "@WS/ERROR" -> _events.tryEmit(SocketEvent.ServerError(payload?.let(::errorText)))
+        }
+    }
+
 
