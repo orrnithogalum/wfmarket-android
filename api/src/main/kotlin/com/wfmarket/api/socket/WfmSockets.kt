@@ -188,6 +188,13 @@ class WfmSockets(
     private fun sendLegacy(type: String, payload: JsonElement): Boolean =
         chat.send(buildJsonObject { put("type", type); put("payload", payload) }.toString())
 
+    private fun sendRoute(route: String, payload: JsonElement): Boolean =
+        presence.send(buildJsonObject {
+            put("route", route)
+            put("payload", payload)
+            put("id", UUID.randomUUID().toString())
+        }.toString())
+
     // ---------------------------------------------------------------- Incoming frames
 
 
