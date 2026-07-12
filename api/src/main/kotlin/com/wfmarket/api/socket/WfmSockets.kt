@@ -235,4 +235,13 @@ class WfmSockets(
         }
     }
 
+    private fun emitBid(payload: JsonElement?, removed: Boolean) {
+        val body = payload as? JsonObject ?: return
+        val auctionId = (body["auction"] as? JsonObject)?.string("id") ?: body.string("auction") ?: return
+        val bid = (body["bid"] as? JsonObject)?.let {
+            runCatching { WfmJson.decodeFromJsonElement<Bid>(it) }.getOrNull()
+        }
+        _events.tryEmit(SocketEvent.BidChanged(auctionId, bid, removed))
+    }
+
 
