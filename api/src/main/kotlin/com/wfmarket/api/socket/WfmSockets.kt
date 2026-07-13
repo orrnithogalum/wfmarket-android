@@ -247,4 +247,27 @@ class WfmSockets(
     private fun decodeMessage(payload: JsonElement?): ChatMessage? =
         (payload as? JsonObject)?.let { runCatching { WfmJson.decodeFromJsonElement<ChatMessage>(it) }.getOrNull() }
 
+    private fun onPresenceFrame(text: String) {
+        val frame = runCatching { WfmJson.parseToJsonElement(text).jsonObject }.getOrNull() ?: return
+        val route = frame["route"]?.jsonPrimitive?.contentOrNull ?: return
+        frameObserver?.invoke("presence", route)
+        val payload = frame["payload"] as? JsonObject
+        when (route) {
+            "@wfm|cmd/auth/signIn:ok" -> _state.update { it.copy(statusAuthorized = true) }
+            "@wfm|cmd/auth/signIn:error" -> _state.update { it.copy(statusAuthorized = false) }
+            "@wfm|event/status/set", "@wfm|cmd/status/set:ok" -> payload?.string("status")?.let {
+                _events.tryEmit(SocketEvent.StatusChanged(it, payload.string("statusUntil")))
+            }
+            "@wfm|event/reports/online" -> payload?.let {
+                _events.tryEmit(SocketEvent.OnlineCount(
+                    connections = it["connections"]?.jsonPrimitive?.intOrNull ?: 0,
+                    authorizedUsers = it["authorizedUsers"]?.jsonPrimitive?.intOrNull ?: 0,
+                ))
+            }
+            "@wfm|event/account/banned", "@wfm|event/account/banLifted",
+            "@wfm|event/account/warned", "@wfm|event/account/warningLifted" ->
+                _events.tryEmit(SocketEvent.AccountNotice(route.substringAfterLast('/'), payload?.string("message")))
+        }
+    }
+
 
