@@ -244,4 +244,7 @@ class WfmSockets(
         _events.tryEmit(SocketEvent.BidChanged(auctionId, bid, removed))
     }
 
+    private fun decodeMessage(payload: JsonElement?): ChatMessage? =
+        (payload as? JsonObject)?.let { runCatching { WfmJson.decodeFromJsonElement<ChatMessage>(it) }.getOrNull() }
+
 
