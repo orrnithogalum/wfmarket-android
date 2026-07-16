@@ -270,4 +270,7 @@ class WfmSockets(
         }
     }
 
+    private fun JsonObject.string(key: String): String? =
+        (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { this[key] !is JsonNull }?.contentOrNull
+
 
