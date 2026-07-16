@@ -279,4 +279,7 @@ class WfmSockets(
         is kotlinx.serialization.json.JsonArray -> element.firstNotNullOfOrNull(::errorText)
     }
 
+    /** The site's temporary ids are 24 hex characters, like a Mongo ObjectId. */
+    private fun newObjectId(): String = UUID.randomUUID().toString().replace("-", "").take(24)
+}
 
