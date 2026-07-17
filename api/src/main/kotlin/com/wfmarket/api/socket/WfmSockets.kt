@@ -297,3 +297,11 @@ private class ReconnectingSocket(
     private var retryJob: Job? = null
     private var attempts = 0
 
+    @Synchronized
+    fun start(http: OkHttpClient, scope: CoroutineScope) {
+        if (running) return
+        running = true
+        attempts = 0
+        open(http, scope)
+    }
+
