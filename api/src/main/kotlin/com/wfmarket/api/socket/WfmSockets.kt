@@ -283,3 +283,17 @@ class WfmSockets(
     private fun newObjectId(): String = UUID.randomUUID().toString().replace("-", "").take(24)
 }
 
+/** A websocket that reconnects with exponential backoff until stopped. */
+private class ReconnectingSocket(
+    private val name: String,
+    private val requestFactory: () -> Request,
+    private val onOpened: () -> Unit,
+    private val onClosed: () -> Unit,
+    private val onFrame: (String) -> Unit,
+) {
+    @Volatile private var socket: WebSocket? = null
+    @Volatile private var open = false
+    @Volatile private var running = false
+    private var retryJob: Job? = null
+    private var attempts = 0
+
