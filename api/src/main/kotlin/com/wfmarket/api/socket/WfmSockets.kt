@@ -305,3 +305,16 @@ private class ReconnectingSocket(
         open(http, scope)
     }
 
+    @Synchronized
+    fun stop() {
+        running = false
+        retryJob?.cancel()
+        retryJob = null
+        socket?.close(1000, null)
+        socket = null
+        if (open) {
+            open = false
+            onClosed()
+        }
+    }
+
