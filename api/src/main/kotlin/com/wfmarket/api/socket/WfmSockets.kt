@@ -318,3 +318,5 @@ private class ReconnectingSocket(
         }
     }
 
+    fun send(text: String): Boolean = open && socket?.send(text) == true
+
