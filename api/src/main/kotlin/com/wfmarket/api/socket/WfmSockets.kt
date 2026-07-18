@@ -320,3 +320,46 @@ private class ReconnectingSocket(
 
     fun send(text: String): Boolean = open && socket?.send(text) == true
 
+    private fun open(http: OkHttpClient, scope: CoroutineScope) {
+        socket = http.newWebSocket(requestFactory(), object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                if (webSocket !== socket) return
+                attempts = 0
+                open = true
+                onOpened()
+            }
+
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                if (webSocket === socket) onFrame(text)
+            }
+
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                webSocket.close(1000, null)
+            }
+
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) = lost(webSocket)
+
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) = lost(webSocket)
+
+            private fun lost(webSocket: WebSocket) {
+                synchronized(this@ReconnectingSocket) {
+                    if (webSocket !== socket) return
+                    socket = null
+                    if (open) {
+                        open = false
+                        onClosed()
+                    }
+                    if (!running) return
+                    val backoff = minOf(60_000L, 2_000L shl minOf(attempts, 5))
+                    attempts++
+                    retryJob = scope.launch {
+                        delay(backoff)
+                        synchronized(this@ReconnectingSocket) {
+                            if (running && socket == null) open(http, scope)
+                        }
+                    }
+                }
+            }
+        })
+    }
+}
