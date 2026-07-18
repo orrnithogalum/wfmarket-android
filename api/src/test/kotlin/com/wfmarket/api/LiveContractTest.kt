@@ -105,4 +105,16 @@ class LiveContractTest {
         val failure = runCatching { api.me() }.exceptionOrNull() as WfmException
         assertEquals(WfmErrorKind.UNAUTHORIZED, failure.kind)
     }
+
+    @Test fun socketsConnectAnonymously() = runBlocking {
+        val sockets = WfmSockets(context, api.http)
+        sockets.connect()
+        try {
+            withTimeout(15_000) { sockets.state.first { it.chatConnected && it.statusConnected } }
+            val report = withTimeout(70_000) { sockets.events.filterIsInstance<SocketEvent.OnlineCount>().first() }
+            assertTrue(report.connections > 0)
+        } finally {
+            sockets.disconnect()
+        }
+    }
 }
