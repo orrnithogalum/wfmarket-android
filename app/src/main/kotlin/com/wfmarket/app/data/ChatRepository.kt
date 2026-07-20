@@ -41,6 +41,9 @@ class ChatRepository(
     private val _messages = MutableStateFlow<Map<String, List<ChatMessage>>>(emptyMap())
     val messages: StateFlow<Map<String, List<ChatMessage>>> = _messages.asStateFlow()
 
+    private val _unread = MutableStateFlow(0)
+    val unread: StateFlow<Int> = _unread.asStateFlow()
+
     /** The conversation currently on screen. It never raises a notification. */
     @Volatile var activeChatId: String? = null
 
