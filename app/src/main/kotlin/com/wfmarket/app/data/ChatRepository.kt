@@ -56,4 +56,30 @@ class ChatRepository(
 
     private val syncLock = Mutex()
 
+    fun start() {
+        scope.launch { sockets.events.collect(::onEvent) }
+        scope.launch {
+            account.isSignedIn.collect { signedIn ->
+                if (signedIn) {
+                    runCatching { refreshChats() }
+                } else {
+                    _chats.value = emptyList()
+                    _messages.value = emptyMap()
+                    _unread.value = 0
+                    notifier.cancelAllChats()
+                }
+            }
+        }
+        scope.launch {
+            account.me.collect { me -> if (me != null && _chats.value.isEmpty()) _unread.value = me.unreadMessages }
+        }
+        // Foreground/background poll. Cheap, and covers a socket that's silently not authorized.
+        scope.launch {
+            while (true) {
+                delay(if (isAppForeground()) 45_000 else 90_000)
+                if (session.token != null) runCatching { syncUnread() }
+            }
+        }
+    }
+
 }
