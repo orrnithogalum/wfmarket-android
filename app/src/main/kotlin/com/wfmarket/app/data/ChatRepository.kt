@@ -44,6 +44,11 @@ class ChatRepository(
     private val _unread = MutableStateFlow(0)
     val unread: StateFlow<Int> = _unread.asStateFlow()
 
+    /** Chats swiped away whose deletion can still be undone. Screens leave them out. */
+    private val _deleting = MutableStateFlow<Set<String>>(emptySet())
+    val deleting: StateFlow<Set<String>> = _deleting.asStateFlow()
+    private val deleteJobs = java.util.concurrent.ConcurrentHashMap<String, Job>()
+
     /** The conversation currently on screen. It never raises a notification. */
     @Volatile var activeChatId: String? = null
 
