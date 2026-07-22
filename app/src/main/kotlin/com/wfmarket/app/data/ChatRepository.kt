@@ -52,4 +52,6 @@ class ChatRepository(
     /** The conversation currently on screen. It never raises a notification. */
     @Volatile var activeChatId: String? = null
 
+    var isAppForeground: () -> Boolean = { false }
+
 }
