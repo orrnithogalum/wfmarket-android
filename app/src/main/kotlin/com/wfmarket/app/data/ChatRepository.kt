@@ -54,4 +54,6 @@ class ChatRepository(
 
     var isAppForeground: () -> Boolean = { false }
 
+    private val syncLock = Mutex()
+
 }
