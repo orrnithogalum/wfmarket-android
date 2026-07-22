@@ -82,4 +82,20 @@ class ChatRepository(
         }
     }
 
+    private fun onEvent(event: SocketEvent) {
+        when (event) {
+            is SocketEvent.NewMessage -> onIncoming(event.message)
+            is SocketEvent.MessageSent -> onSent(event)
+            is SocketEvent.AuctionNotification -> if (settings.current.notifyAuctions && !isAppForeground()) {
+                notifier.showAuction(event.title, event.body, event.auctionId)
+            }
+            is SocketEvent.AccountNotice -> notifier.showAccountNotice(event.kind, event.message)
+            // The socket reports rejections without saying which command they answer. Sends are
+            // the only command in flight on this path, so whatever's pending is what failed.
+            is SocketEvent.ServerError -> failPendingMessages()
+            is SocketEvent.ChatStreamReady -> if (session.token != null) scope.launch { runCatching { syncUnread() } }
+            else -> Unit
+        }
+    }
+
 }
