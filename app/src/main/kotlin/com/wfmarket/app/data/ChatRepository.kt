@@ -98,4 +98,10 @@ class ChatRepository(
         }
     }
 
+    private fun failPendingMessages() {
+        _messages.update { all ->
+            all.mapValues { (_, list) -> list.map { if (it.pending) it.copy(pending = false, failed = true) else it } }
+        }
+    }
+
 }
