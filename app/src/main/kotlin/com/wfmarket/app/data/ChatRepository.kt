@@ -104,4 +104,23 @@ class ChatRepository(
         }
     }
 
+    private fun onIncoming(message: ChatMessage) {
+        scope.launch {
+            appendMessage(message)
+            val known = _chats.value.any { it.id == message.chatId }
+            if (!known) runCatching { refreshChats() }
+            val onScreen = activeChatId == message.chatId && isAppForeground()
+            // The socket also echoes what you send from another device.
+            if (message.messageFrom == account.me.value?.id) return@launch
+            if (onScreen) {
+                sockets.markMessageRead(message.id)
+            } else {
+                incrementUnread(message)
+                val chat = _chats.value.firstOrNull { it.id == message.chatId }
+                notifier.showMessage(chat, message, recentFor(message.chatId))
+                notifier.markDelivered(message.chatId, message.sendDate)
+            }
+        }
+    }
+
 }
