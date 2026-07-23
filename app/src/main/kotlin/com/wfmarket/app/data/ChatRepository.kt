@@ -158,4 +158,8 @@ class ChatRepository(
         recount()
     }
 
+    private fun recount() {
+        _unread.value = _chats.value.sumOf { it.unreadCount }
+    }
+
 }
