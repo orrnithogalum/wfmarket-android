@@ -151,4 +151,11 @@ class ChatRepository(
         }
     }
 
+    private fun incrementUnread(message: ChatMessage) {
+        _chats.update { chats ->
+            chats.map { if (it.id == message.chatId) it.copy(unreadCount = it.unreadCount + 1) else it }
+        }
+        recount()
+    }
+
 }
