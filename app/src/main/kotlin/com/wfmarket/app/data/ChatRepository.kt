@@ -139,4 +139,16 @@ class ChatRepository(
         }
     }
 
+    private fun appendMessage(message: ChatMessage) {
+        _messages.update { all ->
+            val list = all[message.chatId].orEmpty()
+            if (list.any { it.id == message.id }) all else all + (message.chatId to (list + message))
+        }
+        _chats.update { chats ->
+            chats.map {
+                if (it.id == message.chatId) it.copy(lastUpdate = message.sendDate, messages = listOf(message)) else it
+            }.sortedByDescending { it.lastUpdate }
+        }
+    }
+
 }
