@@ -123,4 +123,20 @@ class ChatRepository(
         }
     }
 
+    private fun onSent(event: SocketEvent.MessageSent) {
+        val chatId = event.message.chatId
+        _messages.update { all ->
+            val list = all[chatId].orEmpty()
+            val swapped = list.filterNot { it.pending && it.id == event.tempId }.let { remaining ->
+                if (remaining.any { it.id == event.message.id }) remaining else remaining + event.message.copy(localId = event.tempId)
+            }
+            all + (chatId to swapped)
+        }
+        _chats.update { chats ->
+            chats.map {
+                if (it.id == chatId) it.copy(lastUpdate = event.message.sendDate, messages = listOf(event.message)) else it
+            }.sortedByDescending { it.lastUpdate }
+        }
+    }
+
 }
