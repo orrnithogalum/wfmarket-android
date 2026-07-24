@@ -170,4 +170,13 @@ class ChatRepository(
         recount()
     }
 
+    /**
+     * Compares the server's inbox with what's already been announced and notifies about anything
+     * new. Reads only the chat list, because opening a chat would mark it read.
+     */
+    suspend fun syncUnread() = syncLock.withLock {
+        if (session.token == null) return@withLock
+        announce(api.chats().sortedByDescending { it.lastUpdate })
+    }
+
 }
