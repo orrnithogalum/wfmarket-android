@@ -222,4 +222,10 @@ class ChatRepository(
         notifier.cancelChat(chatId)
     }
 
+    suspend fun openChatWith(userId: String): String {
+        val chatId = api.openChat(userId)
+        if (_chats.value.none { it.id == chatId }) runCatching { refreshChats() }
+        return chatId
+    }
+
 }
