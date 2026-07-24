@@ -209,4 +209,17 @@ class ChatRepository(
         _messages.update { it + (chat.id to messages) }
     }
 
+    suspend fun loadMessages(chatId: String) {
+        val loaded = api.chatMessages(chatId).sortedBy { it.sendDate }
+        _messages.update { all ->
+            val known = all[chatId].orEmpty()
+            val pending = known.filter { it.pending }
+            val localIds = known.mapNotNull { message -> message.localId?.let { message.id to it } }.toMap()
+            all + (chatId to loaded.map { message -> localIds[message.id]?.let { message.copy(localId = it) } ?: message } + pending)
+        }
+        _chats.update { chats -> chats.map { if (it.id == chatId) it.copy(unreadCount = 0) else it } }
+        recount()
+        notifier.cancelChat(chatId)
+    }
+
 }
