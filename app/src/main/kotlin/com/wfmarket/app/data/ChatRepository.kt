@@ -162,4 +162,6 @@ class ChatRepository(
         _unread.value = _chats.value.sumOf { it.unreadCount }
     }
 
+    private fun recentFor(chatId: String) = _messages.value[chatId].orEmpty().takeLast(6)
+
 }
