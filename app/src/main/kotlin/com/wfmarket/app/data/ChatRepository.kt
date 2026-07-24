@@ -164,4 +164,10 @@ class ChatRepository(
 
     private fun recentFor(chatId: String) = _messages.value[chatId].orEmpty().takeLast(6)
 
+    suspend fun refreshChats() {
+        if (session.token == null) return
+        _chats.value = api.chats().sortedByDescending { it.lastUpdate }
+        recount()
+    }
+
 }
