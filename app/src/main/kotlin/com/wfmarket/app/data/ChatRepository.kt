@@ -199,4 +199,7 @@ class ChatRepository(
         }
     }
 
+    /** Conversations made up for trying out the conversation screen. What's sent in them never leaves the phone. */
+    private val samples = mutableSetOf<String>()
+
 }
