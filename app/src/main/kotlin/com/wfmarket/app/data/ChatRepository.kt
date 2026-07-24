@@ -202,4 +202,11 @@ class ChatRepository(
     /** Conversations made up for trying out the conversation screen. What's sent in them never leaves the phone. */
     private val samples = mutableSetOf<String>()
 
+    /** Shows a conversation that isn't on the server, for trying out the conversation screen. */
+    fun showSample(chat: Chat, messages: List<ChatMessage>) {
+        samples += chat.id
+        _chats.update { chats -> chats.filterNot { it.id == chat.id } + chat }
+        _messages.update { it + (chat.id to messages) }
+    }
+
 }
