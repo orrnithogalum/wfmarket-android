@@ -179,4 +179,24 @@ class ChatRepository(
         announce(api.chats().sortedByDescending { it.lastUpdate })
     }
 
+    /** Takes a fresh copy of the inbox and notifies about whatever hasn't been announced yet. */
+    fun announce(latest: List<Chat>) {
+        _chats.value = latest
+        recount()
+        val myId = account.me.value?.id
+        for (chat in latest) {
+            if (chat.unreadCount <= 0) {
+                // Read on another device, so there's nothing left to announce.
+                notifier.cancelChat(chat.id)
+                continue
+            }
+            if (chat.id == activeChatId && isAppForeground()) continue
+            if (!notifier.isNewerThanDelivered(chat.id, chat.lastUpdate)) continue
+            val last = chat.messages.lastOrNull()
+            if (last != null && last.messageFrom == myId) continue
+            notifier.showChatSummary(chat, last)
+            notifier.markDelivered(chat.id, chat.lastUpdate)
+        }
+    }
+
 }
