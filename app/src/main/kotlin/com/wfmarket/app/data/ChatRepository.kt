@@ -228,4 +228,40 @@ class ChatRepository(
         return chatId
     }
 
+    /** Shows the message immediately as pending, then sends it. */
+    suspend fun send(chatId: String, text: String) {
+        val myId = account.me.value?.id.orEmpty()
+        val sample = chatId in samples
+        if (!sample) ensureConnected()
+        val tempId = if (sample) "sample-${java.util.UUID.randomUUID()}" else sockets.sendChatMessage(chatId, text)
+            ?: throw WfmException(WfmErrorKind.NETWORK, listOf("Not connected. Try again in a moment."))
+        val optimistic = ChatMessage(
+            id = tempId,
+            chatId = chatId,
+            message = text,
+            rawMessage = text,
+            messageFrom = myId,
+            sendDate = java.time.Instant.now().toString(),
+            pending = true,
+        )
+        _messages.update { all -> all + (chatId to all[chatId].orEmpty() + optimistic) }
+        if (sample) {
+            // Confirmed a moment later, as the server would.
+            scope.launch {
+                delay(SAMPLE_ECHO_MS)
+                onSent(SocketEvent.MessageSent(tempId, optimistic.copy(id = "$tempId-sent", pending = false)))
+            }
+            return
+        }
+        // A socket that's connected but not authorized accepts the frame and never answers.
+        scope.launch {
+            delay(SEND_TIMEOUT_MS)
+            _messages.update { all ->
+                val list = all[chatId] ?: return@update all
+                if (list.none { it.id == tempId && it.pending }) return@update all
+                all + (chatId to list.map { if (it.id == tempId) it.copy(pending = false, failed = true) else it })
+            }
+        }
+    }
+
 }
