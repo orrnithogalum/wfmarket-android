@@ -280,4 +280,8 @@ class ChatRepository(
         withTimeoutOrNull(8_000) { sockets.state.first { it.chatConnected } }
     }
 
+    suspend fun markChatRead(chatId: String) {
+        runCatching { loadMessages(chatId) }
+    }
+
 }
