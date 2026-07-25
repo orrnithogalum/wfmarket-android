@@ -264,4 +264,14 @@ class ChatRepository(
         }
     }
 
+    private companion object {
+        const val SEND_TIMEOUT_MS = 15_000L
+
+        /** About how long the server takes to confirm a message. */
+        const val SAMPLE_ECHO_MS = 400L
+
+        /** A little longer than a short snackbar stays up. */
+        const val UNDO_WINDOW_MS = 5_000L
+    }
+
 }
