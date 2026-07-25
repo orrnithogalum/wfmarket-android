@@ -284,4 +284,19 @@ class ChatRepository(
         runCatching { loadMessages(chatId) }
     }
 
+    /**
+     * Hides the chat at once and deletes it once there's been time to undo. This runs here rather
+     * than on the screen, so leaving the screen doesn't cancel it.
+     */
+    fun deleteSoon(chatId: String, onFailure: (Throwable) -> Unit) {
+        _deleting.update { it + chatId }
+        deleteJobs.remove(chatId)?.cancel()
+        deleteJobs[chatId] = scope.launch {
+            delay(UNDO_WINDOW_MS)
+            runCatching { deleteChat(chatId) }.onFailure(onFailure)
+            deleteJobs.remove(chatId)
+            _deleting.update { it - chatId }
+        }
+    }
+
 }
