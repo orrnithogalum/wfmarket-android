@@ -274,4 +274,10 @@ class ChatRepository(
         const val UNDO_WINDOW_MS = 5_000L
     }
 
+    /** Used by the notification's inline reply, which can fire while the socket is reconnecting. */
+    suspend fun ensureConnected() {
+        sockets.connect()
+        withTimeoutOrNull(8_000) { sockets.state.first { it.chatConnected } }
+    }
+
 }
