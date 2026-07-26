@@ -304,4 +304,10 @@ class ChatRepository(
         _deleting.update { it - chatId }
     }
 
+    /** Sends a message that never got through again, in place of the failed copy. */
+    suspend fun retry(chatId: String, failed: ChatMessage) {
+        discard(chatId, failed.id)
+        send(chatId, failed.text)
+    }
+
 }
