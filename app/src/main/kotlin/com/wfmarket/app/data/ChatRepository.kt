@@ -317,4 +317,12 @@ class ChatRepository(
         }
     }
 
+    suspend fun deleteChat(chatId: String) {
+        api.deleteChat(chatId)
+        _chats.update { chats -> chats.filterNot { it.id == chatId } }
+        _messages.update { it - chatId }
+        recount()
+        notifier.cancelChat(chatId)
+    }
+
 }
