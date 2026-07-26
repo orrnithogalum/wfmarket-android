@@ -310,4 +310,11 @@ class ChatRepository(
         send(chatId, failed.text)
     }
 
+    /** Removes a message the server never accepted. Sent messages can't be deleted on the site. */
+    fun discard(chatId: String, messageId: String) {
+        _messages.update { all ->
+            all + (chatId to all[chatId].orEmpty().filterNot { it.id == messageId && (it.failed || it.pending) })
+        }
+    }
+
 }
