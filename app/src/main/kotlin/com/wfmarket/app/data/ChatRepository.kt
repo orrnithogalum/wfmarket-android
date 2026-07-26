@@ -325,4 +325,11 @@ class ChatRepository(
         notifier.cancelChat(chatId)
     }
 
+    suspend fun ignore(userId: String, chatId: String) {
+        api.ignoreUser(userId, chatId)
+        _chats.update { chats -> chats.filterNot { it.id == chatId } }
+        recount()
+        runCatching { account.refresh() }
+    }
+
 }
