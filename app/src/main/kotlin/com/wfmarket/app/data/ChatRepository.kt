@@ -332,4 +332,9 @@ class ChatRepository(
         runCatching { account.refresh() }
     }
 
+    suspend fun unignore(userId: String) {
+        api.unignoreUser(userId)
+        runCatching { account.refresh() }
+    }
+
 }
