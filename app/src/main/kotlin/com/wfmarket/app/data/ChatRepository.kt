@@ -299,4 +299,9 @@ class ChatRepository(
         }
     }
 
+    fun undoDelete(chatId: String) {
+        deleteJobs.remove(chatId)?.cancel()
+        _deleting.update { it - chatId }
+    }
+
 }
