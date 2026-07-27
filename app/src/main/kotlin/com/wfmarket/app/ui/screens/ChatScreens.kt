@@ -209,3 +209,45 @@ fun LifecycleResume(onResume: () -> Unit) {
     }
 }
 
+/**
+ * A conversation that can be swiped either way, each direction doing what Settings says. Marking
+ * as read springs back; deleting slides the row away and leaves a moment to undo.
+ */
+@Composable
+private fun SwipeableChatRow(
+    chat: Chat,
+    myId: String?,
+    right: SwipeAction,
+    left: SwipeAction,
+    onSwipe: (SwipeAction) -> Unit,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    fun usable(action: SwipeAction) = action != SwipeAction.NONE
+    // Not saved: a chat brought back by Undo should come back in place, not still swiped away.
+    val state = remember(chat.id) { SwipeToDismissBoxState(SwipeToDismissBoxValue.Settled) { distance -> distance * 0.35f } }
+    val scope = rememberCoroutineScope()
+    val haptics = LocalHapticFeedback.current
+    LaunchedEffect(state) {
+        snapshotFlow { state.targetValue }.drop(1).collect {
+            if (it != SwipeToDismissBoxValue.Settled) haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+        }
+    }
+    val dragging = state.dismissDirection != SwipeToDismissBoxValue.Settled
+    val corner by animateDpAsState(if (dragging) 28.dp else 0.dp, label = "swipeCorner")
+    SwipeToDismissBox(
+        state = state,
+        modifier = modifier,
+        enableDismissFromStartToEnd = usable(right),
+        enableDismissFromEndToStart = usable(left),
+        onDismiss = { direction ->
+            val action = if (direction == SwipeToDismissBoxValue.StartToEnd) right else left
+            onSwipe(action)
+            if (action != SwipeAction.DELETE) scope.launch { state.reset() }
+        },
+        backgroundContent = { SwipeBackground(state, right, left) },
+    ) {
+        ChatRow(chat, myId, Modifier.clip(RoundedCornerShape(corner)), onClick)
+    }
+}
+
