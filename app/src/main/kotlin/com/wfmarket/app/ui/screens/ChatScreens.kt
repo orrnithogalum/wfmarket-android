@@ -201,3 +201,11 @@ fun requestBatteryExemption(context: android.content.Context) {
     }
 }
 
+@Composable
+fun LifecycleResume(onResume: () -> Unit) {
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        onResume()
+        onPauseOrDispose {}
+    }
+}
+
