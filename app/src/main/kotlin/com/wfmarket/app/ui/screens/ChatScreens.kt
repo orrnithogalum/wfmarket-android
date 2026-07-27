@@ -169,3 +169,27 @@ fun ChatsScreen() {
     }
 }
 
+/** Battery optimization is what most often stops background delivery, so it's asked up front. */
+@Composable
+private fun BatteryPrompt(enabled: Boolean, dismissed: Boolean) {
+    val context = LocalContext.current
+    val container = appContainer()
+    val power = remember { context.getSystemService(PowerManager::class.java) }
+    var exempt by remember { mutableStateOf(power.isIgnoringBatteryOptimizations(context.packageName)) }
+    LifecycleResume { exempt = power.isIgnoringBatteryOptimizations(context.packageName) }
+    if (!enabled || exempt || dismissed) return
+    ElevatedCard(Modifier.fillMaxWidth().padding(12.dp), shape = MaterialTheme.shapes.large) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Get messages reliably", style = MaterialTheme.typography.titleSmall)
+            Text(
+                "Allow unrestricted battery use so Android doesn't delay messages while the app is closed.",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilledTonalButton(onClick = { requestBatteryExemption(context) }, shapes = ButtonDefaults.shapes()) { Text("Allow") }
+                TextButton(onClick = container.settings::dismissBatteryPrompt, shapes = ButtonDefaults.shapes()) { Text("Not now") }
+            }
+        }
+    }
+}
+
