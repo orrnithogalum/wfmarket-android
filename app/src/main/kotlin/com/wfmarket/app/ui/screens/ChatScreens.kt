@@ -193,3 +193,11 @@ private fun BatteryPrompt(enabled: Boolean, dismissed: Boolean) {
     }
 }
 
+fun requestBatteryExemption(context: android.content.Context) {
+    runCatching {
+        context.startActivity(
+            Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, "package:${context.packageName}".toUri()),
+        )
+    }
+}
+
