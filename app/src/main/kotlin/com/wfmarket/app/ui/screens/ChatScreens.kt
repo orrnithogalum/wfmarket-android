@@ -358,4 +358,9 @@ private sealed interface ChatItem {
         override val key get() = "day:$label"
     }
 
+    /** The time, between messages of one day sent long apart, as Google Messages marks them. */
+    data class Time(val label: String, val before: String) : ChatItem {
+        override val key get() = "time:$before"
+    }
+
 
