@@ -288,3 +288,18 @@ private fun SwipeBackground(state: SwipeToDismissBoxState, right: SwipeAction, l
     }
 }
 
+/** When a conversation last moved, as Google Messages puts it: a time today, a day this week, a date after that. */
+private fun conversationTime(iso: String?): String {
+    val millis = epochMillis(iso) ?: return ""
+    val zone = ZoneId.systemDefault()
+    val day = Instant.ofEpochMilli(millis).atZone(zone).toLocalDate()
+    val today = LocalDate.now(zone)
+    val pattern = when {
+        day == today -> "HH:mm"
+        ChronoUnit.DAYS.between(day, today) < 7 -> "EEE"
+        day.year == today.year -> "d MMM"
+        else -> "d MMM yyyy"
+    }
+    return DateTimeFormatter.ofPattern(pattern, Locale.getDefault()).withZone(zone).format(Instant.ofEpochMilli(millis))
+}
+
