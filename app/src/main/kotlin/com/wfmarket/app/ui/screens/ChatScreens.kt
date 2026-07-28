@@ -354,4 +354,8 @@ private fun ChatRow(chat: Chat, myId: String?, modifier: Modifier = Modifier, on
 private sealed interface ChatItem {
     val key: String
 
+    data class Day(val label: String) : ChatItem {
+        override val key get() = "day:$label"
+    }
+
 
