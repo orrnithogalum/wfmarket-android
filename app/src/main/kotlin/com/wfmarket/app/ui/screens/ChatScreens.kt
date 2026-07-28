@@ -251,3 +251,40 @@ private fun SwipeableChatRow(
     }
 }
 
+@Composable
+private fun SwipeBackground(state: SwipeToDismissBoxState, right: SwipeAction, left: SwipeAction) {
+    val direction = state.dismissDirection
+    val action = when (direction) {
+        SwipeToDismissBoxValue.StartToEnd -> right
+        SwipeToDismissBoxValue.EndToStart -> left
+        SwipeToDismissBoxValue.Settled -> SwipeAction.NONE
+    }
+    if (action == SwipeAction.NONE) return
+    val armed = state.targetValue != SwipeToDismissBoxValue.Settled
+    val colors = MaterialTheme.colorScheme
+    val delete = action == SwipeAction.DELETE
+    val container by animateColorAsState(
+        when {
+            !armed -> colors.surfaceContainerHighest
+            delete -> colors.errorContainer
+            else -> colors.primaryContainer
+        },
+        label = "swipeColor",
+    )
+    val content = when {
+        !armed -> colors.onSurfaceVariant
+        delete -> colors.onErrorContainer
+        else -> colors.onPrimaryContainer
+    }
+    val scale by animateFloatAsState(if (armed) 1.15f else 0.9f, label = "swipeIcon")
+    Box(
+        Modifier.fillMaxSize().background(container).padding(horizontal = 28.dp),
+        contentAlignment = if (direction == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart else Alignment.CenterEnd,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(if (delete) Icons.Filled.Delete else Icons.Filled.MarkChatRead, null, Modifier.scale(scale), tint = content)
+            Text(action.label, style = MaterialTheme.typography.labelLarge, color = content)
+        }
+    }
+}
+
