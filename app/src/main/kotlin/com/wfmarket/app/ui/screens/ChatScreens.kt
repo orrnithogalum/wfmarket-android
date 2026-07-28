@@ -348,3 +348,10 @@ private fun ChatRow(chat: Chat, myId: String?, modifier: Modifier = Modifier, on
     }
 }
 
+// ---------------------------------------------------------------- Conversation
+
+/** A conversation laid out as Google Messages does: days apart, and runs of messages grouped. */
+private sealed interface ChatItem {
+    val key: String
+
+
