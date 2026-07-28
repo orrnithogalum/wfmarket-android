@@ -303,3 +303,48 @@ private fun conversationTime(iso: String?): String {
     return DateTimeFormatter.ofPattern(pattern, Locale.getDefault()).withZone(zone).format(Instant.ofEpochMilli(millis))
 }
 
+@Composable
+private fun ChatRow(chat: Chat, myId: String?, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val partner = chat.chatWith.firstOrNull { it.id != myId } ?: chat.chatWith.firstOrNull()
+    val last = chat.messages.lastOrNull()
+    val unread = chat.unreadCount > 0
+    val colors = MaterialTheme.colorScheme
+    Row(
+        modifier.fillMaxWidth().background(colors.surface).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        UserAvatar(assetUrl(partner?.avatar), chat.chatName, size = 52.dp, status = partner?.status)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    chat.chatName.ifBlank { partner?.ingameName.orEmpty() },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (unread) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    conversationTime(chat.lastUpdate),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (unread) FontWeight.Bold else FontWeight.Normal,
+                    color = if (unread) colors.primary else colors.onSurfaceVariant,
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    last?.let { (if (it.messageFrom == myId) "You: " else "") + it.text }.orEmpty(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (unread) FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (unread) colors.onSurface else colors.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                if (unread) Badge(containerColor = colors.primary, contentColor = colors.onPrimary) { Text(chat.unreadCount.toString()) }
+            }
+        }
+    }
+}
+
