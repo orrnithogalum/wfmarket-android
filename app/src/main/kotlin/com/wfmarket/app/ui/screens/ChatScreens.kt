@@ -363,4 +363,8 @@ private sealed interface ChatItem {
         override val key get() = "time:$before"
     }
 
+    data class Bubble(val message: ChatMessage, val mine: Boolean, val first: Boolean, val last: Boolean) : ChatItem {
+        override val key get() = message.key
+    }
+}
 
