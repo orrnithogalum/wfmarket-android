@@ -380,4 +380,20 @@ private class Arrivals {
     private var known: Set<String> = emptySet()
     private val rising = mutableSetOf<String>()
 
+    /** Called during composition, so the list is measured with the new items and its new place together. */
+    fun update(items: List<ChatItem>, list: LazyListState) {
+        if (items === shown) return
+        shown = items
+        val keys = items.mapTo(HashSet()) { it.key }
+        val before = known
+        known = keys
+        // What's there when the conversation opens is simply there.
+        if (before.isEmpty()) return
+        val atNewest = Snapshot.withoutReadObservation { list.firstVisibleItemIndex == 0 }
+        val added = keys - before
+        if (!atNewest || added.isEmpty()) return
+        rising += added
+        list.requestScrollToItem(0)
+    }
+
 
