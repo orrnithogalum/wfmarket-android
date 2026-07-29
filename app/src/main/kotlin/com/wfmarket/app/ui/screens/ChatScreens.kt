@@ -368,3 +368,6 @@ private sealed interface ChatItem {
     }
 }
 
+/** The same bubble from the moment it's sent, before and after the server gives it its own id. */
+private val ChatMessage.key get() = localId ?: id
+
