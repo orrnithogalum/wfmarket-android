@@ -371,3 +371,13 @@ private sealed interface ChatItem {
 /** The same bubble from the moment it's sent, before and after the server gives it its own id. */
 private val ChatMessage.key get() = localId ?: id
 
+/**
+ * Which items came in while the newest message was in view. Those rise in at the bottom, and the
+ * list stays on the newest rather than on what was there, so the rest slide up to make room.
+ */
+private class Arrivals {
+    private var shown: List<ChatItem>? = null
+    private var known: Set<String> = emptySet()
+    private val rising = mutableSetOf<String>()
+
+
