@@ -403,3 +403,17 @@ private class Arrivals {
 /** How long a new message takes to rise in, the same as the moves it sets off above it. */
 private fun <T> riseSpec() = Motion.arrive<T>(350)
 
+/**
+ * Grows this from nothing at the bottom of the conversation as it rises into place, so the
+ * messages above slide up to make room in step with it, as one movement.
+ */
+@Composable
+private fun Modifier.riseIn(rising: Boolean): Modifier {
+    val progress = remember { Animatable(if (rising) 0f else 1f) }
+    LaunchedEffect(progress) { progress.animateTo(1f, riseSpec()) }
+    return layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        layout(placeable.width, (placeable.height * progress.value).roundToInt()) { placeable.place(0, 0) }
+    }.graphicsLayer { alpha = progress.value }
+}
+
