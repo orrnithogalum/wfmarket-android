@@ -396,4 +396,7 @@ private class Arrivals {
         list.requestScrollToItem(0)
     }
 
+    /** Whether the item with [key] should rise in, which it does only the first time it's shown. */
+    fun take(key: String): Boolean = rising.remove(key)
+}
 
