@@ -400,3 +400,6 @@ private class Arrivals {
     fun take(key: String): Boolean = rising.remove(key)
 }
 
+/** How long a new message takes to rise in, the same as the moves it sets off above it. */
+private fun <T> riseSpec() = Motion.arrive<T>(350)
+
