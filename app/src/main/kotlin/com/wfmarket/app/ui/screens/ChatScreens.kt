@@ -417,3 +417,9 @@ private fun Modifier.riseIn(rising: Boolean): Modifier {
     }.graphicsLayer { alpha = progress.value }
 }
 
+/**
+ * Messages from one sender read as one run until this long passes between them, as in Google
+ * Messages, where a run carries on across minutes and a long pause starts a new one under the time.
+ */
+private const val GROUP_GAP_MILLIS = 60 * 60_000L
+
