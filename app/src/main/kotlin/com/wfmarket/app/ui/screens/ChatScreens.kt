@@ -423,3 +423,9 @@ private fun Modifier.riseIn(rising: Boolean): Modifier {
  */
 private const val GROUP_GAP_MILLIS = 60 * 60_000L
 
+private fun dayLabel(day: LocalDate, today: LocalDate): String = when (day) {
+    today -> "Today"
+    today.minusDays(1) -> "Yesterday"
+    else -> DateTimeFormatter.ofPattern(if (day.year == today.year) "EEEE d MMMM" else "d MMMM yyyy", Locale.getDefault()).format(day)
+}
+
