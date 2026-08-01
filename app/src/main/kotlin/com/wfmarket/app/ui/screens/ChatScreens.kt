@@ -429,3 +429,29 @@ private fun dayLabel(day: LocalDate, today: LocalDate): String = when (day) {
     else -> DateTimeFormatter.ofPattern(if (day.year == today.year) "EEEE d MMMM" else "d MMMM yyyy", Locale.getDefault()).format(day)
 }
 
+private fun chatItems(messages: List<ChatMessage>, myId: String?): List<ChatItem> {
+    val zone = ZoneId.systemDefault()
+    val today = LocalDate.now(zone)
+    val times = messages.map { epochMillis(it.sendDate) ?: System.currentTimeMillis() }
+    val days = times.map { Instant.ofEpochMilli(it).atZone(zone).toLocalDate() }
+    fun joined(a: Int, b: Int) = messages[a].messageFrom == messages[b].messageFrom && days[a] == days[b] && times[b] - times[a] < GROUP_GAP_MILLIS
+    val clock = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())
+    return buildList {
+        messages.forEachIndexed { index, message ->
+            when {
+                index == 0 || days[index] != days[index - 1] -> add(ChatItem.Day(dayLabel(days[index], today)))
+                times[index] - times[index - 1] >= GROUP_GAP_MILLIS ->
+                    add(ChatItem.Time(Instant.ofEpochMilli(times[index]).atZone(zone).format(clock), message.key))
+            }
+            add(
+                ChatItem.Bubble(
+                    message,
+                    mine = message.messageFrom == myId,
+                    first = index == 0 || !joined(index - 1, index),
+                    last = index == messages.lastIndex || !joined(index, index + 1),
+                ),
+            )
+        }
+    }
+}
+
