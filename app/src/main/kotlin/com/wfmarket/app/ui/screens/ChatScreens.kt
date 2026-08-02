@@ -741,3 +741,28 @@ private fun Composer(draft: String, onDraft: (String) -> Unit, onSend: () -> Uni
     }
 }
 
+/** Its own scope, so the colours easing don't redraw the message field beside it every frame. */
+@Composable
+private fun SendButton(canSend: Boolean, sends: Int, onClick: () -> Unit) {
+    // The button eases to rest as the field clears, rather than going grey the moment it's tapped.
+    val resting = IconButtonDefaults.filledIconButtonColors()
+    val container by animateColorAsState(if (canSend) resting.containerColor else resting.disabledContainerColor, Motion.fadeIn(300), label = "sendContainer")
+    val content by animateColorAsState(if (canSend) resting.contentColor else resting.disabledContentColor, Motion.fadeIn(300), label = "sendContent")
+    val forward = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
+    // Pressing squares the button off a little, the expressive way of answering a touch.
+    FilledIconButton(
+        onClick = onClick,
+        enabled = canSend,
+        shapes = IconButtonDefaults.shapes(),
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = container,
+            contentColor = content,
+            disabledContainerColor = container,
+            disabledContentColor = content,
+        ),
+        modifier = Modifier.size(56.dp),
+    ) {
+        Icon(Icons.AutoMirrored.Filled.Send, "Send")
+    }
+}
+
