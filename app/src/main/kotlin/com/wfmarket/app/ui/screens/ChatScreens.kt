@@ -766,3 +766,14 @@ private fun SendButton(canSend: Boolean, sends: Int, onClick: () -> Unit) {
     }
 }
 
+@Composable
+private fun DayHeader(label: String, modifier: Modifier = Modifier) {
+    Text(
+        label,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
+    )
+}
+
