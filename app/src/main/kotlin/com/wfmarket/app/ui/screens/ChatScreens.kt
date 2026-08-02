@@ -701,3 +701,43 @@ fun ChatScreen(chatId: String) {
     }
 }
 
+/** The message field: a filled pill with a round send button beside it. */
+@Composable
+private fun Composer(draft: String, onDraft: (String) -> Unit, onSend: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val canSend = draft.isNotBlank()
+    // Counts sends, so each one flies the icon off.
+    var sends by remember { mutableIntStateOf(0) }
+    fun send() {
+        if (!canSend) return
+        sends++
+        onSend()
+    }
+    Row(
+        Modifier.fillMaxWidth().background(colors.surface).navigationBarsPadding().imePadding()
+            .padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        TextField(
+            value = draft,
+            onValueChange = onDraft,
+            modifier = Modifier.weight(1f).heightIn(min = 56.dp),
+            placeholder = { Text("Message") },
+            shape = RoundedCornerShape(28.dp),
+            textStyle = MaterialTheme.typography.bodyLarge,
+            maxLines = 6,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = colors.surfaceContainerHigh,
+                unfocusedContainerColor = colors.surfaceContainerHigh,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+            ),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Send),
+            keyboardActions = KeyboardActions(onSend = { send() }),
+        )
+        SendButton(canSend, sends, ::send)
+    }
+}
+
