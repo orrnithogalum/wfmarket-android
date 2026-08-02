@@ -455,3 +455,249 @@ private fun chatItems(messages: List<ChatMessage>, myId: String?): List<ChatItem
     }
 }
 
+@Composable
+fun ChatScreen(chatId: String) {
+    val container = appContainer()
+    val chats by container.chats.chats.collectAsStateWithLifecycle()
+    val allMessages by container.chats.messages.collectAsStateWithLifecycle()
+    val me by container.account.me.collectAsStateWithLifecycle()
+    val navigator = LocalNavigator.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbar = remember { SnackbarHostState() }
+    val chat = chats.firstOrNull { it.id == chatId }
+    val partner = chat?.chatWith?.firstOrNull { it.id != me?.id } ?: chat?.chatWith?.firstOrNull()
+    val partnerName = chat?.chatName?.ifBlank { null } ?: partner?.ingameName.orEmpty()
+    val messages = allMessages[chatId].orEmpty()
+    // As what's sent is stamped, so a made-up sample conversation still reads right signed out.
+    val myId = me?.id.orEmpty()
+    val items = remember(messages, myId) { chatItems(messages, myId) }
+    var draft by rememberSaveable { mutableStateOf("") }
+    var loading by remember { mutableStateOf(true) }
+    var refreshing by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var menuOpen by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
+    var confirmIgnore by remember { mutableStateOf(false) }
+    // Laid out from the bottom, newest first, as Google Messages does: it stays on the newest
+    // message as the keyboard opens, and a message arriving there pushes the rest up.
+    val listState = rememberLazyListState()
+    val arrivals = remember { Arrivals() }
+    arrivals.update(items, listState)
+    // How far the times are dragged into view, from none to all; letting go puts them away.
+    val timesShown = remember { Animatable(0f) }
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+
+    DisposableEffect(chatId) {
+        container.chats.activeChatId = chatId
+        onDispose { container.chats.activeChatId = null }
+    }
+    LaunchedEffect(chatId) {
+        runCatching { container.chats.loadMessages(chatId) }
+            .onSuccess { error = null }
+            .onFailure { error = it.userMessage() }
+        loading = false
+    }
+
+    // Away from the newest message, what arrives doesn't move the list, so reading back through old
+    // ones isn't interrupted; it's counted on the button instead. Sending takes you back down.
+    var unseen by remember { mutableIntStateOf(0) }
+    var handledMessages by remember { mutableIntStateOf(0) }
+    // A message or two below the screen doesn't count as having scrolled away.
+    val awayFromLatest by remember { derivedStateOf { listState.firstVisibleItemIndex >= 3 } }
+    LaunchedEffect(awayFromLatest) { if (!awayFromLatest) unseen = 0 }
+    LaunchedEffect(messages.size) {
+        val added = messages.drop(handledMessages)
+        val first = handledMessages == 0
+        handledMessages = messages.size
+        if (first || added.isEmpty() || listState.firstVisibleItemIndex == 0) return@LaunchedEffect
+        if (added.any { it.messageFrom == myId }) listState.animateScrollToItem(0) else unseen += added.size
+    }
+
+    fun send(text: String = draft.trim()) {
+        if (text.isEmpty()) return
+        draft = ""
+        // Started at once, so the message leaves the field and lands in the conversation in the same frame.
+        scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            runCatching { container.chats.send(chatId, text) }.onFailure {
+                draft = text
+                snackbar.showSnackbar(it.userMessage())
+            }
+        }
+    }
+
+    fun retry(message: ChatMessage) {
+        scope.launch {
+            runCatching { container.chats.retry(chatId, message) }.onFailure {
+                draft = message.text
+                snackbar.showSnackbar(it.userMessage())
+            }
+        }
+    }
+
+    fun copy(text: String, what: String) {
+        copyToClipboard(context, text)
+        // Android 13 and later confirm copies on their own.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) scope.launch { snackbar.showSnackbar("$what copied") }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.clip(MaterialTheme.shapes.large).clickable { partner?.slug?.let(navigator::user) }.padding(end = 8.dp),
+                    ) {
+                        UserAvatar(assetUrl(partner?.avatar), partnerName, size = 40.dp, status = partner?.status)
+                        Column {
+                            Text(partnerName, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            partner?.status?.let { StatusLabel(it) }
+                        }
+                    }
+                },
+                navigationIcon = { IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                actions = {
+                    IconButton(onClick = { menuOpen = true }) { Icon(Icons.Filled.MoreVert, "More") }
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, shape = MaterialTheme.shapes.large) {
+                        DropdownMenuItem(
+                            text = { Text("View profile") },
+                            leadingIcon = { Icon(Icons.Filled.Person, null) },
+                            onClick = { menuOpen = false; partner?.slug?.let(navigator::user) },
+                        )
+                        if (partnerName.isNotBlank()) {
+                            DropdownMenuItem(
+                                text = { Text("Copy /w $partnerName") },
+                                leadingIcon = { Icon(Icons.Filled.SportsEsports, null) },
+                                onClick = { menuOpen = false; copy("/w $partnerName ", "Whisper") },
+                            )
+                        }
+                        DropdownMenuItem(
+                            text = { Text("Delete conversation") },
+                            leadingIcon = { Icon(Icons.Filled.Delete, null) },
+                            onClick = { menuOpen = false; confirmDelete = true },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Ignore user") },
+                            leadingIcon = { Icon(Icons.Filled.Block, null) },
+                            onClick = { menuOpen = false; confirmIgnore = true },
+                        )
+                    }
+                },
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbar) },
+        bottomBar = {
+            Composer(draft, { draft = it }, onSend = { send() })
+        },
+    ) { padding ->
+        RefreshBox(
+            isRefreshing = refreshing,
+            onRefresh = {
+                scope.launch {
+                    refreshing = true
+                    runCatching { container.chats.loadMessages(chatId) }
+                        .onSuccess { error = null }
+                        .onFailure { failure ->
+                            if (messages.isEmpty()) error = failure.userMessage() else container.refreshFailed()
+                        }
+                    refreshing = false
+                }
+            },
+            modifier = Modifier.fillMaxSize().padding(padding),
+        ) {
+            when {
+                loading && messages.isEmpty() -> PullablePage { LoadingBox() }
+                error != null && messages.isEmpty() -> PullablePage { ErrorBox(error!!) }
+                messages.isEmpty() -> PullablePage { EmptyBox("Say hello", "Messages are between you and ${partnerName.ifBlank { "this player" }}.") }
+                else -> {
+                    FadingLazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize().pointerInput(rtl) {
+                            val reveal = TimesWidth.toPx()
+                            val toward = if (rtl) 1f else -1f
+                            fun settle() {
+                                scope.launch { timesShown.animateTo(0f, Motion.move(300)) }
+                            }
+                            detectHorizontalDragGestures(onDragEnd = ::settle, onDragCancel = ::settle) { change, dragAmount ->
+                                change.consume()
+                                scope.launch { timesShown.snapTo((timesShown.value + toward * dragAmount / reveal).coerceIn(0f, 1f)) }
+                            }
+                        },
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        reverseLayout = true,
+                        scrollToTop = false,
+                    ) {
+                        items(items.asReversed(), key = { it.key }, contentType = { it::class }) { item ->
+                            val rising = remember { arrivals.take(item.key) }
+                            // Nothing slides to a new place on its own: what's above a message rising in
+                            // moves with it as it grows, and anything else following would only lag behind.
+                            val motion = Modifier
+                                .animateItem(fadeInSpec = if (rising) null else Motion.fadeIn(), placementSpec = null, fadeOutSpec = Motion.fadeOut())
+                                .riseIn(rising)
+                            when (item) {
+                                is ChatItem.Day -> DayHeader(item.label, motion)
+                                is ChatItem.Time -> DayHeader(item.label, motion)
+                                is ChatItem.Bubble -> MessageBubble(
+                                    item,
+                                    partnerAvatar = assetUrl(partner?.avatar),
+                                    partnerName = partnerName,
+                                    onRetry = { retry(item.message) },
+                                    onDiscard = { container.chats.discard(chatId, item.message.id) },
+                                    onCopy = ::copy,
+                                    timesShown = { timesShown.value },
+                                    modifier = motion,
+                                )
+                            }
+                        }
+                    }
+                    JumpToLatest(
+                        visible = awayFromLatest,
+                        unseen = unseen,
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+                    ) { scope.launch { listState.animateScrollToItem(0) } }
+                }
+            }
+        }
+    }
+
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("Delete this conversation?") },
+            text = { Text("It's removed from your inbox.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    scope.launch {
+                        runCatching { container.chats.deleteChat(chatId) }
+                            .onSuccess { navigator.back() }
+                            .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                    }
+                }) { Text("Delete") }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
+        )
+    }
+    if (confirmIgnore) {
+        AlertDialog(
+            onDismissRequest = { confirmIgnore = false },
+            title = { Text("Ignore $partnerName?") },
+            text = { Text("You won't receive messages from this player. You can undo this in Settings.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmIgnore = false
+                    val userId = partner?.id ?: return@TextButton
+                    scope.launch {
+                        runCatching { container.chats.ignore(userId, chatId) }
+                            .onSuccess { navigator.back() }
+                            .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                    }
+                }) { Text("Ignore") }
+            },
+            dismissButton = { TextButton(onClick = { confirmIgnore = false }) { Text("Cancel") } },
+        )
+    }
+}
+
