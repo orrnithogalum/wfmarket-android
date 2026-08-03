@@ -794,3 +794,6 @@ private val BubbleRound = 22.dp
 private val BubbleJoined = 6.dp
 private val AvatarSize = 32.dp
 
+/** How far your messages slide over to show the times. */
+private val TimesWidth = 48.dp
+
