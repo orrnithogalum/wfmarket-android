@@ -915,3 +915,35 @@ private fun MessageBubble(
     }
 }
 
+/**
+ * The line under a message. "Sending…" gives way to the time with a crossfade, and the time folds
+ * away when another message joins the run, in step with that one rising in below.
+ */
+@Composable
+private fun StatusLine(text: String?, failed: Boolean, mine: Boolean, modifier: Modifier = Modifier) {
+    // Keeps the last words while the line folds away.
+    val last = remember { mutableStateOf(text?.let { it to failed }) }.apply { if (text != null) value = text to failed }
+    val open = remember { Animatable(if (text != null) 1f else 0f) }
+    LaunchedEffect(text != null) { open.animateTo(if (text != null) 1f else 0f, riseSpec()) }
+    val shown = last.value ?: return
+    AnimatedContent(
+        shown,
+        modifier = modifier
+            .clipToBounds()
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                layout(placeable.width, (placeable.height * open.value).roundToInt()) { placeable.place(0, 0) }
+            }
+            .graphicsLayer { alpha = open.value },
+        transitionSpec = { (fadeIn(Motion.fadeIn()) togetherWith fadeOut(Motion.fadeOut())) using null },
+        contentAlignment = if (mine) Alignment.TopEnd else Alignment.TopStart,
+        label = "messageStatus",
+    ) { (words, error) ->
+        Text(
+            words,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (error) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = if (mine) 0.dp else AvatarSize + 12.dp, end = 4.dp, top = 3.dp),
+        )
+    }
+}
