@@ -777,3 +777,16 @@ private fun DayHeader(label: String, modifier: Modifier = Modifier) {
     )
 }
 
+@Composable
+private fun JumpToLatest(visible: Boolean, unseen: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    AnimatedVisibility(visible, modifier, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
+        BadgedBox(badge = { if (unseen > 0) Badge { Text(unseen.toString()) } }) {
+            SmallFloatingActionButton(
+                onClick = onClick,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ) { Icon(Icons.Filled.KeyboardArrowDown, if (unseen > 0) "$unseen new messages" else "Jump to the latest message") }
+        }
+    }
+}
+
