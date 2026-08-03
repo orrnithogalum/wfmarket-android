@@ -790,3 +790,7 @@ private fun JumpToLatest(visible: Boolean, unseen: Int, modifier: Modifier = Mod
     }
 }
 
+private val BubbleRound = 22.dp
+private val BubbleJoined = 6.dp
+private val AvatarSize = 32.dp
+
