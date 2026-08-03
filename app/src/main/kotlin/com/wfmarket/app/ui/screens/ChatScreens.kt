@@ -797,3 +797,121 @@ private val AvatarSize = 32.dp
 /** How far your messages slide over to show the times. */
 private val TimesWidth = 48.dp
 
+@Composable
+private fun MessageBubble(
+    item: ChatItem.Bubble,
+    partnerAvatar: String?,
+    partnerName: String,
+    onRetry: () -> Unit,
+    onDiscard: () -> Unit,
+    onCopy: (text: String, what: String) -> Unit,
+    timesShown: () -> Float,
+    modifier: Modifier = Modifier,
+) {
+    val message = item.message
+    val mine = item.mine
+    val colors = MaterialTheme.colorScheme
+    val haptics = LocalHapticFeedback.current
+    var showTime by remember { mutableStateOf(false) }
+    var menu by remember { mutableStateOf(false) }
+    // Runs of messages keep their round corners on the outside and join up on the sender's side,
+    // so a message sent under the last one tucks that one's corner in as it arrives.
+    val top by animateDpAsState(if (item.first) BubbleRound else BubbleJoined, riseSpec(), label = "bubbleTop")
+    val bottom by animateDpAsState(if (item.last) BubbleRound else BubbleJoined, riseSpec(), label = "bubbleBottom")
+    val shape = if (mine) {
+        RoundedCornerShape(topStart = BubbleRound, bottomStart = BubbleRound, topEnd = top, bottomEnd = bottom)
+    } else {
+        RoundedCornerShape(topEnd = BubbleRound, bottomEnd = BubbleRound, topStart = top, bottomStart = bottom)
+    }
+    val maxWidth = (LocalConfiguration.current.screenWidthDp * 0.78f).dp
+    // Dragging the conversation sideways slides your messages over, and every message's time in at the edge.
+    val reveal = with(LocalDensity.current) { TimesWidth.toPx() }
+    val toward = if (LocalLayoutDirection.current == LayoutDirection.Rtl) 1 else -1
+    val slide = Modifier.graphicsLayer { if (mine) translationX = toward * reveal * timesShown() }
+    Column(
+        modifier.fillMaxWidth().padding(top = if (item.first) 10.dp else 2.dp),
+        horizontalAlignment = if (mine) Alignment.End else Alignment.Start,
+    ) {
+        Box(Modifier.fillMaxWidth()) {
+            Row(
+                Modifier.align(if (mine) Alignment.CenterEnd else Alignment.CenterStart).then(slide),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (!mine) {
+                    if (item.last) UserAvatar(partnerAvatar, partnerName, size = AvatarSize) else Spacer(Modifier.width(AvatarSize))
+                }
+                Box {
+                    Text(
+                        message.text,
+                        color = if (mine) colors.onPrimaryContainer else colors.onSurface,
+                        // The size of the app's other body text, so messages don't stand out from it.
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.widthIn(max = maxWidth)
+                            .clip(shape)
+                            .background(if (mine) colors.primaryContainer else colors.surfaceContainerHigh)
+                            .combinedClickable(
+                                onClick = { if (message.failed) onRetry() else showTime = !showTime },
+                                onLongClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    menu = true
+                                },
+                                onLongClickLabel = "Message options",
+                            )
+                            .padding(horizontal = 14.dp, vertical = 9.dp),
+                    )
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = MaterialTheme.shapes.large) {
+                        DropdownMenuItem(
+                            text = { Text("Copy") },
+                            leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
+                            onClick = { menu = false; onCopy(message.text, "Message") },
+                        )
+                        if (partnerName.isNotBlank()) {
+                            // Your own words go out again in game; theirs get a reply started.
+                            DropdownMenuItem(
+                                text = { Text(if (mine) "Copy as /w whisper" else "Copy /w $partnerName") },
+                                leadingIcon = { Icon(Icons.Filled.SportsEsports, null) },
+                                onClick = {
+                                    menu = false
+                                    onCopy(if (mine) "/w $partnerName ${message.text}" else "/w $partnerName ", "Whisper")
+                                },
+                            )
+                        }
+                        if (message.failed) {
+                            DropdownMenuItem(
+                                text = { Text("Try again") },
+                                leadingIcon = { Icon(Icons.Filled.Refresh, null) },
+                                onClick = { menu = false; onRetry() },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete") },
+                                leadingIcon = { Icon(Icons.Filled.Delete, null) },
+                                onClick = { menu = false; onDiscard() },
+                            )
+                        }
+                    }
+                }
+            }
+            // Tapping the bubble gives its time too, so this one is only for the eye.
+            Text(
+                formatDate(message.sendDate, "HH:mm"),
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.CenterEnd).clearAndSetSemantics {}.graphicsLayer {
+                    val shown = timesShown()
+                    alpha = shown
+                    translationX = -toward * reveal * (1 - shown)
+                },
+            )
+        }
+        val status = when {
+            message.pending -> "Sending…"
+            message.failed -> "Not sent · Tap to try again"
+            showTime -> formatDate(message.sendDate, "EEE d MMM, HH:mm")
+            item.last -> formatDate(message.sendDate, "HH:mm")
+            else -> null
+        }
+        StatusLine(status, message.failed, mine, slide)
+    }
+}
+
