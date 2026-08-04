@@ -22,4 +22,11 @@ class ChatMessageTextTest {
     fun decodesOnlyOnce() {
         assertEquals("&#39;", received("&amp;#39;"))
     }
+
+    @Test
+    fun leavesOrdinaryTextAlone() {
+        for (text in listOf("AT&T", "a & b; c", "&unknown;", "&#xFFFFFFFFF;", "&#99999999;", "50% off")) {
+            assertEquals(text, received(text))
+        }
+    }
 }
