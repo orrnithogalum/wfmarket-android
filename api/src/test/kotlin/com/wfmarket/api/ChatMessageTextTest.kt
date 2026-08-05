@@ -29,4 +29,9 @@ class ChatMessageTextTest {
             assertEquals(text, received(text))
         }
     }
+
+    @Test
+    fun fallsBackToTheRenderedMessage() {
+        assertEquals("I'll", ChatMessage(message = "I&#x27;ll").text)
+    }
 }
