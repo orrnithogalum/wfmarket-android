@@ -34,4 +34,10 @@ class ChatMessageTextTest {
     fun fallsBackToTheRenderedMessage() {
         assertEquals("I'll", ChatMessage(message = "I&#x27;ll").text)
     }
+
+    @Test
+    fun keepsAnUnconfirmedMessageAsTyped() {
+        assertEquals("&#39;", ChatMessage(rawMessage = "&#39;", pending = true).text)
+        assertEquals("&#39;", ChatMessage(rawMessage = "&#39;", failed = true).text)
+    }
 }
