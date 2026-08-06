@@ -89,4 +89,24 @@ class LiveAccountTest {
         }
         assertTrue(api.myOrders().none { it.id == created.id })
     }
+
+    @Test fun socketsAuthorize() = runBlocking {
+        signIn()
+        val sockets = WfmSockets(session, api.http)
+        val frames = java.util.concurrent.ConcurrentLinkedQueue<String>()
+        sockets.frameObserver = { source, type -> frames.add("$source:$type") }
+        sockets.connect()
+        try {
+            assertNotNull("presence socket refused the session", withTimeoutOrNull(15_000) { sockets.state.first { it.statusAuthorized } })
+            assertNotNull(withTimeoutOrNull(15_000) { sockets.state.first { it.chatConnected } })
+            // A chat that can't exist: authorized sockets answer it, and no real player is involved.
+            val error = async { withTimeoutOrNull(6_000) { sockets.events.filterIsInstance<SocketEvent.ServerError>().first() } }
+            delay(200)
+            sockets.sendChatMessage("000000000000000000000000", "contract test")
+            println("socket error for a bogus chat: ${error.await()}")
+            println("frame types: ${frames.toSet()}")
+        } finally {
+            sockets.disconnect()
+        }
+    }
 }
