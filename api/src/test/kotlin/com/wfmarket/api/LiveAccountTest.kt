@@ -109,4 +109,24 @@ class LiveAccountTest {
             sockets.disconnect()
         }
     }
+
+    /** Compares the rejection a bogus chat gets with and without a session. */
+    @Test fun chatSocketAuthProbe() = runBlocking {
+        signIn()
+        suspend fun probe(context: WfmContext): SocketEvent.ServerError? {
+            val sockets = WfmSockets(context, api.http)
+            sockets.connect()
+            try {
+                withTimeoutOrNull(10_000) { sockets.state.first { it.chatConnected } }
+                val answer = async { withTimeoutOrNull(6_000) { sockets.events.filterIsInstance<SocketEvent.ServerError>().first() } }
+                delay(200)
+                sockets.sendChatMessage("000000000000000000000000", "contract test")
+                return answer.await()
+            } finally {
+                sockets.disconnect()
+            }
+        }
+        println("bogus chat, signed in: ${probe(session)}")
+        println("bogus chat, anonymous: ${probe(Session())}")
+    }
 }
