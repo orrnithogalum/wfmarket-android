@@ -28,3 +28,7 @@ Screens talk only to repositories. All knowledge of the site's API lives in `api
 Set `WFM_EMAIL` and `WFM_PASSWORD` to also run the signed-in tests. They sign in once, and anything
 they create (one hidden order, one hidden auction) is removed again.
 Debug builds add a shell-only hook for testing notifications; see `DebugNotificationReceiver`.
+
+## The API, as used here
+
+The site is mid-migration, so the client uses both generations:
