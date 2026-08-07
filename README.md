@@ -32,3 +32,9 @@ Debug builds add a shell-only hook for testing notifications; see `DebugNotifica
 ## The API, as used here
 
 The site is mid-migration, so the client uses both generations:
+
+- **v2** (`Authorization: Bearer`): catalogue, orders, profiles.
+- **v1** (`Authorization: JWT`): sign-in, auctions, chat, statistics, Ducanator, account settings.
+- **Sign-in**: `POST /v1/auth/signin` with `auth_type: header` returns the token in a response header.
+- **Sockets**: `wss://warframe.market/socket` carries chat and bids, authenticated by the JWT cookie.
+  `wss://ws.warframe.market/socket` (subprotocol `wfm`) carries presence.
