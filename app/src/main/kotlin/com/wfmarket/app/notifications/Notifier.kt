@@ -68,3 +68,14 @@ class Notifier(private val context: Context) {
         post(message.chatId, style, name, message.text)
     }
 
+    /** The background poll sees only a chat's latest message, so it shows that. */
+    fun showChatSummary(chat: Chat, last: ChatMessage?) {
+        if (!canPost) return
+        val name = chat.chatName.ifBlank { "New message" }
+        val sender = Person.Builder().setName(name).build()
+        val text = last?.text ?: "${chat.unreadCount} unread messages"
+        val style = NotificationCompat.MessagingStyle(Person.Builder().setName("You").build())
+            .addMessage(text, System.currentTimeMillis(), sender)
+        post(chat.id, style, name, text)
+    }
+
