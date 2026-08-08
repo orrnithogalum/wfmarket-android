@@ -42,3 +42,9 @@ class Notifier(private val context: Context) {
 
     private fun deepLink(path: String, requestCode: Int): PendingIntent = openUrl("https://warframe.market$path", requestCode)
 
+    private fun openUrl(url: String, requestCode: Int): PendingIntent {
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri(), context, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        return PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
