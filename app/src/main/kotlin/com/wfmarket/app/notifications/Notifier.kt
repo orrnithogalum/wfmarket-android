@@ -128,3 +128,21 @@ class Notifier(private val context: Context) {
         runCatching { manager.notify(chatTag(chatId), ID_CHAT, notification) }
     }
 
+    /** Updates the conversation with the user's own reply, confirming the send. */
+    fun showReplySent(chatId: String, chatName: String?, text: String) {
+        if (!canPost) return
+        val me = Person.Builder().setName("You").build()
+        val style = NotificationCompat.MessagingStyle(me).addMessage(text, System.currentTimeMillis(), me)
+        val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setContentTitle(chatName)
+            .setStyle(style)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .setAutoCancel(true)
+            .setTimeoutAfter(5_000)
+            .setContentIntent(deepLink("/im/chats/$chatId", chatId.hashCode() + 2))
+            .build()
+        runCatching { manager.notify(chatTag(chatId), ID_CHAT, notification) }
+    }
+
