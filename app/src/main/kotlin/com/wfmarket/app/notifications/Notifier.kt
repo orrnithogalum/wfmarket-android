@@ -79,3 +79,52 @@ class Notifier(private val context: Context) {
         post(chat.id, style, name, text)
     }
 
+    private fun post(chatId: String, style: NotificationCompat.MessagingStyle, title: String, body: String) {
+        val replyIntent = Intent(context, ChatActionReceiver::class.java)
+            .setAction(ChatActionReceiver.ACTION_REPLY)
+            .putExtra(ChatActionReceiver.EXTRA_CHAT, chatId)
+        val reply = NotificationCompat.Action.Builder(
+            R.drawable.ic_stat_notification,
+            "Reply",
+            PendingIntent.getBroadcast(
+                context,
+                chatId.hashCode(),
+                replyIntent,
+                PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            ),
+        ).addRemoteInput(RemoteInput.Builder(ChatActionReceiver.KEY_REPLY).setLabel("Reply").build())
+            .setAllowGeneratedReplies(true)
+            .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY)
+            .build()
+
+        val readIntent = Intent(context, ChatActionReceiver::class.java)
+            .setAction(ChatActionReceiver.ACTION_MARK_READ)
+            .putExtra(ChatActionReceiver.EXTRA_CHAT, chatId)
+        val read = NotificationCompat.Action.Builder(
+            R.drawable.ic_stat_notification,
+            "Mark as read",
+            PendingIntent.getBroadcast(
+                context,
+                chatId.hashCode() + 1,
+                readIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            ),
+        ).setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_MARK_AS_READ).build()
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(style)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setOnlyAlertOnce(false)
+            .setContentIntent(deepLink("/im/chats/$chatId", chatId.hashCode() + 2))
+            .addAction(reply)
+            .addAction(read)
+            .setGroup(GROUP_MESSAGES)
+            .build()
+        runCatching { manager.notify(chatTag(chatId), ID_CHAT, notification) }
+    }
+
