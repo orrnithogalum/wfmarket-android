@@ -51,3 +51,20 @@ class Notifier(private val context: Context) {
     private val canPost: Boolean
         get() = ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 
+    /** A conversation-style notification with inline reply, used for messages seen live. */
+    fun showMessage(chat: Chat?, message: ChatMessage, recent: List<ChatMessage>) {
+        if (!canPost) return
+        val name = chat?.chatName?.ifBlank { null } ?: "New message"
+        val sender = Person.Builder().setName(name).setKey(message.messageFrom).build()
+        val me = Person.Builder().setName("You").build()
+        val style = NotificationCompat.MessagingStyle(me).setConversationTitle(null)
+        val history = recent.ifEmpty { listOf(message) }
+        history.forEach { entry ->
+            val time = entry.sendDate?.let { runCatching { java.time.Instant.parse(normalizeDate(it)).toEpochMilli() }.getOrNull() }
+                ?: System.currentTimeMillis()
+            val from = if (entry.messageFrom == message.messageFrom) sender else null
+            style.addMessage(entry.text, time, from ?: me)
+        }
+        post(message.chatId, style, name, message.text)
+    }
+
