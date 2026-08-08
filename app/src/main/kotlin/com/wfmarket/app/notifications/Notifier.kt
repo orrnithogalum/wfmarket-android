@@ -40,3 +40,5 @@ class Notifier(private val context: Context) {
         )
     }
 
+    private fun deepLink(path: String, requestCode: Int): PendingIntent = openUrl("https://warframe.market$path", requestCode)
+
