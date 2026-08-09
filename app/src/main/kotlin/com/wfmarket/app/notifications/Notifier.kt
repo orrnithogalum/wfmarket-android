@@ -148,3 +148,8 @@ class Notifier(private val context: Context) {
 
     fun cancelChat(chatId: String) = manager.cancel(chatTag(chatId), ID_CHAT)
 
+    fun cancelAllChats() {
+        runCatching { manager.activeNotifications.filter { it.id == ID_CHAT }.forEach { manager.cancel(it.tag, it.id) } }
+        delivered.edit().clear().apply()
+    }
+
