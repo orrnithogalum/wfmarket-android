@@ -146,3 +146,5 @@ class Notifier(private val context: Context) {
         runCatching { manager.notify(chatTag(chatId), ID_CHAT, notification) }
     }
 
+    fun cancelChat(chatId: String) = manager.cancel(chatTag(chatId), ID_CHAT)
+
