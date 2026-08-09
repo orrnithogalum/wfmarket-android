@@ -153,3 +153,8 @@ class Notifier(private val context: Context) {
         delivered.edit().clear().apply()
     }
 
+    /** Dedupes the socket and poll paths, and survives restarts so old messages never re-alert. */
+    fun markDelivered(chatId: String, date: String?) {
+        date?.let { delivered.edit().putString(chatId, it).apply() }
+    }
+
