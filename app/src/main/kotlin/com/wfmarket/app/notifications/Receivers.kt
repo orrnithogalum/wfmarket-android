@@ -38,4 +38,11 @@ class ChatActionReceiver : BroadcastReceiver() {
         }
     }
 
+    companion object {
+        const val ACTION_REPLY = "com.wfmarket.app.REPLY"
+        const val ACTION_MARK_READ = "com.wfmarket.app.MARK_READ"
+        const val EXTRA_CHAT = "chat_id"
+        const val KEY_REPLY = "reply"
+    }
+}
 
