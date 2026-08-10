@@ -158,3 +158,9 @@ class Notifier(private val context: Context) {
         date?.let { delivered.edit().putString(chatId, it).apply() }
     }
 
+    fun isNewerThanDelivered(chatId: String, date: String?): Boolean {
+        date ?: return false
+        val last = delivered.getString(chatId, null) ?: return true
+        return normalizeDate(date) > normalizeDate(last)
+    }
+
