@@ -167,3 +167,5 @@ class Notifier(private val context: Context) {
     /** `+00:00` and `Z` both occur, and `Instant.parse` and string comparison need one form. */
     private fun normalizeDate(date: String) = date.replace("+00:00", "Z")
 
+    private fun chatTag(chatId: String) = "chat:$chatId"
+
