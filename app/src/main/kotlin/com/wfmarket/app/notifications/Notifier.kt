@@ -169,3 +169,9 @@ class Notifier(private val context: Context) {
 
     private fun chatTag(chatId: String) = "chat:$chatId"
 
+    companion object {
+        const val CHANNEL_MESSAGES = "messages"
+        const val GROUP_MESSAGES = "messages"
+        const val ID_CHAT = 10
+    }
+}
