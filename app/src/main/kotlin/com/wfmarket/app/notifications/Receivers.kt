@@ -46,3 +46,22 @@ class ChatActionReceiver : BroadcastReceiver() {
     }
 }
 
+/** The status buttons on the background connection's notice. */
+class StatusActionReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val container = (context.applicationContext as WfMarketApp).container
+        val status = intent.getStringExtra(EXTRA_STATUS) ?: return
+        val pending = goAsync()
+        container.scope.launch {
+            try {
+                if (status == OFFLINE) {
+                    container.account.goOffline()
+                } else if (!container.account.setStatusWhenConnected(status)) {
+                    container.notices.show("Couldn't change your status. Try again in a moment.")
+                }
+            } finally {
+                pending.finish()
+            }
+        }
+    }
+
