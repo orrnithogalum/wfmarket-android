@@ -65,3 +65,9 @@ class StatusActionReceiver : BroadcastReceiver() {
         }
     }
 
+    companion object {
+        const val ACTION_SET_STATUS = "com.wfmarket.app.SET_STATUS"
+        const val EXTRA_STATUS = "status"
+        const val OFFLINE = "offline"
+    }
+}
