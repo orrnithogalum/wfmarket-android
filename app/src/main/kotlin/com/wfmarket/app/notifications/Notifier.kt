@@ -36,6 +36,10 @@ class Notifier(private val context: Context) {
                 NotificationChannel(CHANNEL_MESSAGES, "Messages", NotificationManager.IMPORTANCE_HIGH).apply {
                     description = "New trade messages from other players"
                 },
+                NotificationChannel(CHANNEL_SERVICE, "Background connection", NotificationManager.IMPORTANCE_MIN).apply {
+                    description = "Silent notice Android requires while the app stays connected: to keep your status, or for instant delivery"
+                    setShowBadge(false)
+                },
             ),
         )
     }
@@ -146,6 +150,46 @@ class Notifier(private val context: Context) {
         runCatching { manager.notify(chatTag(chatId), ID_CHAT, notification) }
     }
 
+    /**
+     * The notice Android requires while the connection stays open. When it's open to keep a status,
+     * it shows the status and offers the other one, so it's useful rather than just in the way.
+     */
+    fun serviceNotification(status: String?, until: Long?, instant: Boolean): android.app.Notification {
+        val builder = NotificationCompat.Builder(context, CHANNEL_SERVICE)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setOngoing(true)
+            .setSilent(true)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+        if (status == null) {
+            return builder.setContentTitle("Instant message delivery is on")
+                .setContentIntent(deepLink("/im/chats", ID_SERVICE))
+                .build()
+        }
+        val untilText = until?.let {
+            "Until " + java.time.format.DateTimeFormatter.ofPattern("HH:mm").withZone(java.time.ZoneId.systemDefault()).format(java.time.Instant.ofEpochMilli(it))
+        } ?: "Until you change it"
+        val other = if (status == UserStatus.INGAME.wire) UserStatus.ONLINE else UserStatus.INGAME
+        return builder.setContentTitle("Status: ${UserStatus.of(status).label}")
+            .setContentText(if (instant) "$untilText · Messages arrive instantly" else untilText)
+            .setContentIntent(openUrl("wfmarket://status", ID_SERVICE))
+            .addAction(statusAction(other.wire, other.label))
+            .addAction(statusAction(StatusActionReceiver.OFFLINE, "Go offline"))
+            .build()
+    }
+
+    private fun statusAction(status: String, label: String): NotificationCompat.Action {
+        val intent = Intent(context, StatusActionReceiver::class.java)
+            .setAction(StatusActionReceiver.ACTION_SET_STATUS)
+            .putExtra(StatusActionReceiver.EXTRA_STATUS, status)
+        val pending = PendingIntent.getBroadcast(context, status.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        return NotificationCompat.Action.Builder(R.drawable.ic_stat_notification, label, pending).build()
+    }
+
+    fun updateServiceNotification(notification: android.app.Notification) {
+        if (canPost) runCatching { manager.notify(ID_SERVICE, notification) }
+    }
+
     fun cancelChat(chatId: String) = manager.cancel(chatTag(chatId), ID_CHAT)
 
     fun cancelAllChats() {
@@ -171,7 +215,9 @@ class Notifier(private val context: Context) {
 
     companion object {
         const val CHANNEL_MESSAGES = "messages"
+        const val CHANNEL_SERVICE = "service"
         const val GROUP_MESSAGES = "messages"
         const val ID_CHAT = 10
+        const val ID_SERVICE = 13
     }
 }

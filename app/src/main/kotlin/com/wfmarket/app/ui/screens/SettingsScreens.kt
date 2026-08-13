@@ -132,6 +132,16 @@ fun SettingsScreen() {
                     "Checks for new messages about every 5 minutes",
                     settings.backgroundMessages,
                 ) { container.settings.setBackgroundMessages(it) }
+                if (settings.backgroundMessages) {
+                    switchRow(
+                        "Instant delivery",
+                        if (batteryExempt) "Messages and auction bids arrive right away" else "Messages and auction bids arrive right away. Without unrestricted battery use, Android shows a silent notification while the app is closed.",
+                        settings.instantMessages,
+                    ) { container.settings.setInstantMessages(it) }
+                }
+                valueRow("Unrestricted battery use", if (batteryExempt) "Allowed" else "Recommended, or Android may delay messages") {
+                    requestBatteryExemption(context)
+                }
             }
 
             SettingsGroup("Appearance") {
