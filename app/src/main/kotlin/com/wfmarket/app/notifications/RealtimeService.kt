@@ -59,4 +59,7 @@ class RealtimeService : Service() {
         }
     }
 
+    private fun notification(notice: ServiceNotice?) =
+        container.notifier.serviceNotification(notice?.status, notice?.until, notice?.instant ?: true)
+
 
