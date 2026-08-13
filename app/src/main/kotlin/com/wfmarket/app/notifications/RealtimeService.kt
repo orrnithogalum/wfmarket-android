@@ -34,4 +34,29 @@ class RealtimeService : Service() {
     /** Whether this run has a notification, which only the foreground needs. */
     private var foreground = false
 
+    override fun onCreate() {
+        super.onCreate()
+        if (isExempt(this)) return
+        foreground = true
+        runCatching {
+            ServiceCompat.startForeground(
+                this,
+                Notifier.ID_SERVICE,
+                notification(container.serviceNotice.value),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+            )
+        }.onFailure {
+            // Android refuses background starts in some states. The worker will retry.
+            Log.w(TAG, "Couldn't enter the foreground", it)
+            stopSelf()
+            return
+        }
+        // The notice shows the status, so it follows every change to it.
+        updates = container.scope.launch {
+            container.serviceNotice.drop(1).collect { notice ->
+                if (foreground && notice != null) container.notifier.updateServiceNotification(notification(notice))
+            }
+        }
+    }
+
 
