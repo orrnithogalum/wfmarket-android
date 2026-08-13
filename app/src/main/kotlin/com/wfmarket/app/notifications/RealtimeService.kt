@@ -29,4 +29,6 @@ class RealtimeService : Service() {
     private val container get() = (application as WfMarketApp).container
     private var updates: Job? = null
 
+    override fun onBind(intent: Intent?): IBinder? = null
+
 
