@@ -31,4 +31,7 @@ class RealtimeService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    /** Whether this run has a notification, which only the foreground needs. */
+    private var foreground = false
+
 
