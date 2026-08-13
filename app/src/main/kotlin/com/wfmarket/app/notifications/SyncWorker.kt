@@ -50,3 +50,29 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
         return Result.success()
     }
 
+    companion object {
+        private const val TAG = "SyncWorker"
+        private const val NAME = "inbox-check"
+        private const val INTERVAL_MINUTES = 5L
+
+        /** The periodic job older versions scheduled, which would otherwise feed a second chain. */
+        private const val LEGACY_NAME = "inbox-sync"
+
+        fun schedule(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(LEGACY_NAME)
+            enqueue(context, ExistingWorkPolicy.KEEP)
+        }
+
+        fun cancel(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(NAME)
+        }
+
+        private fun enqueue(context: Context, policy: ExistingWorkPolicy) {
+            val request = OneTimeWorkRequestBuilder<SyncWorker>()
+                .setInitialDelay(INTERVAL_MINUTES, TimeUnit.MINUTES)
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(NAME, policy, request)
+        }
+    }
+}
