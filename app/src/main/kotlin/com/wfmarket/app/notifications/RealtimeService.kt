@@ -93,3 +93,5 @@ class RealtimeService : Service() {
     }
 }
 
+/** What the service's notice says: the status it's keeping, if any, and whether messages are instant. */
+data class ServiceNotice(val status: String?, val until: Long?, val instant: Boolean)
