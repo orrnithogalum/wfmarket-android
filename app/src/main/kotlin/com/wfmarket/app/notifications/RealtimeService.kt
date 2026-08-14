@@ -67,4 +67,9 @@ class RealtimeService : Service() {
         return START_STICKY
     }
 
+    override fun onDestroy() {
+        updates?.cancel()
+        super.onDestroy()
+    }
+
 
