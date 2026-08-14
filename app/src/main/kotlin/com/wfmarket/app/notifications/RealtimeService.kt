@@ -72,4 +72,24 @@ class RealtimeService : Service() {
         super.onDestroy()
     }
 
+    companion object {
+        private const val TAG = "RealtimeService"
+
+        private fun isExempt(context: Context): Boolean =
+            context.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(context.packageName)
+
+        fun start(context: Context) {
+            val intent = Intent(context, RealtimeService::class.java)
+            // A plain start can still be refused, such as just after the exemption was taken away.
+            if (isExempt(context) && runCatching { context.startService(intent) }.isSuccess) return
+            // May be refused from the background on Android 12+. The worker retries later.
+            runCatching { context.startForegroundService(intent) }
+                .onFailure { Log.w(TAG, "Couldn't start the service", it) }
+        }
+
+        fun stop(context: Context) {
+            context.stopService(Intent(context, RealtimeService::class.java))
+        }
+    }
+}
 
