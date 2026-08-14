@@ -62,4 +62,9 @@ class RealtimeService : Service() {
     private fun notification(notice: ServiceNotice?) =
         container.notifier.serviceNotification(notice?.status, notice?.until, notice?.instant ?: true)
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        container.sockets.connect()
+        return START_STICKY
+    }
+
 
