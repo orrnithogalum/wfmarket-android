@@ -56,3 +56,7 @@ The site's push channel is Web Push, and Android can only wake a closed app thro
 Messaging, so using it would take a relay server between the two. The app doesn't have one. So by
 default `SyncWorker` checks the inbox about every 5 minutes with the app closed, which needs no
 ongoing notification. Android may stretch that gap unless the app has unrestricted battery use.
+
+The Instant delivery setting adds `RealtimeService`, which keeps the websocket open in a foreground
+service. Messages and auction bids then arrive right away, but Android requires a silent
+notification while the app is closed. Without it, auction bid alerts only arrive while the app is open.
