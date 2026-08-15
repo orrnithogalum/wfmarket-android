@@ -46,3 +46,6 @@ SVG files, so `ic_launcher.svg` is mirrored by the `ic_launcher_foreground` and 
 `ic_launcher_monochrome` and `ic_stat_notification` use its hood and eye without the transparent
 layers, since those icons are single-color. The mark is a simplified redraw of the warframe.market
 logo, which belongs to warframe.market.
+
+The polarity symbols (`polarity-*.svg`, drawn by `ic_polarity_*`) come from the Warframe wiki's
+`*_Pol(xBlack).svg` files. The symbols are Digital Extremes' art.
