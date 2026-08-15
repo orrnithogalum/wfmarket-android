@@ -49,3 +49,10 @@ logo, which belongs to warframe.market.
 
 The polarity symbols (`polarity-*.svg`, drawn by `ic_polarity_*`) come from the Warframe wiki's
 `*_Pol(xBlack).svg` files. The symbols are Digital Extremes' art.
+
+## Background notifications
+
+The site's push channel is Web Push, and Android can only wake a closed app through Firebase Cloud
+Messaging, so using it would take a relay server between the two. The app doesn't have one. So by
+default `SyncWorker` checks the inbox about every 5 minutes with the app closed, which needs no
+ongoing notification. Android may stretch that gap unless the app has unrestricted battery use.
