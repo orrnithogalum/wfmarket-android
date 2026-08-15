@@ -38,3 +38,11 @@ The site is mid-migration, so the client uses both generations:
 - **Sign-in**: `POST /v1/auth/signin` with `auth_type: header` returns the token in a response header.
 - **Sockets**: `wss://warframe.market/socket` carries chat and bids, authenticated by the JWT cookie.
   `wss://ws.warframe.market/socket` (subprotocol `wfm`) carries presence.
+
+## Icons
+
+The sources are in `app/src/main/art`. Android launcher icons must be vector drawables rather than
+SVG files, so `ic_launcher.svg` is mirrored by the `ic_launcher_foreground` and `ic_splash` drawables.
+`ic_launcher_monochrome` and `ic_stat_notification` use its hood and eye without the transparent
+layers, since those icons are single-color. The mark is a simplified redraw of the warframe.market
+logo, which belongs to warframe.market.
