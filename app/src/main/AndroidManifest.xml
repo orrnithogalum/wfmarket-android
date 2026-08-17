@@ -42,6 +42,10 @@
             android:exported="false" />
 
         <receiver
+            android:name=".notifications.StatusActionReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".notifications.BootReceiver"
             android:exported="false">
             <intent-filter>

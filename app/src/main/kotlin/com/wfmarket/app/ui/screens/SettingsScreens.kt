@@ -126,6 +126,15 @@ fun SettingsScreen() {
                 valueRow("Language", Language.of(settings.language).label) { languageDialog = true }
             }
 
+            SettingsGroup("Status") {
+                switchRow(
+                    "Stay online when the app is closed",
+                    if (batteryExempt) "Keeps Online or In game showing until the time you chose runs out."
+                    else "Keeps Online or In game showing until the time you chose runs out. Without unrestricted battery use, Android shows a silent notification while it does.",
+                    settings.keepStatusInBackground,
+                ) { container.settings.setKeepStatusInBackground(it) }
+            }
+
             SettingsGroup("Messages") {
                 switchRow(
                     "Messages while the app is closed",
