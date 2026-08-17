@@ -110,6 +110,28 @@ class LiveAccountTest {
         }
     }
 
+    @Test fun statusCanBeReadAndRestored() = runBlocking {
+        signIn()
+        val sockets = WfmSockets(session, api.http)
+        val statuses = async {
+            withTimeoutOrNull(12_000) { sockets.events.filterIsInstance<SocketEvent.StatusChanged>().first() }
+        }
+        delay(100)
+        sockets.connect()
+        try {
+            val initial = statuses.await()
+            println("status on connect: ${initial?.status}")
+            assertNotNull(initial)
+            val answer = async { withTimeoutOrNull(8_000) { sockets.events.filterIsInstance<SocketEvent.StatusChanged>().first() } }
+            delay(100)
+            assertTrue(sockets.setStatus(initial!!.status, null))
+            println("status command answered: ${answer.await()?.status}")
+            assertNotNull(answer.await())
+        } finally {
+            sockets.disconnect()
+        }
+    }
+
     /** Compares the rejection a bogus chat gets with and without a session. */
     @Test fun chatSocketAuthProbe() = runBlocking {
         signIn()
