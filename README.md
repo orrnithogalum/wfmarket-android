@@ -68,3 +68,11 @@ status of its own (invisible, when tried) instead of the one you chose. So the a
 status you pick, and the time its hold runs out, in `HeldStatus`. Each time the presence socket signs
 in, `AccountRepository` waits out the site's opening report and sets the held status again. A status
 changed elsewhere, such as on the website, becomes the held one.
+
+With "Stay online when the app is closed" on (the default), an Online or In game hold also runs
+`RealtimeService` while the app is closed, so the status stays visible until the hold ends. The
+service starts as the app leaves the screen and stops when it returns. With unrestricted battery
+use it runs as a plain background service, which Android allows for exempt apps, so nothing shows.
+Without the exemption Android stops background services within about a minute, so it runs in the
+foreground with a notification that shows the status and has buttons to switch it or go offline
+(`StatusActionReceiver`). Instant delivery works the same way.
