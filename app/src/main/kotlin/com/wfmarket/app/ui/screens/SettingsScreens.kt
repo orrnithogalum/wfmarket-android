@@ -156,6 +156,9 @@ fun SettingsScreen() {
             SettingsGroup("Appearance") {
                 valueRow("Theme", settings.theme.name.lowercase().replaceFirstChar { it.uppercase() }) { themeDialog = true }
                 switchRow("Dynamic color", "Match your wallpaper", settings.dynamicColor) { container.settings.setDynamicColor(it) }
+                if (settings.theme != ThemeMode.LIGHT) {
+                    switchRow("AMOLED black", "Pure black backgrounds in dark theme", settings.amoled) { container.settings.setAmoled(it) }
+                }
             }
 
             SettingsGroup("Notifications") {
