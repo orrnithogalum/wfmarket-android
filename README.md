@@ -60,3 +60,11 @@ ongoing notification. Android may stretch that gap unless the app has unrestrict
 The Instant delivery setting adds `RealtimeService`, which keeps the websocket open in a foreground
 service. Messages and auction bids then arrive right away, but Android requires a silent
 notification while the app is closed. Without it, auction bid alerts only arrive while the app is open.
+
+## Status with the app closed
+
+The site shows you offline as soon as your presence connection closes, and gives a new connection a
+status of its own (invisible, when tried) instead of the one you chose. So the app remembers the
+status you pick, and the time its hold runs out, in `HeldStatus`. Each time the presence socket signs
+in, `AccountRepository` waits out the site's opening report and sets the held status again. A status
+changed elsewhere, such as on the website, becomes the held one.
