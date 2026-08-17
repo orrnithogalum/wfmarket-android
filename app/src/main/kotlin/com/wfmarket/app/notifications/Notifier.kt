@@ -36,6 +36,9 @@ class Notifier(private val context: Context) {
                 NotificationChannel(CHANNEL_MESSAGES, "Messages", NotificationManager.IMPORTANCE_HIGH).apply {
                     description = "New trade messages from other players"
                 },
+                NotificationChannel(CHANNEL_ACCOUNT, "Account", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "Warnings and bans on your account"
+                },
                 NotificationChannel(CHANNEL_SERVICE, "Background connection", NotificationManager.IMPORTANCE_MIN).apply {
                     description = "Silent notice Android requires while the app stays connected: to keep your status, or for instant delivery"
                     setShowBadge(false)
@@ -150,6 +153,26 @@ class Notifier(private val context: Context) {
         runCatching { manager.notify(chatTag(chatId), ID_CHAT, notification) }
     }
 
+    fun showAccountNotice(kind: String, message: String?) {
+        if (!canPost) return
+        val title = when (kind) {
+            "banned" -> "Your account was banned"
+            "banLifted" -> "Your ban was lifted"
+            "warned" -> "You received a warning"
+            "warningLifted" -> "Your warning was lifted"
+            else -> "Account update"
+        }
+        val notification = NotificationCompat.Builder(context, CHANNEL_ACCOUNT)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setAutoCancel(true)
+            .setContentIntent(deepLink("/settings", ID_ACCOUNT))
+            .build()
+        runCatching { manager.notify(ID_ACCOUNT, notification) }
+    }
+
     /**
      * The notice Android requires while the connection stays open. When it's open to keep a status,
      * it shows the status and offers the other one, so it's useful rather than just in the way.
@@ -215,9 +238,11 @@ class Notifier(private val context: Context) {
 
     companion object {
         const val CHANNEL_MESSAGES = "messages"
+        const val CHANNEL_ACCOUNT = "account"
         const val CHANNEL_SERVICE = "service"
         const val GROUP_MESSAGES = "messages"
         const val ID_CHAT = 10
+        const val ID_ACCOUNT = 12
         const val ID_SERVICE = 13
     }
 }
