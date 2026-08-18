@@ -50,3 +50,29 @@ class DebugNotificationReceiver : BroadcastReceiver() {
     }
 }
 
+/** Runs from both sides, a run broken by an hour's pause, and a long message, two hours old to now. */
+private fun showSample(container: com.wfmarket.app.data.AppContainer) {
+    val me = container.account.me.value?.id.orEmpty()
+    val them = "sample-them"
+    val start = java.time.Instant.now().minus(java.time.Duration.ofMinutes(150))
+    var n = 0
+    fun at(minutes: Long, from: String, text: String) = ChatMessage(
+        id = "sample-${n++}",
+        chatId = "sample",
+        message = text,
+        messageFrom = from,
+        sendDate = start.plus(java.time.Duration.ofMinutes(minutes)).toString(),
+    )
+    val messages = listOf(
+        at(0, them, "Hey, is the Torid riven still for sale?"),
+        at(0, them, "The crit chance roll looks great"),
+        at(2, them, "Would you take 300?"),
+        at(4, me, "Hi! It's 350, but I can do 330"),
+        at(5, me, "I'm in game for the next hour or so"),
+        at(80, them, "Sorry, got pulled away. Still around?"),
+        at(81, them, "330 works for me"),
+        at(82, them, "Inviting you now, I'm the one with the Citrine Prime fashion that's way too shiny, you can't miss it in the dojo"),
+        at(140, me, "Got it, thanks for the trade!"),
+    )
+    container.chats.showSample(com.wfmarket.api.model.Chat(id = "sample", chatName = "SampleTenno"), messages)
+}
