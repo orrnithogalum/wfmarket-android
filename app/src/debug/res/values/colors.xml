@@ -1,0 +1,4 @@
+<resources>
+    <!-- The debug build's icon is green, so it's never mistaken for the release app beside it. -->
+    <color name="ic_launcher_background">#1E7D3E</color>
+</resources>
