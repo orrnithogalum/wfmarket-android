@@ -9,3 +9,10 @@ object AuctionType {
     const val SISTER = "sister"
 }
 
+@Serializable
+data class RivenStat(
+    @SerialName("url_name") val urlName: String,
+    val value: Double = 0.0,
+    val positive: Boolean = true,
+)
+
