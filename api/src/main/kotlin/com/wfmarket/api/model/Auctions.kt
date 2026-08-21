@@ -64,3 +64,13 @@ data class Auction(
     val currentPrice: Int get() = if (isDirectSell) buyoutPrice ?: startingPrice else topBid ?: startingPrice
 }
 
+@Serializable
+data class Bid(
+    val id: String = "",
+    val auction: String = "",
+    val value: Int = 0,
+    val created: String? = null,
+    val updated: String? = null,
+    @Serializable(with = V1UserOrIdSerializer::class) val user: V1User = V1User(),
+)
+
