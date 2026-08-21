@@ -60,4 +60,7 @@ data class Auction(
     /** What the seller typed. Like chat messages, the raw note arrives HTML-escaped (`'` as `&#x27;`). */
     val noteText: String get() = decodeHtmlEntities(noteRaw)
 
+    /** What it goes for now: the buyout of a direct sale, or an auction's top bid, else its start. */
+    val currentPrice: Int get() = if (isDirectSell) buyoutPrice ?: startingPrice else topBid ?: startingPrice
+}
 
