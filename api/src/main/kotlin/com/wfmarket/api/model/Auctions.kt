@@ -74,3 +74,14 @@ data class Bid(
     @Serializable(with = V1UserOrIdSerializer::class) val user: V1User = V1User(),
 )
 
+/** Body of `POST /v1/auctions/create`. */
+@Serializable
+data class CreateAuction(
+    @SerialName("starting_price") val startingPrice: Int,
+    @SerialName("buyout_price") val buyoutPrice: Int? = null,
+    @SerialName("minimal_reputation") val minimalReputation: Int = 0,
+    val visible: Boolean = true,
+    val note: String = "",
+    val item: AuctionItem,
+)
+
