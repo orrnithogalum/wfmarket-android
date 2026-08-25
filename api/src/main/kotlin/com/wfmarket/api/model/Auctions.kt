@@ -146,4 +146,7 @@ data class AuctionSearch(
         return (priceMin == null || price >= priceMin) && (priceMax == null || price <= priceMax)
     }
 
+    /** Everything the app filters on itself, after the site has searched. */
+    fun matches(auction: Auction): Boolean = matchesSeller(auction.owner.status) && matchesPrice(auction)
+
 
