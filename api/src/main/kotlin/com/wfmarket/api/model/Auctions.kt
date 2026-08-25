@@ -139,4 +139,6 @@ data class AuctionSearch(
     fun matchesSeller(status: String?): Boolean =
         sellerStatuses.isEmpty() || sellerStatus(status) in sellerStatuses
 
+    val hasPriceRange: Boolean get() = priceMin != null || priceMax != null
+
 
