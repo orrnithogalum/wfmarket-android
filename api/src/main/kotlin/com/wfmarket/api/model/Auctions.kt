@@ -136,4 +136,7 @@ data class AuctionSearch(
             else -> weaponUrlName != null || element != null
         }
 
+    fun matchesSeller(status: String?): Boolean =
+        sellerStatuses.isEmpty() || sellerStatus(status) in sellerStatuses
+
 
