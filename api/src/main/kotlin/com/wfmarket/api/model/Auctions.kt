@@ -95,3 +95,45 @@ data class UpdateAuction(
     val note: String = "",
 )
 
+/** The filters of the auction search page. Blank/null filters are omitted from the query. */
+@Serializable
+data class AuctionSearch(
+    val type: String = AuctionType.RIVEN,
+    val weaponUrlName: String? = null,
+    val sortBy: String = "price_asc",
+    val buyoutPolicy: String? = null,
+    // Riven
+    val positiveStats: List<String> = emptyList(),
+    val negativeStats: List<String> = emptyList(),
+    val polarity: String? = null,
+    val masteryRankMin: Int? = null,
+    val masteryRankMax: Int? = null,
+    val reRollsMin: Int? = null,
+    val reRollsMax: Int? = null,
+    val modRankMaxed: Boolean = false,
+    // Lich / sister
+    val element: String? = null,
+    val hasEphemera: Boolean = false,
+    val quirk: String? = null,
+    val damageMin: Int? = null,
+    val damageMax: Int? = null,
+    /**
+     * Seller presence, as [UserStatus] wire values, where `offline` also covers invisible sellers.
+     * Empty means anyone. The site has no such filter, so it's applied to the results here.
+     */
+    val sellerStatuses: Set<String> = emptySet(),
+    /**
+     * The range of [Auction.currentPrice], in platinum, either end open. The site has no price
+     * filter either, so this too is applied to the results here.
+     */
+    val priceMin: Int? = null,
+    val priceMax: Int? = null,
+) {
+    /** The site refuses open searches: a riven needs a weapon or a stat, a nemesis a weapon or element. */
+    val canSearch: Boolean
+        get() = when (type) {
+            AuctionType.RIVEN -> weaponUrlName != null || positiveStats.isNotEmpty()
+            else -> weaponUrlName != null || element != null
+        }
+
+
