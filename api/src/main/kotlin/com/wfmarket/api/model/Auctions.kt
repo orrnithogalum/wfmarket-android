@@ -160,4 +160,27 @@ data class AuctionSearch(
         append(query.entries.joinToString("&") { (key, value) -> "$key=${java.net.URLEncoder.encode(value, "UTF-8")}" })
     }
 
+    fun toQuery(): Map<String, String> = buildMap {
+        put("type", type)
+        put("sort_by", sortBy)
+        weaponUrlName?.let { put("weapon_url_name", it) }
+        buyoutPolicy?.let { put("buyout_policy", it) }
+        if (type == AuctionType.RIVEN) {
+            if (positiveStats.isNotEmpty()) put("positive_stats", positiveStats.joinToString(","))
+            if (negativeStats.isNotEmpty()) put("negative_stats", negativeStats.joinToString(","))
+            polarity?.let { put("polarity", it) }
+            masteryRankMin?.let { put("mastery_rank_min", it.toString()) }
+            masteryRankMax?.let { put("mastery_rank_max", it.toString()) }
+            reRollsMin?.let { put("re_rolls_min", it.toString()) }
+            reRollsMax?.let { put("re_rolls_max", it.toString()) }
+            if (modRankMaxed) put("mod_rank", "maxed")
+        } else {
+            element?.let { put("element", it) }
+            if (hasEphemera) put("has_ephemera", "true")
+            quirk?.let { put("quirk", it) }
+            damageMin?.let { put("damage_min", it.toString()) }
+            damageMax?.let { put("damage_max", it.toString()) }
+        }
+    }
+
 
