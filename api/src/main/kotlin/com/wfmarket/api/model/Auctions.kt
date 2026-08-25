@@ -141,4 +141,9 @@ data class AuctionSearch(
 
     val hasPriceRange: Boolean get() = priceMin != null || priceMax != null
 
+    fun matchesPrice(auction: Auction): Boolean {
+        val price = auction.currentPrice
+        return (priceMin == null || price >= priceMin) && (priceMax == null || price <= priceMax)
+    }
+
 
