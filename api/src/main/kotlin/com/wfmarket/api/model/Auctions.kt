@@ -183,4 +183,41 @@ data class AuctionSearch(
         }
     }
 
+    companion object {
+        /** This app's own parameters, which the site ignores. */
+        private const val SELLER_STATUS = "seller_status"
+        private const val PRICE_MIN = "price_min"
+        private const val PRICE_MAX = "price_max"
+
+        /** Reads a search from a link's query parameters, as written by [toUrl] or the site's search page. */
+        fun fromQuery(params: Map<String, String>): AuctionSearch {
+            fun list(key: String) = params[key]?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }.orEmpty()
+            fun int(key: String) = params[key]?.toIntOrNull()
+            fun text(key: String) = params[key]?.trim()?.takeIf { it.isNotEmpty() && it != "any" }
+            val type = text("type") ?: AuctionType.RIVEN
+            return AuctionSearch(
+                type = type,
+                weaponUrlName = text("weapon_url_name"),
+                sortBy = text("sort_by") ?: "price_asc",
+                buyoutPolicy = text("buyout_policy")?.takeIf { it == "direct" || it == "auction" },
+                positiveStats = list("positive_stats").take(3),
+                negativeStats = list("negative_stats").take(1),
+                polarity = text("polarity"),
+                masteryRankMin = int("mastery_rank_min"),
+                masteryRankMax = int("mastery_rank_max"),
+                reRollsMin = int("re_rolls_min"),
+                reRollsMax = int("re_rolls_max"),
+                modRankMaxed = params["mod_rank"] == "maxed",
+                element = text("element"),
+                hasEphemera = params["has_ephemera"] == "true",
+                quirk = text("quirk"),
+                damageMin = int("damage_min"),
+                damageMax = int("damage_max"),
+                sellerStatuses = list(SELLER_STATUS).map(::sellerStatus).toSet(),
+                priceMin = int(PRICE_MIN)?.takeIf { it >= 0 },
+                priceMax = int(PRICE_MAX)?.takeIf { it >= 0 },
+            )
+        }
+    }
+}
 
