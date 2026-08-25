@@ -85,3 +85,13 @@ data class CreateAuction(
     val item: AuctionItem,
 )
 
+/** Body of `PUT /v1/auctions/entry/{id}`. */
+@Serializable
+data class UpdateAuction(
+    @SerialName("starting_price") val startingPrice: Int,
+    @SerialName("buyout_price") val buyoutPrice: Int? = null,
+    @SerialName("minimal_reputation") val minimalReputation: Int = 0,
+    val visible: Boolean = true,
+    val note: String = "",
+)
+
