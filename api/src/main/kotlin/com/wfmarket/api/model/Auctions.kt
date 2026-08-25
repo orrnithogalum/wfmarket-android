@@ -149,4 +149,15 @@ data class AuctionSearch(
     /** Everything the app filters on itself, after the site has searched. */
     fun matches(auction: Auction): Boolean = matchesSeller(auction.owner.status) && matchesPrice(auction)
 
+    /** The same search as a warframe.market link, which the app also opens. */
+    fun toUrl(): String = buildString {
+        append("https://warframe.market/auctions/search?")
+        val query = toQuery() + buildMap {
+            if (sellerStatuses.isNotEmpty()) put(SELLER_STATUS, sellerStatuses.sorted().joinToString(","))
+            priceMin?.let { put(PRICE_MIN, it.toString()) }
+            priceMax?.let { put(PRICE_MAX, it.toString()) }
+        }
+        append(query.entries.joinToString("&") { (key, value) -> "$key=${java.net.URLEncoder.encode(value, "UTF-8")}" })
+    }
+
 
