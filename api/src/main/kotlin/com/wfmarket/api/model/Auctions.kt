@@ -221,3 +221,8 @@ data class AuctionSearch(
     }
 }
 
+/** Invisible sellers show as offline to everyone else, so the two are one filter. */
+fun sellerStatus(status: String?): String = when (status) {
+    UserStatus.INGAME.wire, UserStatus.ONLINE.wire -> status
+    else -> UserStatus.OFFLINE.wire
+}
