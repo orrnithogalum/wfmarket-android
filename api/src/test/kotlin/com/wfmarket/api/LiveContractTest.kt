@@ -82,6 +82,23 @@ class LiveContractTest {
         assertTrue(mixed.any { it.type == "npc" && it.npc != null })
     }
 
+    @Test fun auctions() = runBlocking {
+        assertTrue(api.recentAuctions().isNotEmpty())
+        assertTrue(api.popularAuctions().isNotEmpty())
+        val rivens = api.searchAuctions(AuctionSearch(type = AuctionType.RIVEN, weaponUrlName = "soma"))
+        assertTrue(rivens.isNotEmpty())
+        assertTrue(rivens.first().item.attributes.isNotEmpty())
+        assertTrue(rivens.first().owner.ingameName != null)
+        val liches = api.searchAuctions(AuctionSearch(type = AuctionType.LICH, weaponUrlName = "kuva_drakgoon"))
+        assertTrue(liches.first().item.element != null)
+        val sisters = api.searchAuctions(AuctionSearch(type = AuctionType.SISTER, weaponUrlName = "tenet_tetra"))
+        assertTrue(sisters.first().item.damage != null)
+        val entry = api.auction(rivens.first().id)
+        assertEquals(rivens.first().id, entry.id)
+        api.auctionBids(rivens.first().id)
+        Unit
+    }
+
     @Test fun profiles() = runBlocking {
         val slug = api.ordersForItem("mesa_prime_set").first().user!!.slug
         assertEquals(slug, api.user(slug).slug)
