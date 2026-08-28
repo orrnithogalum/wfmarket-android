@@ -19,6 +19,8 @@ class AuctionRepository(private val api: WfmApi, private val sockets: WfmSockets
     /** Lists can lag behind a close, and a closed auction should never come back on screen. */
     private val closed = java.util.Collections.synchronizedSet(mutableSetOf<String>())
 
+    private fun List<Auction>.withoutClosed() = filterNot { it.id in closed }
+
     /**
      * The auction last opened from a list, handed to its page so the page shows at once, while it
      * fetches the latest, and so its picture has somewhere to fly to.
