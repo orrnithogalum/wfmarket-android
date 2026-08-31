@@ -54,3 +54,5 @@ class AuctionRepository(private val api: WfmApi, private val sockets: WfmSockets
     /** Auctions that stay subscribed after their screen closes, because they're followed. */
     var keepWatching: (String) -> Boolean = { false }
 
+    fun watch(id: String) = sockets.subscribeAuction(id)
+
