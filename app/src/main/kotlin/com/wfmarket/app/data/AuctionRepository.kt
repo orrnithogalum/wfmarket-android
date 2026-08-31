@@ -41,3 +41,8 @@ class AuctionRepository(private val api: WfmApi, private val sockets: WfmSockets
     suspend fun update(id: String, update: UpdateAuction) = api.updateAuction(id, update).also { changes.mark(DataKind.AUCTIONS) }
     suspend fun setVisible(id: String, visible: Boolean) = api.setAuctionVisible(id, visible).also { changes.mark(DataKind.AUCTIONS) }
 
+    suspend fun close(id: String) = api.closeAuction(id).also {
+        closed += id
+        changes.mark(DataKind.AUCTIONS)
+    }
+
