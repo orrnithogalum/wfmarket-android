@@ -56,3 +56,7 @@ class AuctionRepository(private val api: WfmApi, private val sockets: WfmSockets
 
     fun watch(id: String) = sockets.subscribeAuction(id)
 
+    fun unwatch(id: String) {
+        if (!keepWatching(id)) sockets.unsubscribeAuction(id)
+    }
+
