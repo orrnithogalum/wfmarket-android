@@ -21,6 +21,14 @@ class AuctionRepository(private val api: WfmApi, private val sockets: WfmSockets
 
     private fun List<Auction>.withoutClosed() = filterNot { it.id in closed }
 
+    suspend fun recent() = api.recentAuctions().withoutClosed()
+    suspend fun popular() = api.popularAuctions().withoutClosed()
+    suspend fun search(search: AuctionSearch) = api.searchAuctions(search).withoutClosed()
+    suspend fun mine() = api.myAuctions().withoutClosed()
+    suspend fun participating() = api.participatingAuctions().withoutClosed()
+    suspend fun ofUser(slug: String) = api.userAuctions(slug).withoutClosed()
+    suspend fun auction(id: String) = api.auction(id)
+
     /**
      * The auction last opened from a list, handed to its page so the page shows at once, while it
      * fetches the latest, and so its picture has somewhere to fly to.
