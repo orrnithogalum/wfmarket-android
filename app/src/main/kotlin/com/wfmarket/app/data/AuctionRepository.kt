@@ -35,3 +35,9 @@ class AuctionRepository(private val api: WfmApi, private val sockets: WfmSockets
      */
     @Volatile var handoff: Auction? = null
 
+    fun handedOff(id: String): Auction? = handoff?.takeIf { it.id == id }
+    suspend fun bids(id: String) = api.auctionBids(id)
+    suspend fun create(request: CreateAuction) = api.createAuction(request).also { changes.mark(DataKind.AUCTIONS) }
+    suspend fun update(id: String, update: UpdateAuction) = api.updateAuction(id, update).also { changes.mark(DataKind.AUCTIONS) }
+    suspend fun setVisible(id: String, visible: Boolean) = api.setAuctionVisible(id, visible).also { changes.mark(DataKind.AUCTIONS) }
+
