@@ -46,3 +46,6 @@ class AuctionRepository(private val api: WfmApi, private val sockets: WfmSockets
         changes.mark(DataKind.AUCTIONS)
     }
 
+    suspend fun markWinner(id: String, userId: String) = api.markAuctionWinner(id, userId).also { changes.mark(DataKind.AUCTIONS) }
+    suspend fun clearWinner(id: String) = api.clearAuctionWinner(id).also { changes.mark(DataKind.AUCTIONS) }
+
