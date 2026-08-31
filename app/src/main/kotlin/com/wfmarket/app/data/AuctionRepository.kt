@@ -51,3 +51,6 @@ class AuctionRepository(private val api: WfmApi, private val sockets: WfmSockets
 
     val bidChanges: Flow<SocketEvent.BidChanged> = sockets.events.filterIsInstance()
 
+    /** Auctions that stay subscribed after their screen closes, because they're followed. */
+    var keepWatching: (String) -> Boolean = { false }
+
