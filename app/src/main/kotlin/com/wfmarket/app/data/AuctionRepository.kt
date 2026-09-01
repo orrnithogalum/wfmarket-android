@@ -71,3 +71,15 @@ class AuctionRepository(private val api: WfmApi, private val sockets: WfmSockets
         changes.mark(DataKind.AUCTIONS)
     }
 
+    private suspend fun await(send: () -> Boolean) {
+        sockets.connect()
+        withTimeout(10_000) { sockets.state.first { it.chatConnected } }
+        val results = sockets.events.filterIsInstance<SocketEvent.BidResult>()
+        if (!send()) throw WfmException(WfmErrorKind.NETWORK, listOf("Not connected. Try again in a moment."))
+        val result = withTimeout(15_000) { results.first() }
+        if (!result.success) {
+            val message = result.error?.let(com.wfmarket.api.ErrorMessages::translate) ?: "The bid was rejected."
+            throw WfmException(WfmErrorKind.VALIDATION, listOf(message))
+        }
+    }
+}
