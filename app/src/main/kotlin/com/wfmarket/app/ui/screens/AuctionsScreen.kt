@@ -86,4 +86,13 @@ class AuctionsViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    private suspend fun load(tab: String, fetch: suspend () -> List<Auction>): Boolean {
+        val current = _lists.value[tab]
+        if (current !is Load.Ready) _lists.value += tab to Load.Loading
+        val result = runCatching { fetch() }
+        result.exceptionOrNull()?.let { if (it is kotlinx.coroutines.CancellationException) throw it }
+        if (result.isSuccess || current !is Load.Ready) _lists.value += tab to result.toLoad()
+        return result.isSuccess
+    }
+
 
