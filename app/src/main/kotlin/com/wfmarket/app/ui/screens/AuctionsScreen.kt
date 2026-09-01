@@ -68,3 +68,19 @@ private enum class AuctionTab(val label: String, val needsAccount: Boolean = fal
     SEARCH("Search"), RECENT("Recent"), POPULAR("Popular"), PRICES("Riven prices"), MINE("My auctions", true), BIDS("My bids", true)
 }
 
+class AuctionsViewModel(private val container: AppContainer) : ViewModel() {
+    private val _lists = MutableStateFlow<Map<String, Load<List<Auction>>>>(emptyMap())
+    val lists = _lists.asStateFlow()
+    private val _search = MutableStateFlow(AuctionSearch())
+    val search = _search.asStateFlow()
+
+    init {
+        // Every tab that's been opened could show what changed, not just the one on screen.
+        viewModelScope.launch {
+            container.changes.flow.collect { kind ->
+                if (kind == DataKind.AUCTIONS || kind == DataKind.SCOPE) _lists.value.keys.forEach { update(it) }
+            }
+        }
+    }
+
+
