@@ -105,4 +105,8 @@ class AuctionsViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    private fun update(tab: String) {
+        viewModelScope.launch { fetch(tab) }
+    }
+
 
