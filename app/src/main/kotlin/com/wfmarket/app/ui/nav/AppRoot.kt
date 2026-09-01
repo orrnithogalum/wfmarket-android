@@ -77,6 +77,7 @@ import kotlinx.coroutines.launch
 
 private enum class TopLevel(val route: String, val label: String, val selected: ImageVector, val unselected: ImageVector) {
     MARKET("market", "Market", Icons.Filled.Storefront, Icons.Outlined.Storefront),
+    AUCTIONS("auctions", "Auctions", Icons.Filled.Gavel, Icons.Outlined.Gavel),
     MESSAGES("messages", "Messages", Icons.AutoMirrored.Filled.Chat, Icons.AutoMirrored.Outlined.Chat),
     PROFILE("me", "Profile", Icons.Filled.Person, Icons.Outlined.Person),
 }
@@ -277,9 +278,13 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     screen("market") { tab { MarketScreen() } }
+                    screen("auctions") { tab { AuctionsScreen() } }
                     screen("messages") { tab { ChatsScreen() } }
                     screen("me") { tab { MyProfileScreen() } }
                     screen("item/{slug}", "slug") { ItemScreen(it.orEmpty()) }
+                    screen("auction/{id}", "id") { AuctionDetailScreen(it.orEmpty()) }
+                    screen("auction_new") { AuctionEditorScreen(null) }
+                    screen("auction_edit/{id}", "id") { AuctionEditorScreen(it) }
                     screen("chat/{id}", "id") { ChatScreen(it.orEmpty()) }
                     screen("user/{slug}", "slug") { ProfileScreen(it.orEmpty()) }
                     screen("settings") { SettingsScreen() }
