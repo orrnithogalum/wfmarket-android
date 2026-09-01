@@ -74,6 +74,9 @@ class AuctionsViewModel(private val container: AppContainer) : ViewModel() {
     private val _search = MutableStateFlow(AuctionSearch())
     val search = _search.asStateFlow()
 
+    private val _refreshing = MutableStateFlow<Set<String>>(emptySet())
+    val refreshing = _refreshing.asStateFlow()
+
     init {
         // Every tab that's been opened could show what changed, not just the one on screen.
         viewModelScope.launch {
