@@ -66,3 +66,8 @@ class AuctionRepository(private val api: WfmApi, private val sockets: WfmSockets
         changes.mark(DataKind.AUCTIONS)
     }
 
+    suspend fun removeBid(auctionId: String, bidId: String) {
+        await { sockets.removeBid(auctionId, bidId) }
+        changes.mark(DataKind.AUCTIONS)
+    }
+
