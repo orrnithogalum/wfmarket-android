@@ -60,3 +60,9 @@ class AuctionRepository(private val api: WfmApi, private val sockets: WfmSockets
         if (!keepWatching(id)) sockets.unsubscribeAuction(id)
     }
 
+    /** Places or raises a bid, and waits for the server's verdict. */
+    suspend fun placeBid(auctionId: String, value: Int, existingBidId: String?) {
+        await { sockets.setBid(auctionId, value, existingBidId) }
+        changes.mark(DataKind.AUCTIONS)
+    }
+
