@@ -95,4 +95,14 @@ class AuctionsViewModel(private val container: AppContainer) : ViewModel() {
         return result.isSuccess
     }
 
+    /** A pull on the list: shows the spinner, and says so if nothing new could be fetched. */
+    fun refresh(tab: String) {
+        viewModelScope.launch {
+            val hadList = _lists.value[tab] is Load.Ready
+            _refreshing.value += tab
+            if (!fetch(tab) && hadList) container.refreshFailed()
+            _refreshing.value -= tab
+        }
+    }
+
 
