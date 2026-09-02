@@ -109,4 +109,13 @@ class AuctionsViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch { fetch(tab) }
     }
 
+    private suspend fun fetch(tab: String): Boolean = when (tab) {
+        AuctionTab.SEARCH.name -> !_search.value.canSearch || load(tab) { container.auctions.search(_search.value) }
+        AuctionTab.RECENT.name -> load(tab) { container.auctions.recent() }
+        AuctionTab.POPULAR.name -> load(tab) { container.auctions.popular() }
+        AuctionTab.MINE.name -> load(tab) { container.auctions.mine() }
+        AuctionTab.BIDS.name -> load(tab) { container.auctions.participating() }
+        else -> true
+    }
+
 
