@@ -127,4 +127,9 @@ class AuctionsViewModel(private val container: AppContainer) : ViewModel() {
         refresh(AuctionTab.SEARCH.name)
     }
 
+    /** Seller status is filtered here rather than by the site, so changing it needs no new search. */
+    fun setSellerStatuses(statuses: Set<String>) {
+        _search.value = _search.value.copy(sellerStatuses = statuses)
+    }
+}
 
