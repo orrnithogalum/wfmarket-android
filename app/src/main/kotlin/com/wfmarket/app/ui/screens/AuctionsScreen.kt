@@ -122,4 +122,9 @@ class AuctionsViewModel(private val container: AppContainer) : ViewModel() {
         if (tab !in _lists.value) refresh(tab)
     }
 
+    fun search(search: AuctionSearch) {
+        _search.value = search
+        refresh(AuctionTab.SEARCH.name)
+    }
+
 
