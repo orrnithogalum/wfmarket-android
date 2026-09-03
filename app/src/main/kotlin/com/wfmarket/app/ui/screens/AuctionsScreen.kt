@@ -133,3 +133,6 @@ class AuctionsViewModel(private val container: AppContainer) : ViewModel() {
     }
 }
 
+/** Browsing tabs show other players' auctions, so they can be narrowed to sellers who can trade now. */
+private val AuctionTab.filtersSellers: Boolean get() = this == AuctionTab.SEARCH || this == AuctionTab.RECENT || this == AuctionTab.POPULAR
+
