@@ -136,3 +136,16 @@ class AuctionsViewModel(private val container: AppContainer) : ViewModel() {
 /** Browsing tabs show other players' auctions, so they can be narrowed to sellers who can trade now. */
 private val AuctionTab.filtersSellers: Boolean get() = this == AuctionTab.SEARCH || this == AuctionTab.RECENT || this == AuctionTab.POPULAR
 
+/** A name for a saved search, made while the catalogue is at hand for proper names. */
+fun alertTitle(search: AuctionSearch, catalog: Catalog): String {
+    val kind = when (search.type) {
+        AuctionType.RIVEN -> "rivens"
+        AuctionType.LICH -> "liches"
+        else -> "sisters"
+    }
+    val subject = search.weaponUrlName?.let { catalog.weaponName(search.type, it) }
+        ?: search.positiveStats.takeIf { it.isNotEmpty() }?.joinToString(" + ") { catalog.attributeName(it) }
+        ?: search.element?.humanize()
+    return listOfNotNull(subject, kind).joinToString(" ").replaceFirstChar { it.uppercase() }
+}
+
