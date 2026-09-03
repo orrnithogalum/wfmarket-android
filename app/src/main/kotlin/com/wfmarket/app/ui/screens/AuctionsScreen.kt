@@ -118,4 +118,8 @@ class AuctionsViewModel(private val container: AppContainer) : ViewModel() {
         else -> true
     }
 
+    fun ensureLoaded(tab: String) {
+        if (tab !in _lists.value) refresh(tab)
+    }
+
 
