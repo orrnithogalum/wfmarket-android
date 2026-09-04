@@ -180,3 +180,176 @@ fun priceRangeLabel(search: AuctionSearch): String? {
     }
 }
 
+@Composable
+fun AuctionsScreen() {
+    val container = appContainer()
+    val viewModel = containerViewModel { AuctionsViewModel(it) }
+    val lists by viewModel.lists.collectAsStateWithLifecycle()
+    val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
+    val search by viewModel.search.collectAsStateWithLifecycle()
+    val catalog by container.catalog.catalog.collectAsStateWithLifecycle()
+    val signedIn by container.account.isSignedIn.collectAsStateWithLifecycle()
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+
+    val alerts by container.alerts.state.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
+
+    val tabs = AuctionTab.entries.filter { !it.needsAccount || signedIn }
+    val pager = rememberPagerState(initialPage = AuctionTab.RECENT.ordinal) { tabs.size }
+    var filtersOpen by remember { mutableStateOf(false) }
+
+    // A link, notification or shortcut asked for a search, or for the filters to choose one.
+    val request by container.auctionRequest.collectAsStateWithLifecycle()
+    LaunchedEffect(request) {
+        val asked = request ?: return@LaunchedEffect
+        container.auctionRequest.value = null
+        asked.search?.let(viewModel::search)
+        if (asked.openFilters) filtersOpen = true
+        // Clearing the request restarts this effect, which would stop a scroll started in it.
+        scope.launch { pager.animateScrollToPage(AuctionTab.SEARCH.ordinal) }
+    }
+
+    fun toggleAlert(search: AuctionSearch) {
+        scope.launch {
+            val existing = container.alerts.alertFor(search)
+            if (existing != null) {
+                container.alerts.removeAlert(existing.id)
+                snackbar.showSnackbar("Alert removed")
+            } else {
+                container.alerts.addAlert(search, alertTitle(search, catalog))
+                val result = snackbar.showSnackbar("You'll be notified about new matches", actionLabel = "Manage", duration = SnackbarDuration.Short)
+                if (result == SnackbarResult.ActionPerformed) navigator.alerts()
+            }
+        }
+    }
+
+    LaunchedEffect(pager.currentPage, tabs.size) {
+        tabs.getOrNull(pager.currentPage)?.takeIf { it != AuctionTab.PRICES }?.let { viewModel.ensureLoaded(it.name) }
+    }
+
+    Scaffold(
+        topBar = {
+            Column {
+                TopAppBar(
+                    title = { Text("Auctions") },
+                    actions = {
+                        // Where saved searches are managed. A plain bell or a count here would read as something having arrived.
+                        IconButton(onClick = navigator::alerts) { Icon(Icons.Outlined.EditNotifications, "Manage alerts") }
+                        IconButton(onClick = {
+                            filtersOpen = true
+                            scope.launch { pager.animateScrollToPage(AuctionTab.SEARCH.ordinal) }
+                        }) { Icon(Icons.Filled.FilterList, "Search filters") }
+                    },
+                )
+                PrimaryScrollableTabRow(selectedTabIndex = pager.currentPage, edgePadding = 8.dp) {
+                    tabs.forEachIndexed { index, tab ->
+                        Tab(
+                            selected = pager.currentPage == index,
+                            onClick = { scope.launch { pager.animateScrollToPage(index) } },
+                            text = { Text(tab.label) },
+                        )
+                    }
+                }
+            }
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { if (signedIn) navigator.editAuction(null) else navigator.signIn() }) {
+                Icon(Icons.Filled.Add, "New auction")
+            }
+        },
+        snackbarHost = { SnackbarHost(snackbar) },
+        contentWindowInsets = WindowInsets.statusBars,
+    ) { padding ->
+        HorizontalPager(pager, Modifier.fillMaxSize().padding(padding), key = { tabs.getOrNull(it)?.name ?: it }) { page ->
+            val tab = tabs.getOrNull(page) ?: return@HorizontalPager
+            val load = lists[tab.name]
+            if (tab == AuctionTab.PRICES) {
+                RivenPricesPage(catalog)
+            } else if (tab == AuctionTab.SEARCH && !search.canSearch) {
+                MessageBox(Icons.Filled.FilterList, "Search rivens, liches and sisters", "Pick a weapon, stats or an element to see matching auctions.") {
+                    FilledTonalButton(onClick = { filtersOpen = true }) { Text("Choose filters") }
+                }
+            } else {
+                // A list's first load shows its own spinner, so the pull spinner waits until there's a list.
+                RefreshBox(isRefreshing = tab.name in refreshing && load is Load.Ready, onRefresh = { viewModel.refresh(tab.name) }) {
+                    LoadContent(load ?: Load.Loading, { viewModel.refresh(tab.name) }) { loaded ->
+                        // The search's own filters, price included, apply to its results. The other
+                        // browsing tabs share only the seller chips.
+                        val auctions = when {
+                            tab == AuctionTab.SEARCH -> loaded.filter(search::matches)
+                            tab.filtersSellers -> loaded.filter { search.matchesSeller(it.owner.status) }
+                            else -> loaded
+                        }
+                        FadingLazyColumn(
+                            Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 88.dp),
+                        ) {
+                            if (tab == AuctionTab.SEARCH) {
+                                item {
+                                    val alertOn = alerts.alerts.any { it.search == search }
+                                    Row(Modifier.padding(bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        TextButton(onClick = { filtersOpen = true }, modifier = Modifier.weight(1f, fill = false)) {
+                                            Icon(Icons.Filled.FilterList, null, Modifier.size(18.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("${search.type.humanize()} filters · ${auctions.size} results", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        }
+                                        Spacer(Modifier.weight(1f))
+                                        FilterChip(
+                                            selected = alertOn,
+                                            onClick = { toggleAlert(search) },
+                                            label = { Text(if (alertOn) "Notifying" else "Notify me") },
+                                            leadingIcon = {
+                                                Icon(if (alertOn) Icons.Filled.NotificationsActive else Icons.Outlined.NotificationsNone, null, Modifier.size(18.dp))
+                                            },
+                                        )
+                                    }
+                                }
+                                val weapon = search.weaponUrlName
+                                if (search.type == AuctionType.RIVEN && weapon != null) {
+                                    item { RivenTradeLine(weapon, catalog, Modifier.padding(start = 8.dp, bottom = 4.dp)) }
+                                }
+                            }
+                            if (tab.filtersSellers) {
+                                item { StatusFilterChips(search.sellerStatuses, viewModel::setSellerStatuses, Modifier.padding(bottom = 8.dp)) }
+                            }
+                            if (auctions.isEmpty()) {
+                                item {
+                                    when {
+                                        loaded.isEmpty() -> EmptyBox("No auctions here")
+                                        tab == AuctionTab.SEARCH && search.hasPriceRange -> EmptyBox(
+                                            "Nothing in that price range",
+                                            // The site returns at most 100 listings, so a range far from
+                                            // the sort's end can miss some that exist.
+                                            "${loaded.size} listings are hidden by your filters." +
+                                                if (loaded.size >= 100) " The site only sends 100 at a time, so a narrower search may find more." else "",
+                                        )
+                                        else -> EmptyBox("No sellers with that status", "${loaded.size} auctions are hidden by the status filter.")
+                                    }
+                                }
+                            }
+                            // One grouped list, like the home page's orders: round outer corners, tight inner ones.
+                            itemsIndexed(auctions, key = { _, auction -> auction.id }) { index, auction ->
+                                AuctionCard(
+                                    auction, catalog,
+                                    shape = ListItemDefaults.segmentedShapes(index, auctions.size).shape,
+                                    // Changing the seller filter slides the rest into the gaps.
+                                    modifier = listItemMotion().padding(bottom = ListItemDefaults.SegmentedGap),
+                                    transitionKey = tab.name,
+                                ) { navigator.auction(auction.id) }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (filtersOpen) {
+        AuctionFiltersSheet(search, catalog, { filtersOpen = false }) {
+            filtersOpen = false
+            viewModel.search(it)
+        }
+    }
+}
+
