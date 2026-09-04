@@ -149,3 +149,22 @@ fun alertTitle(search: AuctionSearch, catalog: Catalog): String {
     return listOfNotNull(subject, kind).joinToString(" ").replaceFirstChar { it.uppercase() }
 }
 
+/** The rest of a saved search's filters, in a line. */
+fun alertSummary(search: AuctionSearch, catalog: Catalog): String = buildList {
+    if (search.weaponUrlName != null && search.positiveStats.isNotEmpty()) add(search.positiveStats.joinToString(" + ") { catalog.attributeName(it) })
+    if (search.negativeStats.isNotEmpty()) add("−" + search.negativeStats.joinToString { catalog.attributeName(it) })
+    search.polarity?.let { add(it.humanize()) }
+    if (search.weaponUrlName != null) search.element?.let { add(it.humanize()) }
+    search.damageMin?.let { add("$it%+ damage") }
+    search.reRollsMax?.let { add("≤ $it rolls") }
+    if (search.modRankMaxed) add("Maxed")
+    if (search.hasEphemera) add("Ephemera")
+    catalog.quirkName(search.type, search.quirk)?.let(::add)
+    when (search.buyoutPolicy) {
+        "direct" -> add("Direct sell")
+        "auction" -> add("Auction")
+    }
+    if (search.sellerStatuses.isNotEmpty()) add(StatusFilterOptions.filter { it.wire in search.sellerStatuses }.joinToString(" or ") { it.label })
+    priceRangeLabel(search)?.let(::add)
+}.joinToString(" · ").ifEmpty { "Any listing" }
+
