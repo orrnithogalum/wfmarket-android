@@ -168,3 +168,15 @@ fun alertSummary(search: AuctionSearch, catalog: Catalog): String = buildList {
     priceRangeLabel(search)?.let(::add)
 }.joinToString(" · ").ifEmpty { "Any listing" }
 
+/** A search's price range in a few characters, such as `100–300p`, `≤ 300p` or `≥ 100p`. */
+fun priceRangeLabel(search: AuctionSearch): String? {
+    val min = search.priceMin
+    val max = search.priceMax
+    return when {
+        min != null && max != null -> "$min–${max}p"
+        max != null -> "≤ ${max}p"
+        min != null -> "≥ ${min}p"
+        else -> null
+    }
+}
+
