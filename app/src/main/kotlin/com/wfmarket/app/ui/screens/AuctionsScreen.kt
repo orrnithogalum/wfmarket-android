@@ -419,3 +419,42 @@ fun AuctionItemSummary(item: AuctionItem, catalog: Catalog) {
     AuctionDetailsLine(item, catalog, Modifier.padding(top = 8.dp))
 }
 
+/** The rest of what an auction is, as one line of text: fewer boxes than a tag for each. */
+@Composable
+fun AuctionDetailsLine(item: AuctionItem, catalog: Catalog, modifier: Modifier = Modifier) {
+    val style = MaterialTheme.typography.labelMedium
+    val color = MaterialTheme.colorScheme.onSurfaceVariant
+    val iconSize = with(LocalDensity.current) { style.fontSize.toDp() } * 1.2f
+    val parts: List<@Composable () -> Unit> = buildList {
+        fun text(value: String) = add { Text(value, style = style, color = color, maxLines = 1) }
+        when (item.type) {
+            AuctionType.RIVEN -> {
+                item.masteryLevel?.let { text("MR $it") }
+                item.modRank?.let { text("Rank $it") }
+                item.reRolls?.let { text(if (it == 1) "1 roll" else "$it rolls") }
+                item.polarity?.let { polarity ->
+                    add {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                            // A little over the label's font size, so the symbol stands as tall as the capitals beside it.
+                            PolarityIcon(polarity, Modifier.size(iconSize), tint = color)
+                            Text(polarity.humanize(), style = style, color = color, maxLines = 1)
+                        }
+                    }
+                }
+            }
+            else -> {
+                item.element?.let { text(it.humanize()) }
+                item.damage?.let { text("$it% damage") }
+                if (item.havingEphemera == true) text("Ephemera")
+                catalog.quirkName(item.type, item.quirk)?.let { text(it) }
+            }
+        }
+    }
+    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+        parts.forEachIndexed { index, part ->
+            if (index > 0) Text("·", style = style, color = color)
+            part()
+        }
+    }
+}
+
