@@ -473,3 +473,78 @@ private fun AuctionPriceColumn(auction: Auction) {
     Figure(label, alignment = Alignment.End) { Platinum(main) }
 }
 
+/**
+ * An auction in a list, the same wherever one is listed. In a grouped list, [shape] is its place's.
+ */
+@Composable
+fun AuctionCard(
+    auction: Auction,
+    catalog: Catalog,
+    modifier: Modifier = Modifier,
+    shape: Shape = MaterialTheme.shapes.large,
+    /** Names the list, so the picture can fly from this card to the auction's page and back. */
+    transitionKey: String? = null,
+    onClick: () -> Unit,
+) {
+    val item = auction.item
+    val colors = MaterialTheme.colorScheme
+    val haptics = LocalHapticFeedback.current
+    val openedFrom = LocalOpenedFrom.current
+    val auctions = appContainer().auctions
+    val shared = transitionKey?.let { "$it:${auction.id}" }
+    val interaction = remember { MutableInteractionSource() }
+    Card(
+        modifier = modifier.fillMaxWidth().clip(shape).combinedClickable(
+            interactionSource = interaction,
+            indication = ripple(),
+            onClick = {
+                openedFrom.key = shared
+                auctions.handoff = auction
+                onClick()
+            },
+        ),
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainer),
+    ) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                WeaponThumb(catalog.weaponImage(item.type, item.weaponUrlName), height = 40.dp, tile = false)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                    Text(catalog.weaponName(item.type, item.weaponUrlName), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        listOfNotNull(item.name?.replaceFirstChar { it.uppercase() }, relativeTime(auction.updated).ifEmpty { null }).joinToString(" · "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                AuctionPriceColumn(auction)
+            }
+            if (item.type == AuctionType.RIVEN && item.attributes.isNotEmpty()) {
+                // On the card's own background: one color per card.
+                RivenStats(item.attributes, catalog, Modifier.fillMaxWidth())
+            }
+            AuctionDetailsLine(item, catalog)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // The seller is a way to their profile of its own, apart from the card around it.
+                val navigator = LocalNavigator.current
+                Row(
+                    Modifier.weight(1f, fill = false).clip(MaterialTheme.shapes.small)
+                        .clickable(enabled = auction.owner.slug != null, onClickLabel = "Open profile") { auction.owner.slug?.let(navigator::user) }
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    UserAvatar(assetUrl(auction.owner.avatar), auction.owner.ingameName, size = 24.dp)
+                    Text(auction.owner.ingameName.orEmpty(), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    StatusLabel(auction.owner.status)
+                    Text("+${auction.owner.reputation}", style = MaterialTheme.typography.labelMedium, color = colors.primary)
+                }
+                if (!auction.visible) SmallTag("Hidden")
+                if (auction.closed) SmallTag("Closed")
+            }
+        }
+    }
+}
+
