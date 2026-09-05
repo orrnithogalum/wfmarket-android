@@ -413,3 +413,9 @@ fun RivenStats(attributes: List<RivenStat>, catalog: Catalog, modifier: Modifier
     }
 }
 
+@Composable
+fun AuctionItemSummary(item: AuctionItem, catalog: Catalog) {
+    if (item.type == AuctionType.RIVEN && item.attributes.isNotEmpty()) RivenStats(item.attributes, catalog)
+    AuctionDetailsLine(item, catalog, Modifier.padding(top = 8.dp))
+}
+
