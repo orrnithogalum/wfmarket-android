@@ -458,3 +458,18 @@ fun AuctionDetailsLine(item: AuctionItem, catalog: Catalog, modifier: Modifier =
     }
 }
 
+/**
+ * What the auction goes for, as the home page shows an order's price: the figure, and under it what
+ * kind of price it is. A bidding auction with a buyout names the buyout there too.
+ */
+@Composable
+private fun AuctionPriceColumn(auction: Auction) {
+    val main = if (auction.isDirectSell) auction.buyoutPrice ?: auction.startingPrice else auction.topBid ?: auction.startingPrice
+    val label = when {
+        auction.isDirectSell -> "buyout"
+        auction.topBid != null -> "top bid"
+        else -> "starting bid"
+    } + (auction.buyoutPrice?.takeIf { !auction.isDirectSell }?.let { " · ${it}p buyout" } ?: "")
+    Figure(label, alignment = Alignment.End) { Platinum(main) }
+}
+
