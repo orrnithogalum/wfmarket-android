@@ -367,3 +367,49 @@ fun formatAttributeValue(stat: RivenStat, catalog: Catalog): String {
     return "$sign${String.format(Locale.US, "%.1f", stat.value)}$unit"
 }
 
+/**
+ * A riven's stats as a table: the stat, then its value at the end in the color of whether it
+ * helps. The printed sign keeps that readable without hue. With [rolls], each value has its grade
+ * after it, and [detailed] adds a bar for where in its range each stat rolled.
+ */
+@Composable
+fun RivenStats(attributes: List<RivenStat>, catalog: Catalog, modifier: Modifier = Modifier, rolls: RivenRolls? = null, detailed: Boolean = false) {
+    val semantic = LocalSemanticColors.current
+    val note = MaterialTheme.typography.labelSmall
+    val noteColor = MaterialTheme.colorScheme.onSurfaceVariant
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(if (detailed && rolls != null) 12.dp else 4.dp)) {
+        attributes.forEachIndexed { index, stat ->
+            val roll = rolls?.stats?.getOrNull(index)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        catalog.attributeName(stat.urlName),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    // The grade sits close to its value, so the two read as one.
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            formatAttributeValue(stat, catalog),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (stat.positive) semantic.positive else semantic.negative,
+                        )
+                        if (rolls != null) RivenGradeLabel(roll)
+                    }
+                }
+                if (detailed && roll != null) {
+                    val (worst, best) = rollEnds(stat, roll, catalog)
+                    when {
+                        roll.outOfRange -> Text("It can only roll $worst to $best, so this may be mistyped.", style = note, color = noteColor)
+                        roll.tooRounded -> Text("Too small at rank ${rolls.rank} to grade. It rolls $worst to $best.", style = note, color = noteColor)
+                        else -> RivenRollBar(roll, worst, best, index = index)
+                    }
+                }
+            }
+        }
+    }
+}
+
