@@ -353,3 +353,17 @@ fun AuctionsScreen() {
     }
 }
 
+/** A stat's value with its sign and unit, such as `+104.6%`, or a multiplier such as `x0.96`. */
+fun formatAttributeValue(stat: RivenStat, catalog: Catalog): String {
+    val unit = when (catalog.attributesBySlug[stat.urlName]?.unit) {
+        // Faction damage is a multiplier, which the game writes as x0.96, and one decimal would
+        // round a small curse up to a misleading x1.0.
+        "multiply" -> return "x${String.format(Locale.US, "%.2f", stat.value)}"
+        "percent" -> "%"
+        "seconds" -> "s"
+        else -> ""
+    }
+    val sign = if (stat.value > 0) "+" else ""
+    return "$sign${String.format(Locale.US, "%.1f", stat.value)}$unit"
+}
+
