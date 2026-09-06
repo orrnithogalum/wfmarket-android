@@ -548,3 +548,20 @@ fun AuctionCard(
     }
 }
 
+@Composable
+fun AuctionPrice(auction: Auction) {
+    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        if (auction.isDirectSell) {
+            Text("Buyout", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Platinum(auction.buyoutPrice ?: auction.startingPrice)
+        } else {
+            Text(if (auction.topBid != null) "Top bid" else "Starting", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Platinum(auction.topBid ?: auction.startingPrice)
+            auction.buyoutPrice?.let {
+                Text("Buyout", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Platinum(it, style = MaterialTheme.typography.labelLarge)
+            }
+        }
+    }
+}
+
