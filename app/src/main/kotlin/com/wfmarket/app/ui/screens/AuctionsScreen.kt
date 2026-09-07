@@ -565,3 +565,14 @@ fun AuctionPrice(auction: Auction) {
     }
 }
 
+// ---------------------------------------------------------------- Filters
+
+/** A label with its chips close under it, so each group reads as one. */
+@Composable
+private fun FilterSection(title: String, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) { content() }
+    }
+}
+
