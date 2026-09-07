@@ -576,3 +576,5 @@ private fun FilterSection(title: String, content: @Composable () -> Unit) {
     }
 }
 
+val AuctionPolarities = listOf("madurai", "vazarin", "naramon")
+
