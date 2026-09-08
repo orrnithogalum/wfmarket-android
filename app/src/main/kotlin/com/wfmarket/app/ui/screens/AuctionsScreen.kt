@@ -578,3 +578,10 @@ private fun FilterSection(title: String, content: @Composable () -> Unit) {
 
 val AuctionPolarities = listOf("madurai", "vazarin", "naramon")
 
+private fun polarityIcon(polarity: String): Int? = when (polarity) {
+    "madurai" -> R.drawable.ic_polarity_madurai
+    "vazarin" -> R.drawable.ic_polarity_vazarin
+    "naramon" -> R.drawable.ic_polarity_naramon
+    else -> null
+}
+
