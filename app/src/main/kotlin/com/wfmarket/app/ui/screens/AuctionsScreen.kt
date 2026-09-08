@@ -606,3 +606,160 @@ fun PolarityChip(polarity: String, selected: Boolean, onClick: () -> Unit) {
 }
 val Elements = listOf("heat", "impact", "electricity", "magnetic", "radiation", "toxin", "cold")
 
+@Composable
+private fun AuctionFiltersSheet(
+    initial: AuctionSearch,
+    catalog: Catalog,
+    onDismiss: () -> Unit,
+    onApply: (AuctionSearch) -> Unit,
+) {
+    var search by remember { mutableStateOf(initial) }
+    var pickWeapon by remember { mutableStateOf(false) }
+    var pickPositive by remember { mutableStateOf(false) }
+    var pickNegative by remember { mutableStateOf(false) }
+    var pickQuirk by remember { mutableStateOf(false) }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(
+            Modifier.fadingVerticalScroll().imePadding().padding(horizontal = 16.dp).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            Text("Search auctions", style = MaterialTheme.typography.titleLarge)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                ChoiceButtonGroup(listOf(AuctionType.RIVEN, AuctionType.LICH, AuctionType.SISTER), search.type, { it.humanize() }, { value ->
+                    if (search.type != value) search = AuctionSearch(type = value, sellerStatuses = search.sellerStatuses, priceMin = search.priceMin, priceMax = search.priceMax)
+                }, Modifier.fillMaxWidth(), fill = true)
+                OutlinedButton(onClick = { pickWeapon = true }, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
+                    WeaponButtonLabel(search.type, search.weaponUrlName, catalog, "Any weapon")
+                }
+            }
+
+            if (search.type == AuctionType.RIVEN) {
+                FilterSection("Positive stats (up to 3)") {
+                    search.positiveStats.forEach { stat ->
+                        InputChip(selected = true, onClick = { search = search.copy(positiveStats = search.positiveStats - stat) }, label = { Text(catalog.attributeName(stat)) })
+                    }
+                    if (search.positiveStats.size < 3) AssistChip(onClick = { pickPositive = true }, label = { Text("Add") })
+                }
+                FilterSection("Negative stat") {
+                    search.negativeStats.forEach { stat ->
+                        InputChip(selected = true, onClick = { search = search.copy(negativeStats = search.negativeStats - stat) }, label = { Text(catalog.attributeName(stat)) })
+                    }
+                    if (search.negativeStats.isEmpty()) AssistChip(onClick = { pickNegative = true }, label = { Text("Add") })
+                }
+                FilterSection("Polarity") {
+                    AuctionPolarities.forEach { value ->
+                        PolarityChip(value, search.polarity == value) { search = search.copy(polarity = if (search.polarity == value) null else value) }
+                    }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        NumberField("MR min", search.masteryRankMin?.toString().orEmpty(), { search = search.copy(masteryRankMin = it.toIntOrNull()) }, Modifier.weight(1f))
+                        NumberField("MR max", search.masteryRankMax?.toString().orEmpty(), { search = search.copy(masteryRankMax = it.toIntOrNull()) }, Modifier.weight(1f))
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        NumberField("Rolls min", search.reRollsMin?.toString().orEmpty(), { search = search.copy(reRollsMin = it.toIntOrNull()) }, Modifier.weight(1f))
+                        NumberField("Rolls max", search.reRollsMax?.toString().orEmpty(), { search = search.copy(reRollsMax = it.toIntOrNull()) }, Modifier.weight(1f))
+                    }
+                    FilterChip(selected = search.modRankMaxed, onClick = { search = search.copy(modRankMaxed = !search.modRankMaxed) }, label = { Text("Maxed only") })
+                }
+            } else {
+                FilterSection("Element") {
+                    Elements.forEach { value ->
+                        FilterChip(
+                            selected = search.element == value,
+                            onClick = { search = search.copy(element = if (search.element == value) null else value) },
+                            label = { Text(value.humanize()) },
+                        )
+                    }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        NumberField("Damage min", search.damageMin?.toString().orEmpty(), { search = search.copy(damageMin = it.toIntOrNull()) }, Modifier.weight(1f))
+                        NumberField("Damage max", search.damageMax?.toString().orEmpty(), { search = search.copy(damageMax = it.toIntOrNull()) }, Modifier.weight(1f))
+                    }
+                    FilterChip(selected = search.hasEphemera, onClick = { search = search.copy(hasEphemera = !search.hasEphemera) }, label = { Text("Has ephemera") })
+                    OutlinedButton(onClick = { pickQuirk = true }, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
+                        Text(catalog.quirkName(search.type, search.quirk)?.let { "Quirk: $it" } ?: "Any quirk")
+                    }
+                }
+            }
+
+            FilterSection("Seller") {
+                StatusFilterOptions.forEach { option ->
+                    val on = option.wire in search.sellerStatuses
+                    FilterChip(
+                        selected = on,
+                        onClick = { search = search.copy(sellerStatuses = if (on) search.sellerStatuses - option.wire else search.sellerStatuses + option.wire) },
+                        label = { Text(option.label) },
+                        leadingIcon = { StatusDotIcon(option.wire) },
+                    )
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Price", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    NumberField("Min platinum", search.priceMin?.toString().orEmpty(), { search = search.copy(priceMin = it.toIntOrNull()) }, Modifier.weight(1f))
+                    NumberField("Max platinum", search.priceMax?.toString().orEmpty(), { search = search.copy(priceMax = it.toIntOrNull()) }, Modifier.weight(1f))
+                }
+                Text(
+                    "The buyout, or an auction's current bid. Alerts only notify within this range.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            FilterSection("Listing type") {
+                listOf("direct" to "Direct sell", "auction" to "Auction").forEach { (value, label) ->
+                    FilterChip(
+                        selected = search.buyoutPolicy == value,
+                        onClick = { search = search.copy(buyoutPolicy = if (search.buyoutPolicy == value) null else value) },
+                        label = { Text(label) },
+                    )
+                }
+            }
+            val sorts = if (search.type == AuctionType.RIVEN) {
+                listOf("price_asc" to "Price: low to high", "price_desc" to "Price: high to low", "positive_attr_desc" to "Best stats first", "positive_attr_asc" to "Lowest stats first")
+            } else {
+                listOf("price_asc" to "Price: low to high", "price_desc" to "Price: high to low", "damage_desc" to "Damage: high to low", "damage_asc" to "Damage: low to high")
+            }
+            FilterSection("Sort") {
+                DropdownChip("", search.sortBy, sorts.map { it.first }, { value -> sorts.first { it.first == value }.second }, { search = search.copy(sortBy = it) })
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (!search.canSearch) {
+                    Text(
+                        if (search.type == AuctionType.RIVEN) "Choose a weapon or a positive stat to search." else "Choose a weapon or an element to search.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Button(enabled = search.canSearch, onClick = { onApply(search) }, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) { Text("Search") }
+            }
+        }
+    }
+
+    if (pickWeapon) {
+        WeaponPicker(search.type, catalog, { pickWeapon = false }, onClear = { search = search.copy(weaponUrlName = null); pickWeapon = false }, selected = search.weaponUrlName) {
+            search = search.copy(weaponUrlName = it)
+            pickWeapon = false
+        }
+    }
+    if (pickPositive || pickNegative) {
+        AttributePicker(catalog, { pickPositive = false; pickNegative = false }) { slug ->
+            search = if (pickPositive) search.copy(positiveStats = (search.positiveStats + slug).distinct()) else search.copy(negativeStats = listOf(slug))
+            pickPositive = false
+            pickNegative = false
+        }
+    }
+    if (pickQuirk) {
+        val quirks = if (search.type == AuctionType.LICH) catalog.lichQuirks else catalog.sisterQuirks
+        SearchablePickerSheet(
+            "Quirk", quirks, { catalog.i18n(it.i18n)?.name ?: it.slug.humanize() },
+            onPick = { search = search.copy(quirk = it.slug); pickQuirk = false },
+            onDismiss = { pickQuirk = false },
+            onClear = { search = search.copy(quirk = null); pickQuirk = false },
+        )
+    }
+}
+
