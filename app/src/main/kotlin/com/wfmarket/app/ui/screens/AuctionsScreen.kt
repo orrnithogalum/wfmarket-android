@@ -591,3 +591,18 @@ fun PolarityIcon(polarity: String, modifier: Modifier = Modifier.size(15.dp), ti
     polarityIcon(polarity)?.let { Icon(painterResource(it), polarity.humanize(), modifier, tint = tint) }
 }
 
+/** A polarity chip: the symbol beside the name, since few players know the names alone. */
+@Composable
+fun PolarityChip(polarity: String, selected: Boolean, onClick: () -> Unit) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(polarity.humanize()) },
+        // Centered in the chip's 18dp icon slot, like the status dots, so every chip lines up the same.
+        leadingIcon = {
+            Box(Modifier.size(FilterChipDefaults.IconSize), contentAlignment = Alignment.Center) { PolarityIcon(polarity) }
+        },
+    )
+}
+val Elements = listOf("heat", "impact", "electricity", "magnetic", "radiation", "toxin", "cold")
+
