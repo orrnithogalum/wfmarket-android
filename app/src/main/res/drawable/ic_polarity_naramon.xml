@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Naramon polarity, from art/polarity-naramon.svg. Tinted by whatever draws it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="45.4"
+    android:viewportHeight="45.4">
+    <!-- Crops the canvas to where the polarity symbols are drawn. -->
+    <group
+        android:translateX="-2.55"
+        android:translateY="-1.5">
+        <path
+            android:pathData="m 10.242086,35.426443 c 0,0 -2.7932962,-7.44879 -6.8901312,-15.642458 l 20.6703922,-0.558659 15.828677,-0.18622 0.744879,-5.027933 3.165736,7.63501 3.351955,6.89013 -22.346368,0.186219 -12.849162,-0.186219 z"
+            android:fillColor="#FF000000"
+            android:fillType="evenOdd"
+            android:strokeColor="#FF000000"
+            android:strokeWidth="1" />
+    </group>
+</vector>
