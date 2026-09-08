@@ -782,3 +782,8 @@ fun WeaponButtonLabel(type: String, weapon: String?, catalog: Catalog, none: Str
     }
 }
 
+@Composable
+fun AttributePicker(catalog: Catalog, onDismiss: () -> Unit, onPick: (String) -> Unit) {
+    val options = remember(catalog) { catalog.rivenAttributes.sortedBy { catalog.attributeName(it.slug) } }
+    SearchablePickerSheet("Stat", options, { catalog.attributeName(it.slug) }, onPick = { onPick(it.slug) }, onDismiss = onDismiss)
+}
