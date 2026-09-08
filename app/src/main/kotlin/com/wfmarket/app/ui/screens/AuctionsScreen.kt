@@ -585,3 +585,9 @@ private fun polarityIcon(polarity: String): Int? = when (polarity) {
     else -> null
 }
 
+/** A polarity's symbol, as the game draws it. Polarities without one draw nothing. */
+@Composable
+fun PolarityIcon(polarity: String, modifier: Modifier = Modifier.size(15.dp), tint: Color = LocalContentColor.current) {
+    polarityIcon(polarity)?.let { Icon(painterResource(it), polarity.humanize(), modifier, tint = tint) }
+}
+
