@@ -763,3 +763,22 @@ private fun AuctionFiltersSheet(
     }
 }
 
+/** A weapon button's label: the weapon's picture and name, fading over to a new choice. */
+@Composable
+fun WeaponButtonLabel(type: String, weapon: String?, catalog: Catalog, none: String) {
+    AnimatedContent(
+        weapon,
+        transitionSpec = { fadeIn(Motion.fadeIn()) togetherWith fadeOut(Motion.fadeOut()) using SizeTransform(clip = false) },
+        label = "weapon",
+    ) { slug ->
+        if (slug == null) {
+            Text(none)
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                WeaponThumb(catalog.weaponImage(type, slug), height = 24.dp, tile = false)
+                Text(catalog.weaponName(type, slug), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
+}
+
