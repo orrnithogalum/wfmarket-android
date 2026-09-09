@@ -80,4 +80,8 @@ class AuctionDetailViewModel(private val container: AppContainer, private val id
         return updated
     }
 
+    fun load() {
+        viewModelScope.launch { fetch() }
+    }
+
 
