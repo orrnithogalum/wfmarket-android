@@ -74,4 +74,10 @@ class AuctionDetailViewModel(private val container: AppContainer, private val id
         }
     }
 
+    private suspend fun fetch(): Boolean {
+        val updated = _auction.accept(runCatching { container.auctions.auction(id) })
+        runCatching { container.auctions.bids(id) }.onSuccess { _bids.value = it.sortedByDescending { bid -> bid.value } }
+        return updated
+    }
+
 
