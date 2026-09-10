@@ -272,3 +272,61 @@ fun AuctionDetailScreen(id: String) {
     }
 }
 
+@Composable
+private fun AuctionHeader(auction: Auction, catalog: Catalog) {
+    val item = auction.item
+    val colors = MaterialTheme.colorScheme
+    // Opened from a card, the card's picture grows into this one. From a link, it's simply here.
+    val shared = LocalOpenedFrom.current.key?.takeIf { it.endsWith(":${auction.id}") }
+    Surface(shape = MaterialTheme.shapes.large, color = colors.surfaceContainer) {
+        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            ItemThumb(
+                catalog.weaponImage(item.type, item.weaponUrlName),
+                Modifier.sharedAcrossScreens(shared?.let { "image:$it" }).fillMaxWidth(),
+                size = 150.dp,
+                width = Dp.Unspecified,
+            )
+            Column(Modifier.padding(horizontal = 4.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(catalog.weaponName(item.type, item.weaponUrlName), style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        listOfNotNull(item.name?.replaceFirstChar { it.uppercase() }, item.type.humanize()).joinToString(" · "),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = colors.onSurfaceVariant,
+                    )
+                }
+                // The prices as big figures with small labels, as the profile shows reputation.
+                Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                    val figure = MaterialTheme.typography.headlineSmall
+                    if (auction.isDirectSell) {
+                        Figure("buyout") { Platinum(auction.buyoutPrice ?: auction.startingPrice, style = figure) }
+                    } else {
+                        Figure(if (auction.topBid != null) "top bid" else "starting bid") { Platinum(auction.topBid ?: auction.startingPrice, style = figure) }
+                        auction.buyoutPrice?.let { Figure("buyout") { Platinum(it, style = figure) } }
+                        if (auction.topBid != null) Figure("started at") { Platinum(auction.startingPrice, style = figure) }
+                    }
+                }
+                if (item.type == AuctionType.RIVEN && item.attributes.isNotEmpty()) {
+                    val rolls = rememberRivenRolls(item, catalog)
+                    RivenStats(item.attributes, catalog, Modifier.fillMaxWidth(), rolls = rolls, detailed = true)
+                    rolls?.let { rivenRollsNote(it, item.modRank) }?.let {
+                        Text(it, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+                    }
+                }
+                AuctionDetailsLine(item, catalog)
+                Text(
+                    listOfNotNull(
+                        auction.minimalReputation.takeIf { it > 0 }?.let { "Bidders need +$it reputation" },
+                        if (auction.visible) null else "Hidden",
+                        if (auction.closed) "Closed" else null,
+                        auction.created?.let { "Listed ${relativeTime(it)}" },
+                        auction.updated?.takeIf { it != auction.created }?.let { "updated ${relativeTime(it)}" },
+                    ).joinToString(" · "),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
