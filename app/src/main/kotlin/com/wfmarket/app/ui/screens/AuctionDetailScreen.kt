@@ -330,3 +330,10 @@ private fun AuctionHeader(auction: Auction, catalog: Catalog) {
     }
 }
 
+/** The in-game whisper that asks the seller for this auction. */
+fun auctionWhisper(auction: Auction, catalog: Catalog): String {
+    val who = auction.owner.ingameName.orEmpty().let { if (it.contains(' ')) "\"$it\"" else it }
+    val what = catalog.weaponName(auction.item.type, auction.item.weaponUrlName) + (auction.item.name?.let { " ${it.humanize()}" } ?: "")
+    return "/w $who Hi! I want to buy: \"$what\" (warframe.market/auction/${auction.id})"
+}
+
