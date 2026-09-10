@@ -97,3 +97,178 @@ class AuctionDetailViewModel(private val container: AppContainer, private val id
     }
 }
 
+@Composable
+fun AuctionDetailScreen(id: String) {
+    val container = appContainer()
+    val viewModel = containerViewModel(key = "auction:$id") { AuctionDetailViewModel(it, id) }
+    val auctionLoad by viewModel.auction.collectAsStateWithLifecycle()
+    val bids by viewModel.bids.collectAsStateWithLifecycle()
+    val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
+    val catalog by container.catalog.catalog.collectAsStateWithLifecycle()
+    val me by container.account.me.collectAsStateWithLifecycle()
+    val signedIn by container.account.isSignedIn.collectAsStateWithLifecycle()
+    val navigator = LocalNavigator.current
+    val openUrl = rememberOpenUrl()
+    val context = LocalContext.current
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    var confirmClose by remember { mutableStateOf<Auction?>(null) }
+    val alerts by container.alerts.state.collectAsStateWithLifecycle()
+    val following = alerts.followed.any { it.id == id }
+
+    DisposableEffect(id) {
+        container.alerts.activeAuctionId = id
+        onDispose { if (container.alerts.activeAuctionId == id) container.alerts.activeAuctionId = null }
+    }
+
+    fun run(success: String? = null, block: suspend () -> Unit) {
+        scope.launch {
+            runCatching { block() }
+                .onSuccess { success?.let { snackbar.showSnackbar(it) } }
+                .onFailure { snackbar.showSnackbar(it.userMessage()) }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Auction") },
+                navigationIcon = { IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                actions = {
+                    val auction = (auctionLoad as? Load.Ready)?.value
+                    // Your own auction's bids already reach you; following is for someone else's.
+                    if (auction != null && !auction.closed && auction.owner.id != me?.id) {
+                        IconToggleButton(
+                            checked = following,
+                            onCheckedChange = { follow ->
+                                scope.launch {
+                                    if (follow) {
+                                        val title = catalog.weaponName(auction.item.type, auction.item.weaponUrlName) +
+                                            (auction.item.name?.let { " ${it.humanize()}" } ?: "")
+                                        container.alerts.follow(auction, title)
+                                        snackbar.showSnackbar("Following. You'll be notified about new bids and when it ends.")
+                                    } else {
+                                        container.alerts.unfollow(auction.id)
+                                        snackbar.showSnackbar("No longer following")
+                                    }
+                                }
+                            },
+                            shapes = IconButtonDefaults.toggleableShapes(),
+                        ) {
+                            Icon(
+                                if (following) Icons.Filled.NotificationsActive else Icons.Outlined.NotificationsNone,
+                                if (following) "Stop following" else "Follow this auction",
+                            )
+                        }
+                    }
+                    IconButton(onClick = { openUrl("https://warframe.market/auction/$id") }) {
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, "Open on warframe.market")
+                    }
+                },
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbar) },
+    ) { padding ->
+        RefreshBox(isRefreshing = refreshing, onRefresh = viewModel::refresh, modifier = Modifier.fillMaxSize().padding(padding)) {
+            LoadContent(auctionLoad, viewModel::load) { auction ->
+                val isOwner = me?.id == auction.owner.id
+                val myBid = bids.firstOrNull { it.user.id == me?.id }
+                FadingLazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    item {
+                        Column {
+                            AuctionHeader(auction, catalog)
+                            if (auction.item.type == AuctionType.RIVEN) RivenTradeCard(auction.item.weaponUrlName, catalog, Modifier.fillMaxWidth(), gap = 12.dp)
+                        }
+                    }
+                    item { OwnerCard(auction, signedIn, isOwner, catalog, context, snackbar) }
+                    if (auction.noteText.isNotBlank()) {
+                        item {
+                            Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                                Text(auction.noteText, Modifier.fillMaxWidth().padding(16.dp), style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+                    if (isOwner) {
+                        item {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                FilledTonalButton(onClick = { navigator.editAuction(auction.id) }, enabled = !auction.closed) {
+                                    Icon(Icons.Filled.Edit, null, Modifier.size(18.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Edit")
+                                }
+                                OutlinedButton(onClick = {
+                                    run(if (auction.visible) "Hidden" else "Visible") { container.auctions.setVisible(auction.id, !auction.visible) }
+                                }) { Text(if (auction.visible) "Hide" else "Show") }
+                                if (!auction.closed) {
+                                    OutlinedButton(onClick = { confirmClose = auction }) { Text(if (auction.winner?.id?.isNotBlank() == true) "Complete" else "Close") }
+                                }
+                                if (auction.winner?.id?.isNotBlank() == true) {
+                                    OutlinedButton(onClick = { run { container.auctions.clearWinner(auction.id) } }) { Text("Clear winner") }
+                                }
+                            }
+                        }
+                    } else if (!auction.closed && !auction.isDirectSell) {
+                        item {
+                            BidForm(auction, myBid, signedIn,
+                                onSignIn = navigator::signIn,
+                                onBid = { value -> run("Bid placed") { container.auctions.placeBid(auction.id, value, myBid?.id) } },
+                                onRemove = { myBid?.let { bid -> run("Bid removed") { container.auctions.removeBid(auction.id, bid.id) } } },
+                            )
+                        }
+                    }
+                    if (bids.isNotEmpty()) {
+                        item { Text("Bids · ${bids.size}", style = MaterialTheme.typography.titleMedium) }
+                        item(key = "bids") {
+                          Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
+                           bids.forEachIndexed { index, bid ->
+                            SegmentedListItem(
+                                onClick = { bid.user.slug?.let(navigator::user) },
+                                shapes = ListItemDefaults.segmentedShapes(index, bids.size),
+                                colors = ListItemDefaults.segmentedColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                                verticalAlignment = Alignment.CenterVertically,
+                                leadingContent = { UserAvatar(assetUrl(bid.user.avatar), bid.user.ingameName, status = bid.user.status) },
+                                supportingContent = { Text("+${bid.user.reputation} · ${relativeTime(bid.updated)}") },
+                                trailingContent = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        if (isOwner && !auction.closed) {
+                                            TextButton(onClick = { run("Winner chosen") { container.auctions.markWinner(auction.id, bid.user.id) } }) { Text("Choose") }
+                                        }
+                                        Platinum(bid.value)
+                                    }
+                                },
+                            ) { Text(bid.user.ingameName.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                           }
+                          }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    confirmClose?.let { auction ->
+        val complete = auction.winner?.id?.isNotBlank() == true
+        AlertDialog(
+            onDismissRequest = { confirmClose = null },
+            title = { Text(if (complete) "Complete this auction?" else "Close this auction?") },
+            text = { Text("It's removed from the site and your profile. This can't be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmClose = null
+                    scope.launch {
+                        // There's nothing left to show here, so go back to wherever this was opened from.
+                        runCatching { container.auctions.close(auction.id) }
+                            .onSuccess {
+                                container.notices.show(if (complete) "Auction completed" else "Auction closed")
+                                navigator.back()
+                            }
+                            .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                    }
+                }) { Text(if (complete) "Complete" else "Close auction") }
+            },
+            dismissButton = { TextButton(onClick = { confirmClose = null }) { Text("Keep") } },
+        )
+    }
+}
+
