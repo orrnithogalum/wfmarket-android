@@ -92,4 +92,8 @@ class AuctionDetailViewModel(private val container: AppContainer, private val id
         }
     }
 
+    override fun onCleared() {
+        container.auctions.unwatch(id)
+    }
+}
 
