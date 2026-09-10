@@ -84,4 +84,12 @@ class AuctionDetailViewModel(private val container: AppContainer, private val id
         viewModelScope.launch { fetch() }
     }
 
+    fun refresh() {
+        viewModelScope.launch {
+            _refreshing.value = true
+            if (!fetch()) container.refreshFailed()
+            _refreshing.value = false
+        }
+    }
+
 
