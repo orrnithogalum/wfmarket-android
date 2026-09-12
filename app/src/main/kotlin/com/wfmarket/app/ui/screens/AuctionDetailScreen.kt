@@ -337,3 +337,63 @@ fun auctionWhisper(auction: Auction, catalog: Catalog): String {
     return "/w $who Hi! I want to buy: \"$what\" (warframe.market/auction/${auction.id})"
 }
 
+@Composable
+private fun OwnerCard(auction: Auction, signedIn: Boolean, isOwner: Boolean, catalog: Catalog, context: android.content.Context, snackbar: SnackbarHostState) {
+    val container = appContainer()
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+    val owner = auction.owner
+    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).clickable { owner.slug?.let(navigator::user) }.padding(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            UserAvatar(assetUrl(owner.avatar), owner.ingameName, size = 48.dp, status = owner.status)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(owner.ingameName.orEmpty(), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    StatusLabel(owner.status)
+                    PlatformTag(auction.platform, auction.crossplay)
+                }
+            }
+            Figure("reputation", alignment = Alignment.End) {
+                Text("+${owner.reputation}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+            }
+        }
+        if (!isOwner) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = {
+                        copyToClipboard(context, auctionWhisper(auction, catalog))
+                        scope.launch { snackbar.showSnackbar("Whisper copied") }
+                    },
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(Icons.Filled.ContentCopy, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Whisper")
+                }
+                Button(
+                    onClick = {
+                        if (!signedIn) {
+                            navigator.signIn()
+                        } else {
+                            scope.launch {
+                                runCatching { container.chats.openChatWith(owner.id) }
+                                    .onSuccess(navigator::chat)
+                                    .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                            }
+                        }
+                    },
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.weight(1f),
+                ) { Text("Message") }
+            }
+        }
+    }
+    }
+}
+
