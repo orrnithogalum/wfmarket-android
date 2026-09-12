@@ -477,3 +477,7 @@ private fun BidForm(auction: Auction, myBid: Bid?, signedIn: Boolean, onSignIn: 
     }
 }
 
+// ---------------------------------------------------------------- Create and edit
+
+private data class StatDraft(val slug: String, val value: String, val positive: Boolean)
+
