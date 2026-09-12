@@ -481,3 +481,246 @@ private fun BidForm(auction: Auction, myBid: Bid?, signedIn: Boolean, onSignIn: 
 
 private data class StatDraft(val slug: String, val value: String, val positive: Boolean)
 
+@Composable
+fun AuctionEditorScreen(id: String?) {
+    val container = appContainer()
+    val catalog by container.catalog.catalog.collectAsStateWithLifecycle()
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+
+    var existing by remember { mutableStateOf<Auction?>(null) }
+    var loading by remember { mutableStateOf(id != null) }
+    var type by rememberSaveable { mutableStateOf(AuctionType.RIVEN) }
+    var weapon by rememberSaveable { mutableStateOf<String?>(null) }
+    var rivenName by rememberSaveable { mutableStateOf("") }
+    var mastery by rememberSaveable { mutableStateOf("8") }
+    var modRank by rememberSaveable { mutableStateOf("0") }
+    var reRolls by rememberSaveable { mutableStateOf("0") }
+    var polarity by rememberSaveable { mutableStateOf(AuctionPolarities.first()) }
+    var stats by remember { mutableStateOf(listOf<StatDraft>()) }
+    var element by rememberSaveable { mutableStateOf(Elements.first()) }
+    var damage by rememberSaveable { mutableStateOf("") }
+    var ephemera by rememberSaveable { mutableStateOf(false) }
+    var quirk by rememberSaveable { mutableStateOf<String?>(null) }
+    var direct by rememberSaveable { mutableStateOf(true) }
+    var startingPrice by rememberSaveable { mutableStateOf("") }
+    var buyoutPrice by rememberSaveable { mutableStateOf("") }
+    var minimalReputation by rememberSaveable { mutableStateOf("0") }
+    var note by rememberSaveable { mutableStateOf("") }
+    var visible by rememberSaveable { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+
+    var pickWeapon by remember { mutableStateOf(false) }
+    var pickStat by remember { mutableStateOf(false) }
+    var pickQuirk by remember { mutableStateOf(false) }
+    val settings by container.settings.flow.collectAsStateWithLifecycle()
+    val classes by container.rivens.classes.collectAsStateWithLifecycle()
+
+    LaunchedEffect(id) {
+        if (id != null) {
+            runCatching { container.auctions.auction(id) }.onSuccess { auction ->
+                existing = auction
+                type = auction.item.type
+                weapon = auction.item.weaponUrlName
+                direct = auction.isDirectSell
+                startingPrice = auction.startingPrice.toString()
+                buyoutPrice = auction.buyoutPrice?.toString().orEmpty()
+                minimalReputation = auction.minimalReputation.toString()
+                note = auction.noteText
+                visible = auction.visible
+            }.onFailure { error = it.userMessage() }
+            loading = false
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(if (id == null) "New auction" else "Edit auction") },
+                navigationIcon = { IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+            )
+        },
+    ) { padding ->
+        if (loading) {
+            LoadingBox(Modifier.padding(padding))
+            return@Scaffold
+        }
+        Column(
+            Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding().fadingVerticalScroll().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (id == null) {
+                ChoiceButtonGroup(listOf(AuctionType.RIVEN, AuctionType.LICH, AuctionType.SISTER), type, { it.humanize() }, { type = it; weapon = null; quirk = null }, Modifier.fillMaxWidth(), fill = true)
+                Column {
+                    OutlinedButton(onClick = { pickWeapon = true }, modifier = Modifier.fillMaxWidth()) {
+                        WeaponButtonLabel(type, weapon, catalog, "Choose weapon")
+                    }
+                    weapon?.takeIf { type == AuctionType.RIVEN }?.let { RivenTradeLine(it, catalog, gap = 4.dp) }
+                }
+
+                if (type == AuctionType.RIVEN) {
+                    OutlinedTextField(rivenName, { rivenName = it }, label = { Text("Riven name, as shown in game") }, supportingText = { Text("For example: hexa-critatis. It has to match the stats.") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        NumberField("Mastery", mastery, { mastery = it }, Modifier.weight(1f))
+                        NumberField("Rank", modRank, { modRank = it }, Modifier.weight(1f))
+                        NumberField("Rolls", reRolls, { reRolls = it }, Modifier.weight(1f))
+                    }
+                    Text("Polarity", style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        AuctionPolarities.forEach { value ->
+                            PolarityChip(value, polarity == value) { polarity = value }
+                        }
+                    }
+                    Text("Stats", style = MaterialTheme.typography.labelLarge)
+                    // Graded as typed, so a mistyped value shows up before it's posted. In game every
+                    // stat is at today's disposition, so the old ones aren't tried.
+                    val draftRolls = remember(weapon, stats, modRank, classes, catalog, settings.rivenGrades) {
+                        weapon?.takeIf { settings.rivenGrades }?.let { slug ->
+                            val parsed = stats.map { RivenStat(it.slug, it.value.replace(',', '.').toDoubleOrNull() ?: 0.0, it.positive) }
+                            catalog.rivenRolls(AuctionItem(weaponUrlName = slug, modRank = modRank.toIntOrNull() ?: 0, attributes = parsed), classes, allowOldDisposition = false)
+                        }
+                    }
+                    stats.forEachIndexed { index, stat ->
+                        val roll = draftRolls?.stats?.getOrNull(index)
+                        // Fixed widths for everything but the name, so the fields line up row to row.
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Column(Modifier.weight(1f)) {
+                                Text(catalog.attributeName(stat.slug), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                roll?.let { DraftRollHint(stat, it, draftRolls.rank, catalog) }
+                            }
+                            OutlinedTextField(
+                                stat.value,
+                                { new -> stats = stats.toMutableList().also { it[index] = stat.copy(value = new) } },
+                                label = { Text("Value") },
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                modifier = Modifier.width(96.dp),
+                            )
+                            FilterChip(
+                                selected = stat.positive,
+                                onClick = { stats = stats.toMutableList().also { it[index] = stat.copy(positive = !stat.positive) } },
+                                label = { Text(if (stat.positive) "Good" else "Bad", Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+                                modifier = Modifier.width(72.dp),
+                            )
+                            IconButton(onClick = { stats = stats.toMutableList().also { it.removeAt(index) } }) { Icon(Icons.Filled.Close, "Remove stat") }
+                        }
+                    }
+                    if (stats.size < 4) AssistChip(onClick = { pickStat = true }, label = { Text("Add stat") })
+                } else {
+                    Text("Element", style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Elements.forEach { value ->
+                            FilterChip(selected = element == value, onClick = { element = value }, label = { Text(value.humanize()) })
+                        }
+                    }
+                    NumberField("Damage bonus %", damage, { damage = it }, Modifier.fillMaxWidth())
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Has ephemera", Modifier.weight(1f))
+                        Switch(checked = ephemera, onCheckedChange = { ephemera = it })
+                    }
+                    OutlinedButton(onClick = { pickQuirk = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text(catalog.quirkName(type, quirk)?.let { "Quirk: $it" } ?: "Quirk (optional)")
+                    }
+                }
+                HorizontalDivider()
+            }
+
+            ChoiceButtonGroup(listOf(true, false), direct, { if (it) "Direct sell" else "Auction" }, { direct = it }, Modifier.fillMaxWidth(), fill = true)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NumberField(if (direct) "Price" else "Starting price", startingPrice, { startingPrice = it }, Modifier.weight(1f))
+                if (!direct) NumberField("Buyout (optional)", buyoutPrice, { buyoutPrice = it }, Modifier.weight(1f))
+            }
+            if (!direct) NumberField("Minimum bidder reputation", minimalReputation, { minimalReputation = it }, Modifier.fillMaxWidth())
+            OutlinedTextField(note, { note = it }, label = { Text("Note (optional)") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Visible to others", Modifier.weight(1f))
+                Switch(checked = visible, onCheckedChange = { visible = it })
+            }
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            Button(
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    error = null
+                    val start = startingPrice.toIntOrNull()
+                    if (start == null || start <= 0) { error = "Enter a price of at least 1 platinum."; return@Button }
+                    val buyout = if (direct) start else buyoutPrice.toIntOrNull()
+                    val reputation = if (direct) 0 else minimalReputation.toIntOrNull() ?: 0
+                    val current = existing
+                    if (current == null) {
+                        val weaponSlug = weapon
+                        if (weaponSlug == null) { error = "Choose a weapon."; return@Button }
+                        val item = if (type == AuctionType.RIVEN) {
+                            if (rivenName.isBlank()) { error = "Enter the riven's name."; return@Button }
+                            if (stats.size < 2) { error = "Add at least two stats."; return@Button }
+                            val parsed = stats.map { stat ->
+                                val number = stat.value.replace(',', '.').toDoubleOrNull()
+                                if (number == null) { error = "Enter a number for ${catalog.attributeName(stat.slug)}."; return@Button }
+                                RivenStat(stat.slug, number, stat.positive)
+                            }
+                            AuctionItem(
+                                type = type,
+                                weaponUrlName = weaponSlug,
+                                name = rivenName.trim().lowercase(),
+                                masteryLevel = mastery.toIntOrNull() ?: 8,
+                                modRank = modRank.toIntOrNull() ?: 0,
+                                reRolls = reRolls.toIntOrNull() ?: 0,
+                                polarity = polarity,
+                                attributes = parsed,
+                            )
+                        } else {
+                            val bonus = damage.toIntOrNull()
+                            if (bonus == null) { error = "Enter the damage bonus."; return@Button }
+                            AuctionItem(type = type, weaponUrlName = weaponSlug, element = element, damage = bonus, havingEphemera = ephemera, quirk = quirk)
+                        }
+                        busy = true
+                        scope.launch {
+                            runCatching {
+                                container.auctions.create(CreateAuction(start, buyout, reputation, visible, note, item))
+                            }.onSuccess {
+                                navigator.replaceWithAuction(it.id)
+                            }.onFailure {
+                                busy = false
+                                error = it.userMessage()
+                            }
+                        }
+                    } else {
+                        busy = true
+                        scope.launch {
+                            runCatching {
+                                container.auctions.update(current.id, UpdateAuction(start, buyout, reputation, visible, note))
+                            }.onSuccess { navigator.back() }.onFailure {
+                                busy = false
+                                error = it.userMessage()
+                            }
+                        }
+                    }
+                },
+            ) { Text(if (existing == null) "Post auction" else "Save") }
+        }
+    }
+
+    if (pickWeapon) {
+        WeaponPicker(type, catalog, { pickWeapon = false }, selected = weapon) {
+            weapon = it
+            pickWeapon = false
+        }
+    }
+    if (pickStat) {
+        AttributePicker(catalog, { pickStat = false }) { slug ->
+            stats = stats + StatDraft(slug, "", positive = stats.size < 3)
+            pickStat = false
+        }
+    }
+    if (pickQuirk) {
+        val quirks = if (type == AuctionType.LICH) catalog.lichQuirks else catalog.sisterQuirks
+        SearchablePickerSheet(
+            "Quirk", quirks, { catalog.i18n(it.i18n)?.name ?: it.slug.humanize() },
+            onPick = { quirk = it.slug; pickQuirk = false },
+            onDismiss = { pickQuirk = false },
+            onClear = { quirk = null; pickQuirk = false },
+        )
+    }
+}
+
