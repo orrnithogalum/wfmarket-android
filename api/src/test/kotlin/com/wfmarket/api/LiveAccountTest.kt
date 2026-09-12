@@ -110,6 +110,41 @@ class LiveAccountTest {
         }
     }
 
+    /** A hidden direct sell nobody can see, which closing removes outright. */
+    @Test fun auctionLifecycle() = runBlocking {
+        signIn()
+        val item = AuctionItem(
+            type = AuctionType.RIVEN,
+            weaponUrlName = "soma",
+            name = "hexa-critatis",
+            masteryLevel = 8,
+            modRank = 0,
+            reRolls = 0,
+            polarity = "vazarin",
+            // A real riven's name and stats: the server checks that the name fits the stats.
+            attributes = listOf(
+                RivenStat("critical_chance", 154.6, true),
+                RivenStat("critical_damage", 137.5, true),
+                RivenStat("status_chance", 104.9, true),
+                RivenStat("recoil", 86.5, false),
+            ),
+        )
+        val created = try {
+            api.createAuction(CreateAuction(startingPrice = 999, buyoutPrice = 999, visible = false, item = item))
+        } catch (e: WfmException) {
+            println("auction rejected: fields=${e.fieldErrors} messages=${e.messages}")
+            throw e
+        }
+        try {
+            assertEquals(false, created.visible)
+            assertTrue(api.myAuctions().any { it.id == created.id })
+            assertEquals(990, api.updateAuction(created.id, UpdateAuction(990, 990, visible = false)).startingPrice)
+        } finally {
+            api.closeAuction(created.id)
+        }
+        println("auctions left open: ${api.myAuctions().count { !it.closed }}")
+    }
+
     @Test fun statusCanBeReadAndRestored() = runBlocking {
         signIn()
         val sockets = WfmSockets(session, api.http)
