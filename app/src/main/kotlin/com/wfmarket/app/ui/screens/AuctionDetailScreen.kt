@@ -724,3 +724,26 @@ fun AuctionEditorScreen(id: String?) {
     }
 }
 
+/** Under a stat being typed: its range, and once there's a value, its grade or that it can't be. */
+@Composable
+private fun DraftRollHint(draft: StatDraft, roll: StatRoll, rank: Int, catalog: Catalog) {
+    val stat = RivenStat(draft.slug, 0.0, draft.positive)
+    val (worst, best) = rollEnds(stat, roll, catalog)
+    val range = "$worst to $best at rank $rank"
+    val text = when {
+        draft.value.isBlank() -> "Rolls $range"
+        roll.outOfRange -> "Can't roll that: $range"
+        roll.grade != null -> "${roll.grade?.label} · $range"
+        else -> "Rolls $range"
+    }
+    // The hint changes as the value is typed, so it fades between readings rather than flickering,
+    // and turns red smoothly when a value goes out of reach.
+    val color by animateColorAsState(
+        if (roll.outOfRange && draft.value.isNotBlank()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+        Motion.fadeIn(),
+        label = "hint",
+    )
+    AnimatedContent(text, transitionSpec = { fadeIn(Motion.fadeIn(150)) togetherWith fadeOut(Motion.fadeOut(90)) }, label = "hint") {
+        Text(it, style = MaterialTheme.typography.labelSmall, color = color)
+    }
+}
