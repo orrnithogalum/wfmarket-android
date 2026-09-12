@@ -397,3 +397,12 @@ private fun OwnerCard(auction: Auction, signedIn: Boolean, isOwner: Boolean, cat
     }
 }
 
+/** Steps for the suggested bids, rounder the higher the price, so they're amounts people bid. */
+private fun bidStep(minimum: Int): Int = when {
+    minimum < 20 -> 1
+    minimum < 100 -> 5
+    minimum < 500 -> 10
+    minimum < 2000 -> 50
+    else -> 100
+}
+
