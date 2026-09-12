@@ -406,3 +406,74 @@ private fun bidStep(minimum: Int): Int = when {
     else -> 100
 }
 
+/**
+ * The bid form: what has to be beaten, the amount with a few suggestions just above it, and one
+ * button that says what it will do. A bid below the minimum is caught here rather than by the site.
+ */
+@Composable
+private fun BidForm(auction: Auction, myBid: Bid?, signedIn: Boolean, onSignIn: () -> Unit, onBid: (Int) -> Unit, onRemove: () -> Unit) {
+    val minimum = (auction.topBid ?: (auction.startingPrice - 1)) + 1
+    var value by remember(auction.topBid) { mutableStateOf(minimum.toString()) }
+    val amount = value.toIntOrNull()
+    val tooLow = amount != null && amount < minimum
+    val colors = MaterialTheme.colorScheme
+    val step = bidStep(minimum)
+    val suggestions = remember(minimum) {
+        val first = ((minimum + step - 1) / step) * step
+        listOf(minimum, first + step, first + 2 * step, first + 5 * step).distinct().filter { it >= minimum }
+    }
+    Surface(shape = MaterialTheme.shapes.large, color = colors.surfaceContainer) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(if (myBid == null) "Place a bid" else "Your bid", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        listOfNotNull(
+                            myBid?.let { "You're at ${it.value}p" },
+                            if (auction.topBid != null) "top bid ${auction.topBid}p" else "starts at ${auction.startingPrice}p",
+                            "at least ${minimum}p",
+                        ).joinToString(" · ").replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                    )
+                }
+                if (myBid != null) TextButton(onClick = onRemove, shapes = ButtonDefaults.shapes()) { Text("Withdraw") }
+            }
+            OutlinedTextField(
+                value = value,
+                onValueChange = { new -> if (new.all(Char::isDigit) && new.length <= 7) value = new },
+                label = { Text("Your bid") },
+                trailingIcon = { Icon(PlatinumIcon, "platinum", Modifier.size(20.dp), tint = LocalSemanticColors.current.platinum) },
+                isError = tooLow,
+                supportingText = if (tooLow) ({ Text("Bid at least ${minimum}p.") }) else null,
+                textStyle = MaterialTheme.typography.titleLarge,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                suggestions.forEach { suggestion ->
+                    FilterChip(selected = amount == suggestion, onClick = { value = suggestion.toString() }, label = { Text("${suggestion}p") })
+                }
+            }
+            Button(
+                onClick = { if (!signedIn) onSignIn() else amount?.let(onBid) },
+                enabled = !signedIn || (amount != null && !tooLow),
+                shapes = ButtonDefaults.shapes(),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    when {
+                        !signedIn -> "Sign in to bid"
+                        amount == null -> "Bid"
+                        myBid == null -> "Bid ${amount}p"
+                        else -> "Raise to ${amount}p"
+                    },
+                )
+            }
+            Text("The seller chooses the winner from the bids.", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+        }
+    }
+}
+
