@@ -18,6 +18,11 @@ class AuctionSearchTest {
         }
 
     @Test
+    fun decodesTheApostropheInANote() {
+        assertEquals("it's a beam weapon", Auction(noteRaw = "it&#x27;s a beam weapon").noteText)
+    }
+
+    @Test
     fun aLinkGivesBackTheSameSearch() {
         val search = AuctionSearch(
             weaponUrlName = "torid",
