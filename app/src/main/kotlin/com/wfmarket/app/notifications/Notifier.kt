@@ -36,6 +36,9 @@ class Notifier(private val context: Context) {
                 NotificationChannel(CHANNEL_MESSAGES, "Messages", NotificationManager.IMPORTANCE_HIGH).apply {
                     description = "New trade messages from other players"
                 },
+                NotificationChannel(CHANNEL_AUCTIONS, "Auctions", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "Bids and updates on your auctions and the ones you follow"
+                },
                 NotificationChannel(CHANNEL_ACCOUNT, "Account", NotificationManager.IMPORTANCE_DEFAULT).apply {
                     description = "Warnings and bans on your account"
                 },
@@ -153,6 +156,19 @@ class Notifier(private val context: Context) {
         runCatching { manager.notify(chatTag(chatId), ID_CHAT, notification) }
     }
 
+    fun showAuction(title: String?, body: String?, auctionId: String?) {
+        if (!canPost) return
+        val notification = NotificationCompat.Builder(context, CHANNEL_AUCTIONS)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setContentTitle(title ?: "Auction update")
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setAutoCancel(true)
+            .setContentIntent(deepLink(auctionId?.let { "/auction/$it" } ?: "/auctions", (auctionId ?: "auctions").hashCode()))
+            .build()
+        runCatching { manager.notify(auctionId ?: "auctions", ID_AUCTION, notification) }
+    }
+
     fun showAccountNotice(kind: String, message: String?) {
         if (!canPost) return
         val title = when (kind) {
@@ -238,10 +254,12 @@ class Notifier(private val context: Context) {
 
     companion object {
         const val CHANNEL_MESSAGES = "messages"
+        const val CHANNEL_AUCTIONS = "auctions"
         const val CHANNEL_ACCOUNT = "account"
         const val CHANNEL_SERVICE = "service"
         const val GROUP_MESSAGES = "messages"
         const val ID_CHAT = 10
+        const val ID_AUCTION = 11
         const val ID_ACCOUNT = 12
         const val ID_SERVICE = 13
     }

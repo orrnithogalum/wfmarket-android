@@ -153,6 +153,14 @@ fun SettingsScreen() {
                 }
             }
 
+            SettingsGroup("Auctions") {
+                switchRow(
+                    "Updates on your auctions",
+                    "Bids and changes on auctions you run, while the app is connected",
+                    settings.notifyAuctions,
+                ) { container.settings.setNotifyAuctions(it) }
+            }
+
             SettingsGroup("Appearance") {
                 valueRow("Theme", settings.theme.name.lowercase().replaceFirstChar { it.uppercase() }) { themeDialog = true }
                 switchRow("Dynamic color", "Match your wallpaper", settings.dynamicColor) { container.settings.setDynamicColor(it) }
