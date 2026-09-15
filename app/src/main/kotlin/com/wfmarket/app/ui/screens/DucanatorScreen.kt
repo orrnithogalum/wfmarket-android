@@ -74,3 +74,5 @@ private enum class DucatSort(val label: String) {
     POS_MONTH("Rank change, month"),
 }
 
+private enum class DucatPeriod(val label: String) { HOUR("Hour"), DAY("Day") }
+
