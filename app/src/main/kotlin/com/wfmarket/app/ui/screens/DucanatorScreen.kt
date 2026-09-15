@@ -61,3 +61,16 @@ class DucanatorViewModel(private val container: AppContainer) : ViewModel() {
     }
 }
 
+private enum class DucatSort(val label: String) {
+    DPP("Ducats/Plat"),
+    DPP_WA("Ducats/Plat (WA)"),
+    WA_PRICE("WA price"),
+    MEDIAN("Median"),
+    DUCATS("Ducats"),
+    VOLUME("Volume"),
+    NAME("Name"),
+    POS_DAY("Rank change, day"),
+    POS_WEEK("Rank change, week"),
+    POS_MONTH("Rank change, month"),
+}
+
