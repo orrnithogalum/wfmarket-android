@@ -50,4 +50,14 @@ class DucanatorViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun refresh() {
+        viewModelScope.launch {
+            val hadData = _data.value is Load.Ready
+            _refreshing.value = hadData
+            val updated = _data.accept(runCatching { container.market.ducats() })
+            if (hadData && !updated) container.refreshFailed()
+            _refreshing.value = false
+        }
+    }
+}
 
