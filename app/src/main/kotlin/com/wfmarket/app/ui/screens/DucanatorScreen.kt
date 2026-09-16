@@ -239,3 +239,7 @@ private fun PositionChange(label: String, change: Int) {
     }
 }
 
+private fun fmt(value: Double): String = when {
+    value % 1.0 == 0.0 -> value.toInt().toString()
+    else -> String.format(Locale.US, "%.2f", value)
+}
