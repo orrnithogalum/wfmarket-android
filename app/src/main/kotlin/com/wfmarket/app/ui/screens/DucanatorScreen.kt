@@ -176,3 +176,43 @@ fun DucanatorScreen() {
     }
 }
 
+@Composable
+private fun DucatRow(entry: DucatEntry, catalog: Catalog, shapes: ListItemShapes) {
+    val navigator = LocalNavigator.current
+    val item = catalog.itemsById[entry.item]
+    val i18n = item?.i18n?.localized(catalog.language)
+    val colors = MaterialTheme.colorScheme
+    SegmentedListItem(
+        onClick = { item?.let { navigator.item(it.slug) } },
+        shapes = shapes,
+        colors = ListItemDefaults.segmentedColors(containerColor = colors.surfaceContainer),
+        modifier = Modifier.padding(bottom = ListItemDefaults.SegmentedGap),
+        verticalAlignment = Alignment.CenterVertically,
+        leadingContent = { if (item != null) ItemThumb(catalog.art(item)) else ItemThumb(null as String?) },
+        supportingContent = {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    LabelledValue("WA", fmt(entry.waPrice))
+                    LabelledValue("Med", fmt(entry.median))
+                    LabelledValue("Duc", entry.ducats.toString())
+                    LabelledValue("Vol", entry.volume.toString())
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    PositionChange("D", entry.positionChangeDay)
+                    PositionChange("W", entry.positionChangeWeek)
+                    PositionChange("M", entry.positionChangeMonth)
+                }
+            }
+        },
+        trailingContent = {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(fmt(entry.ducatsPerPlatinum), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = colors.primary)
+                Text("ducats/plat", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+                Text("WA ${fmt(entry.ducatsPerPlatinumWa)}", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+            }
+        },
+    ) {
+        Text(i18n?.name ?: "…", style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
