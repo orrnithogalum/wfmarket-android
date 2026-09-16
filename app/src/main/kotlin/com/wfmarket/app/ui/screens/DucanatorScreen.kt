@@ -216,3 +216,11 @@ private fun DucatRow(entry: DucatEntry, catalog: Catalog, shapes: ListItemShapes
     }
 }
 
+@Composable
+private fun LabelledValue(label: String, value: String) {
+    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+    }
+}
+
