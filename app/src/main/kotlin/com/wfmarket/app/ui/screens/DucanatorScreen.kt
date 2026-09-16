@@ -76,3 +76,103 @@ private enum class DucatSort(val label: String) {
 
 private enum class DucatPeriod(val label: String) { HOUR("Hour"), DAY("Day") }
 
+/** The Ducanator: the items that return the most ducats per platinum spent. */
+@Composable
+fun DucanatorScreen() {
+    val container = appContainer()
+    val viewModel = containerViewModel { DucanatorViewModel(it) }
+    val data by viewModel.data.collectAsStateWithLifecycle()
+    val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
+    val catalog by container.catalog.catalog.collectAsStateWithLifecycle()
+
+    var period by rememberSaveable { mutableStateOf(DucatPeriod.HOUR) }
+    var sort by rememberSaveable { mutableStateOf(DucatSort.DPP) }
+    var descending by rememberSaveable { mutableStateOf(true) }
+    var query by rememberSaveable { mutableStateOf("") }
+    var showHelp by remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Ducanator") },
+                actions = {
+                    IconButton(onClick = { showHelp = true }) { Icon(Icons.Outlined.Info, "About the Ducanator") }
+                },
+            )
+        },
+        contentWindowInsets = WindowInsets.statusBars,
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            // The same filled pill as the home page's search bar.
+            TextField(
+                value = query,
+                onValueChange = { query = it },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                placeholder = { Text("Filter items") },
+                leadingIcon = { Icon(Icons.Filled.Search, null) },
+                singleLine = true,
+                shape = CircleShape,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+            )
+            Row(
+                Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ChoiceButtonGroup(DucatPeriod.entries, period, { it.label }, { period = it })
+                DropdownChip("Sort", sort, DucatSort.entries, { it.label }, { sort = it; descending = it != DucatSort.NAME && it != DucatSort.WA_PRICE && it != DucatSort.MEDIAN }, isDefault = sort == DucatSort.DPP)
+                FilterChip(selected = false, onClick = { descending = !descending }, label = { Text(if (descending) "High → low" else "Low → high") })
+            }
+            RefreshBox(isRefreshing = refreshing, onRefresh = viewModel::refresh, modifier = Modifier.weight(1f)) {
+                LoadContent(data, viewModel::refresh) { ducats ->
+                    val rows = remember(ducats, period, sort, descending, query, catalog) {
+                        val source = if (period == DucatPeriod.HOUR) ducats.previousHour else ducats.previousDay
+                        val filtered = if (query.isBlank()) source else source.filter { entry ->
+                            catalog.itemsById[entry.item]?.let { catalog.itemName(it).contains(query.trim(), ignoreCase = true) } == true
+                        }
+                        val sorted = when (sort) {
+                            DucatSort.DPP -> filtered.sortedBy { it.ducatsPerPlatinum }
+                            DucatSort.DPP_WA -> filtered.sortedBy { it.ducatsPerPlatinumWa }
+                            DucatSort.WA_PRICE -> filtered.sortedBy { it.waPrice }
+                            DucatSort.MEDIAN -> filtered.sortedBy { it.median }
+                            DucatSort.DUCATS -> filtered.sortedBy { it.ducats }
+                            DucatSort.VOLUME -> filtered.sortedBy { it.volume }
+                            DucatSort.NAME -> filtered.sortedBy { entry -> catalog.itemsById[entry.item]?.let(catalog::itemName).orEmpty() }
+                            DucatSort.POS_DAY -> filtered.sortedBy { it.positionChangeDay }
+                            DucatSort.POS_WEEK -> filtered.sortedBy { it.positionChangeWeek }
+                            DucatSort.POS_MONTH -> filtered.sortedBy { it.positionChangeMonth }
+                        }
+                        if (descending) sorted.reversed() else sorted
+                    }
+                    FadingLazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
+                        if (rows.isEmpty()) item { EmptyBox("No results") }
+                        itemsIndexed(rows, key = { _, entry -> entry.item }) { index, entry ->
+                            DucatRow(entry, catalog, ListItemDefaults.segmentedShapes(index, rows.size))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showHelp) {
+        AlertDialog(
+            onDismissRequest = { showHelp = false },
+            confirmButton = { TextButton(onClick = { showHelp = false }) { Text("Close") } },
+            title = { Text("Ducanator") },
+            text = {
+                Text(
+                    "Which items return the most ducats per platinum spent.\n\n" +
+                        "WA price is the volume-weighted average price. Data comes only from this site's orders by online users, and is collected hourly and daily.\n\n" +
+                        "Rank change shows how far an item moved up or down the list over a day, week and month.",
+                )
+            },
+        )
+    }
+}
+
