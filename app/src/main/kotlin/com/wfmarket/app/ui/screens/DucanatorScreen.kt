@@ -224,3 +224,18 @@ private fun LabelledValue(label: String, value: String) {
     }
 }
 
+/** A rank that improved has a positive change, and the arrow keeps the direction readable without hue. */
+@Composable
+private fun PositionChange(label: String, change: Int) {
+    val semantic = LocalSemanticColors.current
+    val (arrow, color) = when {
+        change > 0 -> "▲" to semantic.positive
+        change < 0 -> "▼" to semantic.negative
+        else -> "–" to MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("$arrow${if (change != 0) kotlin.math.abs(change).toString() else ""}", style = MaterialTheme.typography.labelSmall, color = color)
+    }
+}
+
