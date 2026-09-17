@@ -81,3 +81,6 @@ class AuctionAlerts(
     /** The auction on screen, whose changes are already in front of the user. */
     @Volatile var activeAuctionId: String? = null
 
+    private fun read(): AlertsState = runCatching { json.decodeFromString(AlertsState.serializer(), file.readText()) }
+        .getOrElse { if (file.exists()) Log.w(TAG, "Couldn't read alerts", it); AlertsState() }
+
