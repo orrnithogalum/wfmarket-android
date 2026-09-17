@@ -40,3 +40,11 @@ data class AuctionAlert(
     val checkedAt: Long = 0,
 )
 
+/** An auction someone else is running, watched for new bids and for its end. */
+@Serializable
+data class FollowedAuction(
+    val id: String,
+    val title: String,
+    val topBid: Int? = null,
+)
+
