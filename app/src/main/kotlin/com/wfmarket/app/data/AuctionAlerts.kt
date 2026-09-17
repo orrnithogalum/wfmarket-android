@@ -75,6 +75,9 @@ class AuctionAlerts(
     private val writeLock = Mutex()
     private val checkLock = Mutex()
 
+    private val _state = MutableStateFlow(read())
+    val state: StateFlow<AlertsState> = _state.asStateFlow()
+
     /** The auction on screen, whose changes are already in front of the user. */
     @Volatile var activeAuctionId: String? = null
 
