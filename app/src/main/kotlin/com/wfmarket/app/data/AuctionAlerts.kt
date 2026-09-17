@@ -84,3 +84,13 @@ class AuctionAlerts(
     private fun read(): AlertsState = runCatching { json.decodeFromString(AlertsState.serializer(), file.readText()) }
         .getOrElse { if (file.exists()) Log.w(TAG, "Couldn't read alerts", it); AlertsState() }
 
+    private suspend fun update(change: (AlertsState) -> AlertsState) = writeLock.withLock {
+        val next = change(_state.value)
+        _state.value = next
+        withContext(Dispatchers.IO) {
+            val temp = File(file.parentFile, "${file.name}.tmp")
+            temp.writeText(json.encodeToString(AlertsState.serializer(), next))
+            temp.renameTo(file)
+        }
+    }
+
