@@ -56,3 +56,25 @@ data class AlertsState(
     val hasWork: Boolean get() = alerts.any { it.enabled } || followed.isNotEmpty()
 }
 
+/**
+ * Saved auction searches and followed auctions. The site has no alerts of its own, so these are
+ * checked by polling, with the app closed too, and followed auctions also update live over the
+ * socket while it's connected.
+ */
+class AuctionAlerts(
+    context: Context,
+    private val api: WfmApi,
+    private val sockets: WfmSockets,
+    private val notifier: Notifier,
+    private val myId: () -> String?,
+    private val isAppForeground: () -> Boolean,
+    private val scope: CoroutineScope,
+) {
+    private val file = File(context.filesDir, "auction_alerts.json")
+    private val json = Json { ignoreUnknownKeys = true }
+    private val writeLock = Mutex()
+    private val checkLock = Mutex()
+
+    /** The auction on screen, whose changes are already in front of the user. */
+    @Volatile var activeAuctionId: String? = null
+
