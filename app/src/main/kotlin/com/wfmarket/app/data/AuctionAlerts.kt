@@ -48,3 +48,11 @@ data class FollowedAuction(
     val topBid: Int? = null,
 )
 
+@Serializable
+data class AlertsState(
+    val alerts: List<AuctionAlert> = emptyList(),
+    val followed: List<FollowedAuction> = emptyList(),
+) {
+    val hasWork: Boolean get() = alerts.any { it.enabled } || followed.isNotEmpty()
+}
+
