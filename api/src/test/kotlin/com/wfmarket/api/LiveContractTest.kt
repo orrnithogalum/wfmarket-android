@@ -82,6 +82,12 @@ class LiveContractTest {
         assertTrue(mixed.any { it.type == "npc" && it.npc != null })
     }
 
+    @Test fun ducanator() = runBlocking {
+        val ducats = api.ducats()
+        assertTrue(ducats.previousHour.isNotEmpty())
+        assertTrue(ducats.previousDay.first().ducatsPerPlatinum > 0)
+    }
+
     @Test fun auctions() = runBlocking {
         assertTrue(api.recentAuctions().isNotEmpty())
         assertTrue(api.popularAuctions().isNotEmpty())
