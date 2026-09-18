@@ -96,3 +96,11 @@ class AuctionAlerts(
 
     fun alertFor(search: AuctionSearch): AuctionAlert? = _state.value.alerts.firstOrNull { it.search == search }
 
+    suspend fun addAlert(search: AuctionSearch, title: String) {
+        if (alertFor(search) != null) return
+        val alert = AuctionAlert(search = search, title = title)
+        update { it.copy(alerts = listOf(alert) + it.alerts) }
+        // What's listed now is the baseline. Taking it at once means only later listings notify.
+        scope.launch { checkLock.withLock { checkAlert(alert) } }
+    }
+
