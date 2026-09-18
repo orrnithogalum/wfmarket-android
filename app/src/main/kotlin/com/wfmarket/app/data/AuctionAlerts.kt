@@ -106,3 +106,9 @@ class AuctionAlerts(
 
     suspend fun removeAlert(id: String) = update { state -> state.copy(alerts = state.alerts.filterNot { it.id == id }) }
 
+    /** Puts back an alert that was just removed, with what it had already seen. */
+    suspend fun restoreAlert(alert: AuctionAlert, index: Int) = update { state ->
+        if (state.alerts.any { it.id == alert.id }) state
+        else state.copy(alerts = state.alerts.toMutableList().apply { add(index.coerceIn(0, size), alert) })
+    }
+
