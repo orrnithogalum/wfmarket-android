@@ -104,3 +104,5 @@ class AuctionAlerts(
         scope.launch { checkLock.withLock { checkAlert(alert) } }
     }
 
+    suspend fun removeAlert(id: String) = update { state -> state.copy(alerts = state.alerts.filterNot { it.id == id }) }
+
