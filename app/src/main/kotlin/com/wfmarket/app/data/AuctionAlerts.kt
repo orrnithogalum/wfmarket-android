@@ -94,3 +94,5 @@ class AuctionAlerts(
         }
     }
 
+    fun alertFor(search: AuctionSearch): AuctionAlert? = _state.value.alerts.firstOrNull { it.search == search }
+
