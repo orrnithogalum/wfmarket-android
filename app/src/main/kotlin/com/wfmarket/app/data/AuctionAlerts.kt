@@ -112,3 +112,8 @@ class AuctionAlerts(
         else state.copy(alerts = state.alerts.toMutableList().apply { add(index.coerceIn(0, size), alert) })
     }
 
+    suspend fun setAlertEnabled(id: String, enabled: Boolean) = update { state ->
+        // Paused alerts start over, so they don't announce everything listed while they were off.
+        state.copy(alerts = state.alerts.map { if (it.id == id) it.copy(enabled = enabled, checked = it.checked && enabled) else it })
+    }
+
