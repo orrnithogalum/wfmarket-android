@@ -119,3 +119,9 @@ class AuctionAlerts(
 
     fun isFollowed(id: String): Boolean = _state.value.followed.any { it.id == id }
 
+    suspend fun follow(auction: Auction, title: String) {
+        if (isFollowed(auction.id)) return
+        update { it.copy(followed = listOf(FollowedAuction(auction.id, title, auction.topBid)) + it.followed) }
+        sockets.subscribeAuction(auction.id)
+    }
+
