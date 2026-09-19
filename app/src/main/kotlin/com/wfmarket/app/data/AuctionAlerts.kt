@@ -117,3 +117,5 @@ class AuctionAlerts(
         state.copy(alerts = state.alerts.map { if (it.id == id) it.copy(enabled = enabled, checked = it.checked && enabled) else it })
     }
 
+    fun isFollowed(id: String): Boolean = _state.value.followed.any { it.id == id }
+
