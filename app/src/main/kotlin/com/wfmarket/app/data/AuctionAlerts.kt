@@ -135,3 +135,15 @@ class AuctionAlerts(
         _state.value.followed.forEach { sockets.subscribeAuction(it.id) }
     }
 
+    /** Runs every saved search and looks at every followed auction, notifying about what's new. */
+    suspend fun check() = checkLock.withLock {
+        for (alert in _state.value.alerts.filter { it.enabled }) {
+            checkAlert(alert)
+            delay(REQUEST_GAP_MS)
+        }
+        for (followed in _state.value.followed) {
+            refreshFollowed(followed.id)
+            delay(REQUEST_GAP_MS)
+        }
+    }
+
