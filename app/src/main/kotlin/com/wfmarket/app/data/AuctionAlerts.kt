@@ -130,3 +130,8 @@ class AuctionAlerts(
         if (activeAuctionId != id) sockets.unsubscribeAuction(id)
     }
 
+    /** Followed auctions only send bids to a connection that asked for them. */
+    fun resubscribe() {
+        _state.value.followed.forEach { sockets.subscribeAuction(it.id) }
+    }
+
