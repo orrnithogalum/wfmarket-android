@@ -125,3 +125,8 @@ class AuctionAlerts(
         sockets.subscribeAuction(auction.id)
     }
 
+    suspend fun unfollow(id: String) {
+        update { state -> state.copy(followed = state.followed.filterNot { it.id == id }) }
+        if (activeAuctionId != id) sockets.unsubscribeAuction(id)
+    }
+
