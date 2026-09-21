@@ -177,3 +177,37 @@ class AuctionAlerts(
         if (fresh.isNotEmpty()) notifier.showAlertMatches(current, fresh)
     }
 
+    /** Looks at one followed auction now, such as when the socket says it got a bid. */
+    suspend fun refreshFollowed(id: String) {
+        val followed = _state.value.followed.firstOrNull { it.id == id } ?: return
+        val auction = try {
+            api.auction(id)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: WfmException) {
+            // The site answers a removed auction with a form error on the id.
+            if (e.kind == WfmErrorKind.NOT_FOUND || "auction" in e.fieldErrors) {
+                notifier.showFollowedEnded(followed, removed = true)
+                unfollow(id)
+            }
+            return
+        } catch (e: Exception) {
+            return
+        }
+        if (auction.closed) {
+            notifier.showFollowedEnded(followed, removed = false)
+            unfollow(id)
+            return
+        }
+        val top = auction.topBid ?: return
+        if (top == followed.topBid) return
+        update { state -> state.copy(followed = state.followed.map { if (it.id == id) it.copy(topBid = top) else it }) }
+        // A bid that was taken back isn't news, and neither is one the user placed.
+        if (top < (followed.topBid ?: 0)) return
+        if (activeAuctionId == id && isAppForeground()) return
+        val me = myId()
+        val leader = if (me == null) null else runCatching { api.auctionBids(id).maxByOrNull { it.value }?.user?.id }.getOrNull()
+        if (leader != null && leader == me) return
+        notifier.showFollowedBid(followed, top)
+    }
+
