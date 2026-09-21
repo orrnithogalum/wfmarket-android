@@ -147,3 +147,33 @@ class AuctionAlerts(
         }
     }
 
+    private suspend fun checkAlert(alert: AuctionAlert) {
+        val results = try {
+            api.searchAuctions(alert.search)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Couldn't run an alert's search", e)
+            return
+        }
+        val me = myId()
+        val matching = results.filter { !it.closed && it.visible && it.owner.id != me && alert.search.matches(it) }
+        // An alert added while this ran may have replaced the list, so this one is looked up again.
+        val current = _state.value.alerts.firstOrNull { it.id == alert.id } ?: return
+        val seen = current.seen.toSet()
+        // Unseen isn't enough: switching platform or crossplay brings in a whole other set of old
+        // listings, and the 100-result window shifts as cheaper ones sell.
+        val since = current.checkedAt - CLOCK_SLACK_MS
+        // With a price range, a listing repriced into it is news too, so its last change counts.
+        fun changedSince(auction: Auction): Boolean =
+            (createdMillis(auction) ?: 0L) >= since || (current.search.hasPriceRange && (updatedMillis(auction) ?: 0L) >= since)
+        val fresh = if (current.checked) matching.filter { it.id !in seen && changedSince(it) } else emptyList()
+        val now = System.currentTimeMillis()
+        update { state ->
+            state.copy(alerts = state.alerts.map {
+                if (it.id == alert.id) it.copy(seen = (matching.map(Auction::id) + it.seen).distinct().take(MAX_SEEN), checked = true, checkedAt = now) else it
+            })
+        }
+        if (fresh.isNotEmpty()) notifier.showAlertMatches(current, fresh)
+    }
+
