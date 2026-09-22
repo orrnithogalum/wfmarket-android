@@ -211,3 +211,5 @@ class AuctionAlerts(
         notifier.showFollowedBid(followed, top)
     }
 
+    private fun createdMillis(auction: Auction): Long? = millis(auction.created)
+
