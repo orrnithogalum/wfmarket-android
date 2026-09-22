@@ -215,3 +215,7 @@ class AuctionAlerts(
 
     private fun updatedMillis(auction: Auction): Long? = millis(auction.updated)
 
+    private fun millis(iso: String?): Long? = iso?.let {
+        runCatching { java.time.OffsetDateTime.parse(it).toInstant().toEpochMilli() }.getOrNull()
+    }
+
