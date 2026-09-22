@@ -213,3 +213,5 @@ class AuctionAlerts(
 
     private fun createdMillis(auction: Auction): Long? = millis(auction.created)
 
+    private fun updatedMillis(auction: Auction): Long? = millis(auction.updated)
+
