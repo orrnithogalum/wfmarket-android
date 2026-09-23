@@ -76,3 +76,14 @@ use it runs as a plain background service, which Android allows for exempt apps,
 Without the exemption Android stops background services within about a minute, so it runs in the
 foreground with a notification that shows the status and has buttons to switch it or go offline
 (`StatusActionReceiver`). Instant delivery works the same way.
+
+## Auction alerts
+
+The site has no saved-search alerts, so `AuctionAlerts` keeps them in `auction_alerts.json` and
+`SyncWorker` runs each search on every check. Results the alert has already seen are remembered, so
+only new listings notify. The first check after saving takes the baseline silently. The search API
+returns at most 100 results, so a broad search sorted by price only sees the 100 cheapest. Seller
+status isn't a site filter either; `AuctionSearch.sellerStatuses` is applied to the results in the
+app, and invisible sellers count as offline. Nor is price: `priceMin` and `priceMax` are checked
+against what an auction goes for now (its buyout, or its top bid, else its start). With a price
+range, a listing repriced into it notifies too, not only new listings.
