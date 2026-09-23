@@ -39,6 +39,9 @@ class Notifier(private val context: Context) {
                 NotificationChannel(CHANNEL_AUCTIONS, "Auctions", NotificationManager.IMPORTANCE_DEFAULT).apply {
                     description = "Bids and updates on your auctions and the ones you follow"
                 },
+                NotificationChannel(CHANNEL_ALERTS, "Auction alerts", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "New auctions matching your saved searches"
+                },
                 NotificationChannel(CHANNEL_ACCOUNT, "Account", NotificationManager.IMPORTANCE_DEFAULT).apply {
                     description = "Warnings and bans on your account"
                 },
@@ -189,6 +192,77 @@ class Notifier(private val context: Context) {
         runCatching { manager.notify(ID_ACCOUNT, notification) }
     }
 
+    /** One line per auction: what it is, what it costs, and whether the seller can trade now. */
+    private fun describe(auction: Auction): String {
+        val item = auction.item
+        val name = when (item.type) {
+            AuctionType.RIVEN -> listOfNotNull(item.weaponUrlName.humanize(), item.name?.replaceFirstChar { it.uppercase() }).joinToString(" ")
+            else -> listOfNotNull(item.weaponUrlName.humanize(), item.element?.humanize(), item.damage?.let { "$it%" }).joinToString(" ")
+        }
+        val price = when {
+            auction.isDirectSell -> "${auction.buyoutPrice ?: auction.startingPrice}p"
+            auction.topBid != null -> "bid ${auction.topBid}p"
+            else -> "from ${auction.startingPrice}p"
+        }
+        return "$name · $price · ${UserStatus.of(auction.owner.status).label}"
+    }
+
+    private fun Auction.price() = if (isDirectSell) buyoutPrice ?: startingPrice else topBid ?: startingPrice
+
+    fun showAlertMatches(alert: AuctionAlert, fresh: List<Auction>) {
+        if (!canPost) return
+        val sorted = fresh.sortedBy { it.price() }
+        val single = sorted.singleOrNull()
+        val builder = NotificationCompat.Builder(context, CHANNEL_ALERTS)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+            .setAutoCancel(true)
+        if (single != null) {
+            builder.setContentTitle("New: ${alert.title}")
+                .setContentText(describe(single))
+                .setContentIntent(deepLink("/auction/${single.id}", single.id.hashCode()))
+        } else {
+            val style = NotificationCompat.InboxStyle().setSummaryText("From ${sorted.first().price()}p")
+            sorted.take(5).forEach { style.addLine(describe(it)) }
+            builder.setContentTitle("${sorted.size} new: ${alert.title}")
+                .setContentText(describe(sorted.first()))
+                .setStyle(style)
+                .setNumber(sorted.size)
+                .setContentIntent(openUrl(alert.search.toUrl(), alert.id.hashCode()))
+        }
+        runCatching { manager.notify("alert:${alert.id}", ID_ALERT, builder.build()) }
+    }
+
+    fun showFollowedBid(auction: FollowedAuction, topBid: Int) {
+        if (!canPost) return
+        val notification = NotificationCompat.Builder(context, CHANNEL_AUCTIONS)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setContentTitle("New bid on ${auction.title}")
+            .setContentText("The top bid is now ${topBid}p")
+            .setAutoCancel(true)
+            .setContentIntent(deepLink("/auction/${auction.id}", auction.id.hashCode()))
+            .build()
+        runCatching { manager.notify("follow:${auction.id}", ID_AUCTION, notification) }
+    }
+
+    fun showFollowedEnded(auction: FollowedAuction, removed: Boolean) {
+        if (!canPost) return
+        val notification = NotificationCompat.Builder(context, CHANNEL_AUCTIONS)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setContentTitle("${auction.title} has ended")
+            .setContentText(
+                when {
+                    removed -> "The seller removed it. You're no longer following it."
+                    auction.topBid != null -> "The last top bid was ${auction.topBid}p. You're no longer following it."
+                    else -> "It closed without bids. You're no longer following it."
+                },
+            )
+            .setAutoCancel(true)
+            .setContentIntent(deepLink(if (removed) "/auctions" else "/auction/${auction.id}", auction.id.hashCode()))
+            .build()
+        runCatching { manager.notify("follow:${auction.id}", ID_AUCTION, notification) }
+    }
+
     /**
      * The notice Android requires while the connection stays open. When it's open to keep a status,
      * it shows the status and offers the other one, so it's useful rather than just in the way.
@@ -255,6 +329,7 @@ class Notifier(private val context: Context) {
     companion object {
         const val CHANNEL_MESSAGES = "messages"
         const val CHANNEL_AUCTIONS = "auctions"
+        const val CHANNEL_ALERTS = "auction_alerts"
         const val CHANNEL_ACCOUNT = "account"
         const val CHANNEL_SERVICE = "service"
         const val GROUP_MESSAGES = "messages"
@@ -262,5 +337,6 @@ class Notifier(private val context: Context) {
         const val ID_AUCTION = 11
         const val ID_ACCOUNT = 12
         const val ID_SERVICE = 13
+        const val ID_ALERT = 14
     }
 }

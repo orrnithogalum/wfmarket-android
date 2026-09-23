@@ -291,6 +291,7 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                     screen("user/{slug}", "slug") { ProfileScreen(it.orEmpty()) }
                     screen("settings") { SettingsScreen() }
                     screen("signin") { SignInScreen() }
+                    screen("alerts") { AlertsScreen() }
                 }
                 }
                 }

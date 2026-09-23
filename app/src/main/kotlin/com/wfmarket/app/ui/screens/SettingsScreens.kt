@@ -81,6 +81,7 @@ fun SettingsScreen() {
     val settings by container.settings.flow.collectAsStateWithLifecycle()
     val signedIn by container.account.isSignedIn.collectAsStateWithLifecycle()
     val me by container.account.me.collectAsStateWithLifecycle()
+    val alerts by container.alerts.state.collectAsStateWithLifecycle()
     val navigator = LocalNavigator.current
     val context = LocalContext.current
     val openUrl = rememberOpenUrl()
@@ -154,6 +155,12 @@ fun SettingsScreen() {
             }
 
             SettingsGroup("Auctions") {
+                val count = alerts.alerts.size + alerts.followed.size
+                valueRow(
+                    "Alerts and followed auctions",
+                    if (count == 0) "Get notified about new matches for a search, or new bids on an auction" else "${alerts.alerts.size} saved ${if (alerts.alerts.size == 1) "search" else "searches"} · ${alerts.followed.size} followed",
+                    onClick = navigator::alerts,
+                )
                 switchRow(
                     "Updates on your auctions",
                     "Bids and changes on auctions you run, while the app is connected",
