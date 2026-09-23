@@ -90,3 +90,7 @@ range, a listing repriced into it notifies too, not only new listings.
 
 Followed auctions are polled the same way and also update live over the socket while it's open.
 A removed auction answers `400` with `{"error": {"auction": ["app.form.not_exist"]}}`.
+
+In debug builds, `adb shell am broadcast -a com.wfmarket.app.DEBUG_NOTIFY -p com.wfmarket.app.debug --ez alerts true`
+runs the check at once, and `--ez sample true` puts a made-up conversation, `sample`, in the inbox
+for checking how messages group. Nothing about it is sent anywhere.
