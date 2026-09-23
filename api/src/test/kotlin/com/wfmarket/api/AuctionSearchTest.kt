@@ -49,4 +49,18 @@ class AuctionSearchTest {
         assertEquals("price_desc", search.sortBy)
         assertTrue(search.sellerStatuses.isEmpty())
     }
+
+    @Test
+    fun priceRangeChecksWhatAnAuctionGoesForNow() {
+        val search = AuctionSearch(priceMin = 100, priceMax = 300)
+        // A direct sale goes for its buyout, and an auction for its top bid, or its start before any bid.
+        assertTrue(search.matchesPrice(Auction(isDirectSell = true, startingPrice = 300, buyoutPrice = 300)))
+        assertFalse(search.matchesPrice(Auction(isDirectSell = true, startingPrice = 301, buyoutPrice = 301)))
+        assertTrue(search.matchesPrice(Auction(startingPrice = 50, topBid = 120, buyoutPrice = 900)))
+        assertFalse(search.matchesPrice(Auction(startingPrice = 50, buyoutPrice = 900)))
+        // Either end can be left open.
+        assertTrue(AuctionSearch(priceMax = 300).matchesPrice(Auction(isDirectSell = true, startingPrice = 1, buyoutPrice = 1)))
+        assertTrue(AuctionSearch(priceMin = 100).matchesPrice(Auction(isDirectSell = true, startingPrice = 9000, buyoutPrice = 9000)))
+        assertFalse(AuctionSearch().hasPriceRange)
+    }
 }
