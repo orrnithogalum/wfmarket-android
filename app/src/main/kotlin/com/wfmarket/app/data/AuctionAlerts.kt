@@ -219,3 +219,14 @@ class AuctionAlerts(
         runCatching { java.time.OffsetDateTime.parse(it).toInstant().toEpochMilli() }.getOrNull()
     }
 
+    private companion object {
+        const val TAG = "AuctionAlerts"
+
+        /** Covers a phone clock that runs ahead of the site's. */
+        const val CLOCK_SLACK_MS = 10 * 60_000L
+        const val MAX_SEEN = 500
+
+        /** Keeps a burst of checks well under the site's three requests a second. */
+        const val REQUEST_GAP_MS = 500L
+    }
+}
