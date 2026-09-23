@@ -63,4 +63,14 @@ class AuctionSearchTest {
         assertTrue(AuctionSearch(priceMin = 100).matchesPrice(Auction(isDirectSell = true, startingPrice = 9000, buyoutPrice = 9000)))
         assertFalse(AuctionSearch().hasPriceRange)
     }
+
+    @Test
+    fun invisibleSellersCountAsOffline() {
+        val offline = AuctionSearch(sellerStatuses = setOf("offline"))
+        assertTrue(offline.matchesSeller("offline"))
+        assertTrue(offline.matchesSeller("invisible"))
+        assertTrue(offline.matchesSeller(null))
+        assertFalse(offline.matchesSeller("ingame"))
+        assertTrue(AuctionSearch().matchesSeller("online"))
+    }
 }
