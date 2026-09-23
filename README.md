@@ -87,3 +87,6 @@ status isn't a site filter either; `AuctionSearch.sellerStatuses` is applied to 
 app, and invisible sellers count as offline. Nor is price: `priceMin` and `priceMax` are checked
 against what an auction goes for now (its buyout, or its top bid, else its start). With a price
 range, a listing repriced into it notifies too, not only new listings.
+
+Followed auctions are polled the same way and also update live over the socket while it's open.
+A removed auction answers `400` with `{"error": {"auction": ["app.form.not_exist"]}}`.
