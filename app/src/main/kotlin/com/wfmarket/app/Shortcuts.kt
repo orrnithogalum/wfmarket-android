@@ -15,3 +15,13 @@ object Shortcuts {
     /** Links within the app that have no page on the site. */
     const val SCHEME = "wfmarket"
 
+    fun publish(context: Context) {
+        val shortcuts = listOf(
+            shortcut(context, "messages", "Messages", "Messages", "https://warframe.market/im/chats", R.drawable.ic_shortcut_messages),
+            shortcut(context, "auction_search", "Search auctions", "Search auctions", "$SCHEME://auctions/search", R.drawable.ic_shortcut_search),
+            shortcut(context, "new_auction", "New auction", "Create an auction", "$SCHEME://auctions/new", R.drawable.ic_shortcut_add),
+            shortcut(context, "status_ingame", "In game", "Set your status to In game", "$SCHEME://status/ingame", R.drawable.ic_shortcut_ingame),
+        ).mapIndexed { index, builder -> builder.setRank(index).build() }
+        runCatching { ShortcutManagerCompat.setDynamicShortcuts(context, shortcuts) }
+    }
+
