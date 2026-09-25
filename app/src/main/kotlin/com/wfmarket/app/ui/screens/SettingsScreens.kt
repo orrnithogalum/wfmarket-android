@@ -116,6 +116,19 @@ fun SettingsScreen() {
     ) { padding ->
       RefreshBox(isRefreshing = refreshing, onRefresh = ::refreshAccount, modifier = Modifier.fillMaxSize().padding(padding)) {
         Column(Modifier.fillMaxSize().fadingVerticalScroll()) {
+            if (signedIn) {
+                me?.let { user ->
+                    SettingsGroup {
+                        valueRow(
+                            user.ingameName.ifBlank { "Unverified account" },
+                            if (user.verification) "Verified · Password, email, linked accounts" else "Not verified · Verify to trade",
+                            trailing = { UserAvatar(assetUrl(user.avatar), user.ingameName, size = 40.dp) },
+                            onClick = navigator::accountSettings,
+                        )
+                    }
+                }
+            }
+
             SettingsGroup("Market") {
                 valueRow("Platform", Platform.of(settings.platform).label) { platformDialog = true }
                 switchRow(
@@ -244,6 +257,22 @@ fun SettingsScreen() {
     }
 }
 
+/** A form on its own card, to sit among [SettingsGroup]s. */
+@Composable
+private fun FormCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Text(
+            title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp),
+        )
+        Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
+        }
+    }
+}
+
 @Composable
 private fun PasswordField(label: String, value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
     var show by remember { mutableStateOf(false) }
@@ -261,6 +290,222 @@ private fun PasswordField(label: String, value: String, onChange: (String) -> Un
         },
         modifier = modifier.fillMaxWidth(),
     )
+}
+
+private val LinkableServices = listOf(
+    "steam" to "Steam",
+    "xbox" to "Xbox",
+    "playstation" to "PlayStation",
+    "discord" to "Discord",
+    "github" to "GitHub",
+    "patreon" to "Patreon",
+)
+
+@Composable
+fun AccountSettingsScreen() {
+    val container = appContainer()
+    val me by container.account.me.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val openUrl = rememberOpenUrl()
+    val scope = rememberCoroutineScope()
+    val snackbar = remember { SnackbarHostState() }
+
+    var currentForPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
+    var currentForEmail by remember { mutableStateOf("") }
+    var newEmail by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf<String?>(null) }
+
+    var confirmDeletion by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) { runCatching { container.account.refresh() } }
+
+    var refreshing by remember { mutableStateOf(false) }
+
+    val background = settingsBackground
+    Scaffold(topBar = { BackBar("Account", background) }, snackbarHost = { SnackbarHost(snackbar) }, containerColor = background) { padding ->
+      RefreshBox(
+        isRefreshing = refreshing,
+        onRefresh = {
+            scope.launch {
+                refreshing = true
+                runCatching { container.account.refresh() }.onFailure { container.refreshFailed() }
+                refreshing = false
+            }
+        },
+        modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
+      ) {
+        Column(
+            Modifier.fillMaxSize().imePadding().fadingVerticalScroll(),
+        ) {
+            val user = me
+            SettingsGroup("Verification") {
+                if (user?.verification == true) {
+                    valueRow("Verified as ${user.ingameName}", "Changed your in-game name? Follow the same steps again to update it.")
+                } else {
+                    valueRow("Not verified", "Verify to post orders and send messages.")
+                }
+            }
+            user?.checkCode?.let { code ->
+                Column(Modifier.padding(horizontal = 16.dp).padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
+                        Row(Modifier.fillMaxWidth().padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(code, Modifier.weight(1f), fontFamily = FontFamily.Monospace)
+                            IconButton(onClick = {
+                                copyToClipboard(context, code)
+                                scope.launch { snackbar.showSnackbar("Code copied") }
+                            }) { Icon(Icons.Filled.ContentCopy, "Copy code") }
+                        }
+                    }
+                    Text(
+                        "Send this code in a private forum message to the bot KycKyc on forums.warframe.com. It checks its inbox every 2 minutes, and your account takes the name you have on the forum.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                    OutlinedButton(onClick = { openUrl("https://warframe.market/settings") }, shapes = ButtonDefaults.shapes()) { Text("Full instructions on the site") }
+                }
+            }
+
+            FormCard("Change password") {
+                PasswordField("Current password", currentForPassword, { currentForPassword = it })
+                PasswordField("New password", newPassword, { newPassword = it })
+                PasswordField("Confirm new password", confirmPassword, { confirmPassword = it })
+                passwordError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                Button(
+                    enabled = currentForPassword.isNotEmpty() && newPassword.isNotEmpty(),
+                    shapes = ButtonDefaults.shapes(),
+                    onClick = {
+                        if (newPassword != confirmPassword) {
+                            passwordError = "The new passwords don't match."
+                            return@Button
+                        }
+                        passwordError = null
+                        scope.launch {
+                            runCatching { container.account.changePassword(currentForPassword, newPassword, confirmPassword) }
+                                .onSuccess {
+                                    currentForPassword = ""
+                                    newPassword = ""
+                                    confirmPassword = ""
+                                    snackbar.showSnackbar("Password changed")
+                                }
+                                .onFailure { passwordError = it.userMessage() }
+                        }
+                    },
+                ) { Text("Change password") }
+            }
+
+            FormCard("Change email") {
+                OutlinedTextField(
+                    newEmail,
+                    { newEmail = it },
+                    label = { Text("New email") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                PasswordField("Current password", currentForEmail, { currentForEmail = it })
+                emailError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                Button(
+                    enabled = currentForEmail.isNotEmpty() && newEmail.isNotBlank(),
+                    shapes = ButtonDefaults.shapes(),
+                    onClick = {
+                        emailError = null
+                        scope.launch {
+                            runCatching { container.account.changeEmail(currentForEmail, newEmail.trim()) }
+                                .onSuccess {
+                                    currentForEmail = ""
+                                    newEmail = ""
+                                    snackbar.showSnackbar("Check your inbox to confirm the new email")
+                                }
+                                .onFailure { emailError = it.userMessage() }
+                        }
+                    },
+                ) { Text("Change email") }
+            }
+
+            SettingsGroup("Linked accounts") {
+                LinkableServices.forEach { (service, label) ->
+                    val linked = user?.linkedAccounts?.let { accounts ->
+                        (accounts[service] ?: accounts["${service}_profile"])?.let { (it as? JsonPrimitive)?.booleanOrNull }
+                    } == true
+                    valueRow(
+                        label,
+                        if (linked) "Linked" else "Not linked",
+                        trailing = {
+                            if (linked) {
+                                TextButton(onClick = {
+                                    scope.launch {
+                                        runCatching { container.account.unlinkAccount(service) }
+                                            .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                                    }
+                                }) { Text("Remove") }
+                            } else {
+                                TextButton(onClick = { openUrl("https://warframe.market/settings/account") }) { Text("Link on site") }
+                            }
+                        },
+                    )
+                }
+            }
+
+            user?.ignoreList?.takeIf { it.isNotEmpty() }?.let { ignored ->
+                SettingsGroup("Ignored players · ${ignored.size}") {
+                    ignored.forEach { id ->
+                        valueRow(
+                            id,
+                            trailing = {
+                                TextButton(onClick = {
+                                    scope.launch {
+                                        runCatching { container.chats.unignore(id) }.onFailure { snackbar.showSnackbar(it.userMessage()) }
+                                    }
+                                }) { Text("Unignore") }
+                            },
+                        )
+                    }
+                }
+            }
+
+            SettingsGroup("Danger zone") {
+                if (user?.deleteInProgress == true) {
+                    valueRow(
+                        "Account scheduled for deletion",
+                        user.deleteAt?.let { "On ${formatDate(it)}" },
+                        trailing = {
+                            TextButton(onClick = {
+                                scope.launch { runCatching { container.account.cancelDeletion() }.onFailure { snackbar.showSnackbar(it.userMessage()) } }
+                            }) { Text("Cancel") }
+                        },
+                    )
+                } else {
+                    valueRow("Delete account", "Schedules deletion of your account", destructive = true) { confirmDeletion = true }
+                }
+            }
+            Spacer(Modifier.height(24.dp).navigationBarsPadding())
+        }
+      }
+    }
+
+    if (confirmDeletion) {
+        AlertDialog(
+            onDismissRequest = { confirmDeletion = false },
+            title = { Text("Delete your account?") },
+            text = { Text("Your account, orders and history will be removed once the waiting period ends. You can cancel until then.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDeletion = false
+                    scope.launch {
+                        runCatching { container.account.requestDeletion() }
+                            .onSuccess { snackbar.showSnackbar("Deletion scheduled") }
+                            .onFailure { snackbar.showSnackbar(it.userMessage()) }
+                    }
+                }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { confirmDeletion = false }) { Text("Keep account") } },
+        )
+    }
 }
 
 @Composable

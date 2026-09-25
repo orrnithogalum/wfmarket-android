@@ -290,6 +290,7 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                     screen("chat/{id}", "id") { ChatScreen(it.orEmpty()) }
                     screen("user/{slug}", "slug") { ProfileScreen(it.orEmpty()) }
                     screen("settings") { SettingsScreen() }
+                    screen("account") { AccountSettingsScreen() }
                     screen("signin") { SignInScreen() }
                     screen("alerts") { AlertsScreen() }
                 }
