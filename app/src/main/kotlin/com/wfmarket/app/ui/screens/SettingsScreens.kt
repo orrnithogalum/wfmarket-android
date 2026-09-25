@@ -174,6 +174,11 @@ fun SettingsScreen() {
                 if (settings.theme != ThemeMode.LIGHT) {
                     switchRow("AMOLED black", "Pure black backgrounds in dark theme", settings.amoled) { container.settings.setAmoled(it) }
                 }
+                switchRow(
+                    "Back to top button",
+                    "Shows on long lists when you start scrolling back up",
+                    settings.scrollToTopButton,
+                ) { container.settings.setScrollToTopButton(it) }
             }
 
             SettingsGroup("Notifications") {

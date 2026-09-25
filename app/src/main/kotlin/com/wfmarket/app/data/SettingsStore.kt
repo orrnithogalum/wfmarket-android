@@ -46,6 +46,7 @@ data class AppSettings(
     val batteryPromptDismissed: Boolean = false,
     val keepStatusInBackground: Boolean = true,
     val heldStatus: HeldStatus? = null,
+    val scrollToTopButton: Boolean = true,
 )
 
 private val Context.dataStore by preferencesDataStore("settings")
@@ -67,6 +68,7 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         val keepStatusInBackground = booleanPreferencesKey("keep_status_in_background")
         val heldStatus = stringPreferencesKey("held_status")
         val heldStatusUntil = longPreferencesKey("held_status_until")
+        val scrollToTopButton = booleanPreferencesKey("scroll_to_top_button")
     }
 
     private fun Preferences.toSettings() = AppSettings(
@@ -83,6 +85,7 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         batteryPromptDismissed = this[Keys.batteryPromptDismissed] ?: false,
         keepStatusInBackground = this[Keys.keepStatusInBackground] ?: true,
         heldStatus = this[Keys.heldStatus]?.let { HeldStatus(it, this[Keys.heldStatusUntil]) },
+        scrollToTopButton = this[Keys.scrollToTopButton] ?: true,
     )
 
 
@@ -114,6 +117,7 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
     fun setStatusDurationOption(value: Int) = edit { it[Keys.statusDurationOption] = value }
     fun dismissBatteryPrompt() = edit { it[Keys.batteryPromptDismissed] = true }
     fun setKeepStatusInBackground(value: Boolean) = edit { it[Keys.keepStatusInBackground] = value }
+    fun setScrollToTopButton(value: Boolean) = edit { it[Keys.scrollToTopButton] = value }
 
     fun setHeldStatus(value: HeldStatus?) = edit {
         if (value == null) {
