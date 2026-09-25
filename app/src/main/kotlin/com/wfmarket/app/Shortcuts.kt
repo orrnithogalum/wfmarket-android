@@ -25,3 +25,10 @@ object Shortcuts {
         runCatching { ShortcutManagerCompat.setDynamicShortcuts(context, shortcuts) }
     }
 
+    private fun shortcut(context: Context, id: String, short: String, long: String, uri: String, icon: Int) =
+        ShortcutInfoCompat.Builder(context, id)
+            .setShortLabel(short)
+            .setLongLabel(long)
+            .setIcon(IconCompat.createWithResource(context, icon))
+            .setIntent(Intent(Intent.ACTION_VIEW, uri.toUri(), context, MainActivity::class.java))
+}
