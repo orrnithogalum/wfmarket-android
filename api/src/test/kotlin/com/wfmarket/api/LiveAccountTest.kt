@@ -110,6 +110,17 @@ class LiveAccountTest {
         }
     }
 
+    /** Wrong current passwords: this reaches the real routes, and changes nothing. */
+    @Test fun accountChangesRejectWrongPassword() = runBlocking {
+        signIn()
+        val password = runCatching { api.changePassword("not-the-current-password", "unused-new-password", "unused-new-password") }
+        println("change password: ${(password.exceptionOrNull() as? WfmException)?.kind} ${(password.exceptionOrNull() as? WfmException)?.summary}")
+        assertTrue(password.isFailure)
+        val email = runCatching { api.changeEmail("not-the-current-password", "unused-address@example.invalid") }
+        println("change email: ${(email.exceptionOrNull() as? WfmException)?.kind} ${(email.exceptionOrNull() as? WfmException)?.summary}")
+        assertTrue(email.isFailure)
+    }
+
     /** A hidden direct sell nobody can see, which closing removes outright. */
     @Test fun auctionLifecycle() = runBlocking {
         signIn()
