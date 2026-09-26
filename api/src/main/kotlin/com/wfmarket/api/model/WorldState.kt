@@ -10,3 +10,6 @@ data class WorldState(
     @SerialName("PrimeVaultTraders") val primeVaultTraders: List<PrimeVaultTrader> = emptyList(),
 )
 
+@Serializable
+data class WorldDate(@SerialName("\$date") val date: WorldDateValue = WorldDateValue())
+
