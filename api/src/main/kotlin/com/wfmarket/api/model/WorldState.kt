@@ -13,3 +13,6 @@ data class WorldState(
 @Serializable
 data class WorldDate(@SerialName("\$date") val date: WorldDateValue = WorldDateValue())
 
+@Serializable
+data class WorldDateValue(@SerialName("\$numberLong") val millis: Long = 0)
+
