@@ -16,3 +16,11 @@ data class WorldDate(@SerialName("\$date") val date: WorldDateValue = WorldDateV
 @Serializable
 data class WorldDateValue(@SerialName("\$numberLong") val millis: Long = 0)
 
+@Serializable
+data class WorldEvent(
+    @SerialName("Messages") val messages: List<WorldMessage> = emptyList(),
+    @SerialName("Prop") val link: String? = null,
+    @SerialName("ImageUrl") val imageUrl: String? = null,
+    @SerialName("Date") val date: WorldDate = WorldDate(),
+)
+
