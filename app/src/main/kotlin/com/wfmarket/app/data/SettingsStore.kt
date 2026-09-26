@@ -20,6 +20,8 @@ import kotlinx.coroutines.runBlocking
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+/** What swiping a conversation in the inbox does. */
+enum class SwipeAction(val label: String) { NONE("Nothing"), MARK_READ("Mark as read"), DELETE("Delete") }
 
 /**
  * The status last chosen, here or on another device, and when its hold runs out. The site drops
@@ -47,6 +49,8 @@ data class AppSettings(
     val keepStatusInBackground: Boolean = true,
     val heldStatus: HeldStatus? = null,
     val scrollToTopButton: Boolean = true,
+    val swipeRight: SwipeAction = SwipeAction.MARK_READ,
+    val swipeLeft: SwipeAction = SwipeAction.DELETE,
 )
 
 private val Context.dataStore by preferencesDataStore("settings")
@@ -69,6 +73,8 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         val heldStatus = stringPreferencesKey("held_status")
         val heldStatusUntil = longPreferencesKey("held_status_until")
         val scrollToTopButton = booleanPreferencesKey("scroll_to_top_button")
+        val swipeRight = stringPreferencesKey("swipe_right")
+        val swipeLeft = stringPreferencesKey("swipe_left")
     }
 
     private fun Preferences.toSettings() = AppSettings(
@@ -86,8 +92,11 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         keepStatusInBackground = this[Keys.keepStatusInBackground] ?: true,
         heldStatus = this[Keys.heldStatus]?.let { HeldStatus(it, this[Keys.heldStatusUntil]) },
         scrollToTopButton = this[Keys.scrollToTopButton] ?: true,
+        swipeRight = swipeAction(this[Keys.swipeRight]) ?: SwipeAction.MARK_READ,
+        swipeLeft = swipeAction(this[Keys.swipeLeft]) ?: SwipeAction.DELETE,
     )
 
+    private fun swipeAction(name: String?) = name?.let { runCatching { SwipeAction.valueOf(it) }.getOrNull() }
 
     private fun defaultLanguage(): String {
         val locale = context.resources.configuration.locales[0]
@@ -118,6 +127,8 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
     fun dismissBatteryPrompt() = edit { it[Keys.batteryPromptDismissed] = true }
     fun setKeepStatusInBackground(value: Boolean) = edit { it[Keys.keepStatusInBackground] = value }
     fun setScrollToTopButton(value: Boolean) = edit { it[Keys.scrollToTopButton] = value }
+    fun setSwipeRight(value: SwipeAction) = edit { it[Keys.swipeRight] = value.name }
+    fun setSwipeLeft(value: SwipeAction) = edit { it[Keys.swipeLeft] = value.name }
 
     fun setHeldStatus(value: HeldStatus?) = edit {
         if (value == null) {

@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wfmarket.api.model.Language
 import com.wfmarket.api.model.Platform
 import com.wfmarket.api.model.assetUrl
+import com.wfmarket.app.data.SwipeAction
 import com.wfmarket.app.data.ThemeMode
 import com.wfmarket.app.ui.components.*
 import kotlinx.coroutines.launch
@@ -75,6 +76,29 @@ private fun ChoiceRow(label: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
+/** One choice per direction, as Google Messages offers it. */
+@Composable
+private fun SwipeActionsDialog(right: SwipeAction, left: SwipeAction, onRight: (SwipeAction) -> Unit, onLeft: (SwipeAction) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Swipe actions") },
+        text = {
+            Column(Modifier.fadingVerticalScroll(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                listOf("Swipe right" to (right to onRight), "Swipe left" to (left to onLeft)).forEach { (title, choice) ->
+                    val (current, onPick) = choice
+                    Column {
+                        Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 4.dp))
+                        SwipeAction.entries.forEach { ChoiceRow(it.label, it == current) { onPick(it) } }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
+    )
+}
+
+private fun SwipeAction.summary(direction: String) = "$label: swipe $direction"
+
 @Composable
 fun SettingsScreen() {
     val container = appContainer()
@@ -94,6 +118,7 @@ fun SettingsScreen() {
     var platformDialog by remember { mutableStateOf(false) }
     var languageDialog by remember { mutableStateOf(false) }
     var themeDialog by remember { mutableStateOf(false) }
+    var swipeDialog by remember { mutableStateOf(false) }
 
     fun updatePreference(block: suspend () -> Unit) {
         scope.launch { runCatching { block() }.onFailure { snackbar.showSnackbar(it.userMessage()) } }
@@ -162,6 +187,10 @@ fun SettingsScreen() {
                         settings.instantMessages,
                     ) { container.settings.setInstantMessages(it) }
                 }
+                valueRow(
+                    "Swipe actions",
+                    "${settings.swipeRight.summary("right")}\n${settings.swipeLeft.summary("left")}",
+                ) { swipeDialog = true }
                 valueRow("Unrestricted battery use", if (batteryExempt) "Allowed" else "Recommended, or Android may delay messages") {
                     requestBatteryExemption(context)
                 }
@@ -253,6 +282,14 @@ fun SettingsScreen() {
                 themeDialog = false
                 container.settings.setTheme(it)
             },
+        )
+    }
+    if (swipeDialog) {
+        SwipeActionsDialog(
+            settings.swipeRight, settings.swipeLeft,
+            onRight = container.settings::setSwipeRight,
+            onLeft = container.settings::setSwipeLeft,
+            onDismiss = { swipeDialog = false },
         )
     }
 }
