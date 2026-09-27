@@ -24,3 +24,9 @@ data class WorldEvent(
     @SerialName("Date") val date: WorldDate = WorldDate(),
 )
 
+@Serializable
+data class WorldMessage(
+    @SerialName("LanguageCode") val language: String = "",
+    @SerialName("Message") val message: String = "",
+)
+
