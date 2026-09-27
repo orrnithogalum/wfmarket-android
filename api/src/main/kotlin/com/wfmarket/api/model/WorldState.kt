@@ -30,3 +30,10 @@ data class WorldMessage(
     @SerialName("Message") val message: String = "",
 )
 
+@Serializable
+data class PrimeVaultTrader(
+    @SerialName("Activation") val activation: WorldDate = WorldDate(),
+    @SerialName("Expiry") val expiry: WorldDate = WorldDate(),
+    @SerialName("Manifest") val manifest: List<PrimeVaultItem> = emptyList(),
+)
+
