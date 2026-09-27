@@ -40,3 +40,12 @@ data class PrimeVaultTrader(
 @Serializable
 data class PrimeVaultItem(@SerialName("ItemType") val itemType: String = "")
 
+/** The Prime Resurgence running right now. */
+data class PrimeResurgence(
+    val expiresAtMillis: Long,
+    /** Game paths of what's on offer, comparable with [Item.gameRef]. */
+    val gameRefs: List<String>,
+    val headline: String?,
+    val bannerUrl: String?,
+    val link: String?,
+)
