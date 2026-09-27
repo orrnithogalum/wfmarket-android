@@ -37,3 +37,6 @@ data class PrimeVaultTrader(
     @SerialName("Manifest") val manifest: List<PrimeVaultItem> = emptyList(),
 )
 
+@Serializable
+data class PrimeVaultItem(@SerialName("ItemType") val itemType: String = "")
+
