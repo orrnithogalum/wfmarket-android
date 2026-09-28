@@ -126,6 +126,10 @@ class LiveContractTest {
         }
     }
 
+    @Test fun primeResurgenceEndsWhenItExpires() = runBlocking {
+        assertEquals(null, api.primeResurgence(nowMillis = Long.MAX_VALUE))
+    }
+
     @Test fun signInReportsReadableErrors() = runBlocking {
         val failure = runCatching {
             api.signIn("nobody-wfm-probe@example.invalid", "probe-not-a-real-password", "contract-test")
