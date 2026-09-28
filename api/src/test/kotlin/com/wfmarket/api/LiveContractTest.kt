@@ -116,6 +116,16 @@ class LiveContractTest {
         Unit
     }
 
+    @Test fun primeResurgence() = runBlocking {
+        val resurgence = api.primeResurgence()
+        // Rotations run back to back, but a gap between them is legitimate.
+        println("resurgence: ${resurgence?.headline} until ${resurgence?.expiresAtMillis}, ${resurgence?.gameRefs?.size} entries")
+        if (resurgence != null) {
+            val sets = api.items().filter { "set" in it.tags }.map { it.gameRef }.toSet()
+            assertTrue(resurgence.gameRefs.any { it in sets })
+        }
+    }
+
     @Test fun signInReportsReadableErrors() = runBlocking {
         val failure = runCatching {
             api.signIn("nobody-wfm-probe@example.invalid", "probe-not-a-real-password", "contract-test")
