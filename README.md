@@ -39,6 +39,10 @@ The site is mid-migration, so the client uses both generations:
 - **Sockets**: `wss://warframe.market/socket` carries chat and bids, authenticated by the JWT cookie.
   `wss://ws.warframe.market/socket` (subprotocol `wfm`) carries presence.
 
+- **Featured carousel**: warframe.market's showcase is maintained by hand and goes stale. The current
+  Prime Access is worked out from the catalogue (item ids start with their creation time), and the
+  Prime Resurgence comes from Warframe's official world state.
+
 ## Icons
 
 The sources are in `app/src/main/art`. Android launcher icons must be vector drawables rather than
