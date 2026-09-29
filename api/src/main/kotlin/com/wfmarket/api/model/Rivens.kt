@@ -42,3 +42,11 @@ enum class RollScale {
     PLAIN,
 }
 
+/** A stat's base value in each riven table, or null where that riven can't roll it. */
+class RivenAttributeScale(
+    val scale: RollScale,
+    rifle: Double?, shotgun: Double?, pistol: Double?, archgun: Double?, melee: Double?, kitgun: Double?, zaw: Double?,
+) {
+    private val values = arrayOf(rifle, shotgun, pistol, archgun, melee, kitgun, zaw)
+
+
