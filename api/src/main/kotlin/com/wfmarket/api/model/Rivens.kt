@@ -30,3 +30,15 @@ enum class RivenClass(val label: String) {
     }
 }
 
+/** How a stat's rolled number becomes the number shown. */
+enum class RollScale {
+    /** Shown in hundredths, as percentages are. Parry angle is shown this way too, without the sign. */
+    PERCENT,
+
+    /** Faction damage, shown as `x1.45`: one plus the roll. */
+    MULTIPLIER,
+
+    /** Shown as rolled, like Punch Through's metres or Initial Combo. */
+    PLAIN,
+}
+
