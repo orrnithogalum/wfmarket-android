@@ -49,4 +49,6 @@ class RivenAttributeScale(
 ) {
     private val values = arrayOf(rifle, shotgun, pistol, archgun, melee, kitgun, zaw)
 
+    fun base(rivenClass: RivenClass): Double? = values[rivenClass.ordinal]
+}
 
