@@ -86,3 +86,18 @@ data class StatRoll(
     val position: Double get() = ((deviation + 10) / 20).coerceIn(0.0, 1.0)
 }
 
+/** A riven's stats graded together, since how many there are decides how strong each one is. */
+data class RivenRolls(
+    /** Aligned with the riven's attributes. Null where a stat couldn't be graded at all. */
+    val stats: List<StatRoll?>,
+    /** The rank the values were read at. Sellers often enter a maxed riven's stats at rank 0. */
+    val rank: Int,
+    /**
+     * Set when the values only make sense with the weapon's old disposition, from before Riven
+     * Disposition was retired. The riven's stats in game are now these times [nowFactor].
+     */
+    val oldDisposition: Double?,
+) {
+    val nowFactor: Double? get() = oldDisposition?.let { RivenGrading.DISPOSITION / it }
+}
+
