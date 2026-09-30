@@ -113,3 +113,6 @@ object RivenGrading {
     const val DISPOSITION = 1.2
     const val MAX_RANK = 8
 
+    /** S and F reach 1.5 past the ±10% a roll can reach, to allow for the game's rounding. */
+    private const val LIMIT = 11.5
+
