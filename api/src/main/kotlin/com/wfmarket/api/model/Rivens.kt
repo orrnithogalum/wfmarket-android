@@ -82,4 +82,7 @@ data class StatRoll(
     val min: Double get() = minOf(worst, best)
     val max: Double get() = maxOf(worst, best)
 
+    /** Where the value sits in its range, from 0 for the worst roll to 1 for the best. */
+    val position: Double get() = ((deviation + 10) / 20).coerceIn(0.0, 1.0)
+}
 
