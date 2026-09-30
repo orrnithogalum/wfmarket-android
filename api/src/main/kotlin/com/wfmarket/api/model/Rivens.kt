@@ -116,3 +116,6 @@ object RivenGrading {
     /** S and F reach 1.5 past the ±10% a roll can reach, to allow for the game's rounding. */
     private const val LIMIT = 11.5
 
+    /** Above this many points of doubt from rounding, half a grade either way, a letter would mislead. */
+    private const val MAX_DOUBT = 2.0
+
