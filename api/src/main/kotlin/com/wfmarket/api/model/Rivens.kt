@@ -101,3 +101,15 @@ data class RivenRolls(
     val nowFactor: Double? get() = oldDisposition?.let { RivenGrading.DISPOSITION / it }
 }
 
+/**
+ * Riven stat grades, as Warframe's riven graders give them.
+ *
+ * A stat's value at rank `r` is `base × 10 × (r + 1) × disposition × layout × roll`, where the roll
+ * is 0.9–1.1 and the layout multiplier depends on how many buffs and curses the riven has. The
+ * disposition is the weapon's own, as the site lists it. The base values are Warframe's public
+ * export (`ExportUpgrades`, the `Lotus…RandomModRare` entries), keyed by the site's slugs.
+ */
+object RivenGrading {
+    const val DISPOSITION = 1.2
+    const val MAX_RANK = 8
+
