@@ -52,3 +52,12 @@ class RivenAttributeScale(
     fun base(rivenClass: RivenClass): Double? = values[rivenClass.ordinal]
 }
 
+/** A stat's grade: how far its roll landed from the middle of the ±10% it can roll, in two-point bands. */
+enum class RivenGrade(val label: String, val floor: Double) {
+    S("S", 9.5), A_PLUS("A+", 7.5), A("A", 5.5), A_MINUS("A-", 3.5), B_PLUS("B+", 1.5), B("B", -1.5),
+    B_MINUS("B-", -3.5), C_PLUS("C+", -5.5), C("C", -7.5), C_MINUS("C-", -9.5), F("F", Double.NEGATIVE_INFINITY);
+
+    val isGood: Boolean get() = this <= A_MINUS
+    val isBad: Boolean get() = this >= C_PLUS
+
+
