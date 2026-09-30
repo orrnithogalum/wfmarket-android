@@ -65,3 +65,21 @@ enum class RivenGrade(val label: String, val floor: Double) {
     }
 }
 
+/**
+ * One stat's roll. [deviation] is in percent from the middle of its range, where a smaller curse
+ * counts as better. [worst] and [best] are the ends of the range, as the listing shows values.
+ */
+data class StatRoll(
+    val grade: RivenGrade?,
+    val deviation: Double,
+    val worst: Double,
+    val best: Double,
+    /** Further than any roll can reach, so most likely mistyped. */
+    val outOfRange: Boolean,
+    /** Shown so rounded, as small stats are at a low rank, that the grade could be anything. */
+    val tooRounded: Boolean,
+) {
+    val min: Double get() = minOf(worst, best)
+    val max: Double get() = maxOf(worst, best)
+
+
