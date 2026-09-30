@@ -60,4 +60,8 @@ enum class RivenGrade(val label: String, val floor: Double) {
     val isGood: Boolean get() = this <= A_MINUS
     val isBad: Boolean get() = this >= C_PLUS
 
+    companion object {
+        fun of(deviation: Double): RivenGrade = entries.first { deviation >= it.floor }
+    }
+}
 
