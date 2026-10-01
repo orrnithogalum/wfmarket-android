@@ -130,3 +130,5 @@ object RivenGrading {
         else -> null
     }
 
+    fun scaleOf(slug: String): RivenAttributeScale? = scales[slug]
+
