@@ -122,3 +122,11 @@ object RivenGrading {
     /** Recoil is the stat whose buff is a negative number. */
     private val negativeBuffs = setOf("recoil")
 
+    private fun layout(buffs: Int, curses: Int): Pair<Double, Double>? = when (buffs to curses) {
+        2 to 0 -> 0.99 to 0.0
+        2 to 1 -> 1.2375 to 0.495
+        3 to 0 -> 0.75 to 0.0
+        3 to 1 -> 0.9375 to 0.75
+        else -> null
+    }
+
