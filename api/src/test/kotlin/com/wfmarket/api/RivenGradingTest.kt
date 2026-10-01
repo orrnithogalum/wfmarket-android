@@ -36,6 +36,13 @@ class RivenGradingTest {
     }
 
     @Test
+    fun readsMaxedStatsListedAtRankZero() {
+        val rolls = grades(RivenClass.RIFLE, 0, RivenStat("critical_chance", 222.0, true), RivenStat("multishot", 134.0, true), RivenStat("zoom", -36.0, false))
+        assertEquals(8, rolls.rank)
+        assertTrue(rolls.stats.all { it?.grade == RivenGrade.B })
+    }
+
+    @Test
     fun gradeBandsAreTwoPointsWide() {
         assertEquals(RivenGrade.S, RivenGrade.of(9.5))
         assertEquals(RivenGrade.A_PLUS, RivenGrade.of(9.49))
