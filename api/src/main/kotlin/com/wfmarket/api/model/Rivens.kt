@@ -156,3 +156,41 @@ object RivenGrading {
         return readings.maxBy { reading -> reading.stats.count { it != null && !it.outOfRange } }
     }
 
+    private fun roll(stat: RivenStat, rivenClass: RivenClass, rank: Int, disposition: Double, layout: Double): StatRoll? {
+        val attribute = scales[stat.urlName] ?: return null
+        val base = attribute.base(rivenClass) ?: return null
+        val shown = when (attribute.scale) {
+            RollScale.PERCENT -> 100.0
+            else -> 1.0
+        }
+        val middle = base * 10 * (rank + 1) * disposition * layout * shown
+        if (middle <= 0) return null
+        val magnitude = when (attribute.scale) {
+            RollScale.MULTIPLIER -> abs(stat.value - 1)
+            else -> abs(stat.value)
+        }
+        val rolled = (magnitude / middle - 1) * 100
+        // A bigger curse is a worse one.
+        val deviation = if (stat.positive) rolled else -rolled
+        // Listings carry what the game shows: one decimal, or two for multipliers.
+        val halfStep = if (attribute.scale == RollScale.MULTIPLIER) 0.005 else 0.05
+        val doubt = halfStep / middle * 100
+        val outOfRange = abs(deviation) > LIMIT + doubt
+        val tooRounded = doubt > MAX_DOUBT
+        val sign = if (stat.positive != (stat.urlName in negativeBuffs)) 1.0 else -1.0
+        fun shownValue(fraction: Double): Double {
+            val value = middle * fraction
+            return if (attribute.scale == RollScale.MULTIPLIER) 1 + sign * value else sign * value
+        }
+        // Worst first: the smallest buff, or the biggest curse.
+        val (worst, best) = if (stat.positive) shownValue(0.9) to shownValue(1.1) else shownValue(1.1) to shownValue(0.9)
+        return StatRoll(
+            grade = if (outOfRange || tooRounded) null else RivenGrade.of(deviation),
+            deviation = deviation,
+            worst = worst,
+            best = best,
+            outOfRange = outOfRange,
+            tooRounded = tooRounded,
+        )
+    }
+
