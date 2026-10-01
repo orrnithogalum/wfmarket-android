@@ -119,3 +119,6 @@ object RivenGrading {
     /** Above this many points of doubt from rounding, half a grade either way, a letter would mislead. */
     private const val MAX_DOUBT = 2.0
 
+    /** Recoil is the stat whose buff is a negative number. */
+    private val negativeBuffs = setOf("recoil")
+
