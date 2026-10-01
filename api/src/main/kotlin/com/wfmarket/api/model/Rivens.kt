@@ -132,3 +132,27 @@ object RivenGrading {
 
     fun scaleOf(slug: String): RivenAttributeScale? = scales[slug]
 
+    /**
+     * Grades a riven's stats. The values are tried at the listed rank and at max rank, and with the
+     * weapon's old disposition when given, and read whichever way the most stats make sense.
+     */
+    fun grade(
+        rivenClass: RivenClass,
+        stats: List<RivenStat>,
+        rank: Int,
+        oldDisposition: Double? = null,
+    ): RivenRolls? {
+        val buffs = stats.count { it.positive }
+        val (buffScale, curseScale) = layout(buffs, stats.size - buffs) ?: return null
+        val ranks = listOf(rank.coerceIn(0, MAX_RANK), MAX_RANK).distinct()
+        val dispositions = listOfNotNull(DISPOSITION, oldDisposition?.takeIf { abs(it - DISPOSITION) > 0.005 })
+        val readings = dispositions.flatMap { disposition ->
+            ranks.map { r ->
+                val rolls = stats.map { roll(it, rivenClass, r, disposition, if (it.positive) buffScale else curseScale) }
+                RivenRolls(rolls, r, disposition.takeIf { it != DISPOSITION })
+            }
+        }
+        // The first reading wins ties: the listed rank and today's disposition.
+        return readings.maxBy { reading -> reading.stats.count { it != null && !it.outOfRange } }
+    }
+
