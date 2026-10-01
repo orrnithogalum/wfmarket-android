@@ -49,6 +49,7 @@ data class AppSettings(
     val keepStatusInBackground: Boolean = true,
     val heldStatus: HeldStatus? = null,
     val scrollToTopButton: Boolean = true,
+    val rivenGrades: Boolean = true,
     val swipeRight: SwipeAction = SwipeAction.MARK_READ,
     val swipeLeft: SwipeAction = SwipeAction.DELETE,
 )
@@ -73,6 +74,7 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         val heldStatus = stringPreferencesKey("held_status")
         val heldStatusUntil = longPreferencesKey("held_status_until")
         val scrollToTopButton = booleanPreferencesKey("scroll_to_top_button")
+        val rivenGrades = booleanPreferencesKey("riven_grades")
         val swipeRight = stringPreferencesKey("swipe_right")
         val swipeLeft = stringPreferencesKey("swipe_left")
     }
@@ -92,6 +94,7 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         keepStatusInBackground = this[Keys.keepStatusInBackground] ?: true,
         heldStatus = this[Keys.heldStatus]?.let { HeldStatus(it, this[Keys.heldStatusUntil]) },
         scrollToTopButton = this[Keys.scrollToTopButton] ?: true,
+        rivenGrades = this[Keys.rivenGrades] ?: true,
         swipeRight = swipeAction(this[Keys.swipeRight]) ?: SwipeAction.MARK_READ,
         swipeLeft = swipeAction(this[Keys.swipeLeft]) ?: SwipeAction.DELETE,
     )
@@ -127,6 +130,7 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
     fun dismissBatteryPrompt() = edit { it[Keys.batteryPromptDismissed] = true }
     fun setKeepStatusInBackground(value: Boolean) = edit { it[Keys.keepStatusInBackground] = value }
     fun setScrollToTopButton(value: Boolean) = edit { it[Keys.scrollToTopButton] = value }
+    fun setRivenGrades(value: Boolean) = edit { it[Keys.rivenGrades] = value }
     fun setSwipeRight(value: SwipeAction) = edit { it[Keys.swipeRight] = value.name }
     fun setSwipeLeft(value: SwipeAction) = edit { it[Keys.swipeLeft] = value.name }
 

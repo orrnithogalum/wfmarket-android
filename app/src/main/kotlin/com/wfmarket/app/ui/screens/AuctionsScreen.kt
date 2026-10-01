@@ -415,7 +415,7 @@ fun RivenStats(attributes: List<RivenStat>, catalog: Catalog, modifier: Modifier
 
 @Composable
 fun AuctionItemSummary(item: AuctionItem, catalog: Catalog) {
-    if (item.type == AuctionType.RIVEN && item.attributes.isNotEmpty()) RivenStats(item.attributes, catalog)
+    if (item.type == AuctionType.RIVEN && item.attributes.isNotEmpty()) RivenStats(item.attributes, catalog, rolls = rememberRivenRolls(item, catalog))
     AuctionDetailsLine(item, catalog, Modifier.padding(top = 8.dp))
 }
 
@@ -523,7 +523,7 @@ fun AuctionCard(
             }
             if (item.type == AuctionType.RIVEN && item.attributes.isNotEmpty()) {
                 // On the card's own background: one color per card.
-                RivenStats(item.attributes, catalog, Modifier.fillMaxWidth())
+                RivenStats(item.attributes, catalog, Modifier.fillMaxWidth(), rolls = rememberRivenRolls(item, catalog))
             }
             AuctionDetailsLine(item, catalog)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

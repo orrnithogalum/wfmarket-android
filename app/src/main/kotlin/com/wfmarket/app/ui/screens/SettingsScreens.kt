@@ -208,6 +208,11 @@ fun SettingsScreen() {
                     "Bids and changes on auctions you run, while the app is connected",
                     settings.notifyAuctions,
                 ) { container.settings.setNotifyAuctions(it) }
+                switchRow(
+                    "Riven grades",
+                    "A letter from S to F beside each riven stat, for how well it rolled",
+                    settings.rivenGrades,
+                ) { container.settings.setRivenGrades(it) }
             }
 
             SettingsGroup("Appearance") {
