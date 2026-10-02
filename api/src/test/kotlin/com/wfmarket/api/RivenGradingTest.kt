@@ -43,6 +43,14 @@ class RivenGradingTest {
     }
 
     @Test
+    fun keepsTheListedRankWhenItFits() {
+        // Two buffs alone roll 178.2% crit chance and 118.8% multishot at rank 8, and a ninth of that at rank 0.
+        val rolls = grades(RivenClass.RIFLE, 0, RivenStat("critical_chance", 19.8, true), RivenStat("multishot", 11.9, true))
+        assertEquals(0, rolls.rank)
+        assertTrue(rolls.stats.all { it?.grade != null })
+    }
+
+    @Test
     fun gradeBandsAreTwoPointsWide() {
         assertEquals(RivenGrade.S, RivenGrade.of(9.5))
         assertEquals(RivenGrade.A_PLUS, RivenGrade.of(9.49))
