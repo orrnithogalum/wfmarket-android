@@ -61,6 +61,12 @@ class RivenGradingTest {
     }
 
     @Test
+    fun onlyGradesLayoutsTheGameRolls() {
+        assertNull(RivenGrading.grade(RivenClass.RIFLE, listOf(RivenStat("critical_chance", 100.0, true)), 8))
+        assertNull(RivenGrading.grade(RivenClass.MELEE, listOf(RivenStat("range", 1.0, true), RivenStat("critical_chance", 100.0, false)), 8))
+    }
+
+    @Test
     fun gradeBandsAreTwoPointsWide() {
         assertEquals(RivenGrade.S, RivenGrade.of(9.5))
         assertEquals(RivenGrade.A_PLUS, RivenGrade.of(9.49))
