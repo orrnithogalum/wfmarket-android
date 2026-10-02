@@ -51,6 +51,16 @@ class RivenGradingTest {
     }
 
     @Test
+    fun leavesRoundedAndImpossibleValuesUngraded() {
+        val rolls = grades(RivenClass.PISTOL, 0, RivenStat("damage_vs_corpus", 1.03, true), RivenStat("critical_chance", 400.0, true))
+        val (faction, crit) = rolls.stats
+        assertTrue(faction!!.tooRounded)
+        assertNull(faction.grade)
+        assertTrue(crit!!.outOfRange)
+        assertNull(crit.grade)
+    }
+
+    @Test
     fun gradeBandsAreTwoPointsWide() {
         assertEquals(RivenGrade.S, RivenGrade.of(9.5))
         assertEquals(RivenGrade.A_PLUS, RivenGrade.of(9.49))
