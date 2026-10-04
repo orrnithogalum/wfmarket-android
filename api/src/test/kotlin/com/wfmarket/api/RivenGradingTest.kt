@@ -61,6 +61,14 @@ class RivenGradingTest {
     }
 
     @Test
+    fun signsRangesTheWayTheGameShowsThem() {
+        val rolls = grades(RivenClass.RIFLE, 8, RivenStat("recoil", -90.0, true), RivenStat("critical_chance", 150.0, true), RivenStat("damage_vs_grineer", 0.7, false))
+        val (recoil, _, faction) = rolls.stats
+        assertTrue(recoil!!.max < 0)
+        assertTrue(faction!!.max < 1 && faction.min > 0)
+    }
+
+    @Test
     fun onlyGradesLayoutsTheGameRolls() {
         assertNull(RivenGrading.grade(RivenClass.RIFLE, listOf(RivenStat("critical_chance", 100.0, true)), 8))
         assertNull(RivenGrading.grade(RivenClass.MELEE, listOf(RivenStat("range", 1.0, true), RivenStat("critical_chance", 100.0, false)), 8))
