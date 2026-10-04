@@ -22,3 +22,11 @@ data class RivenTrade(
     val rivenClass: RivenClass? get() = RivenClass.ofModName(itemType)
 }
 
+/** A week of riven trades on one platform. [publishedMillis] is when Warframe put the week out. */
+@Serializable
+data class RivenTrades(
+    val platform: String,
+    val publishedMillis: Long,
+    val trades: List<RivenTrade> = emptyList(),
+)
+
