@@ -30,4 +30,8 @@ data class RivenWeeks(val platform: String, val weeks: List<RivenTrades>) {
     val latest: RivenTrades? get() = weeks.lastOrNull()
     val previous: RivenTrades? get() = weeks.getOrNull(weeks.size - 2)
 
+    private val byWeek: List<Map<Pair<String?, Boolean>, RivenTrade>> by lazy {
+        weeks.map { week -> week.trades.associateBy { it.weekKey to it.rerolled } }
+    }
+
 
