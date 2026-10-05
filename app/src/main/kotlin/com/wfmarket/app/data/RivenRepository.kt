@@ -34,4 +34,13 @@ data class RivenWeeks(val platform: String, val weeks: List<RivenTrades>) {
         weeks.map { week -> week.trades.associateBy { it.weekKey to it.rerolled } }
     }
 
+    /** A weapon's weeks, newest first, by its English name, which is how Warframe names it, or a [weekKey]. */
+    fun history(name: String): List<RivenWeek> = weeks.indices.reversed().mapNotNull { index ->
+        val lines = byWeek[index]
+        val key = name.lowercase()
+        val unrolled = lines[key to false]
+        val rolled = lines[key to true]
+        if (unrolled == null && rolled == null) null else RivenWeek(weeks[index].publishedMillis, unrolled, rolled)
+    }
+
 
