@@ -130,6 +130,20 @@ class LiveContractTest {
         assertEquals(null, api.primeResurgence(nowMillis = Long.MAX_VALUE))
     }
 
+    @Test fun rivenTrades() = runBlocking {
+        val week = api.rivenTrades("pc")!!
+        val ageDays = (System.currentTimeMillis() - week.publishedMillis) / 86_400_000
+        println("riven trades: ${week.trades.size} lines, published $ageDays days ago")
+        assertTrue(ageDays < 14)
+        assertTrue(week.trades.size > 100)
+        assertTrue(week.trades.all { it.rivenClass != null })
+        // The trade data names weapons in English, which is how the app matches them to the site's.
+        val names = api.rivenWeapons().mapNotNull { it.i18n["en"]?.name?.lowercase() }.toSet()
+        val named = week.trades.mapNotNull { it.compatibility?.lowercase() }.toSet()
+        assertTrue(named.count { it in names } > named.size * 0.95)
+        assertEquals(null, api.rivenTrades("mobile"))
+    }
+
     @Test fun signInReportsReadableErrors() = runBlocking {
         val failure = runCatching {
             api.signIn("nobody-wfm-probe@example.invalid", "probe-not-a-real-password", "contract-test")
