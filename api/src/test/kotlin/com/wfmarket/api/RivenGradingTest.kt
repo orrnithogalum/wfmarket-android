@@ -82,4 +82,20 @@ class RivenGradingTest {
         assertEquals(RivenGrade.B_MINUS, RivenGrade.of(-1.51))
         assertEquals(RivenGrade.F, RivenGrade.of(-11.0))
     }
+
+    @Test
+    fun readsWarframesObjectLiterals() {
+        val text = """
+            [
+              { itemType: 'Rifle Riven Mod', compatibility: 'Ack & Brunt', rerolled: true, avg: 1.5e2, pop: 4, median: 9.5, },
+              { itemType: "Zaw Riven Mod", compatibility: 'it\'s "odd"', rerolled: false, avg: 3, pop: 1, median: 2 },
+            ]
+        """
+        val trades = WfmJson.decodeFromString(ListSerializer(RivenTrade.serializer()), relaxedJson(text))
+        assertEquals(2, trades.size)
+        assertEquals("Ack & Brunt", trades[0].compatibility)
+        assertEquals(150.0, trades[0].avg, 0.0)
+        assertEquals("it's \"odd\"", trades[1].compatibility)
+        assertNotNull(trades[1].rivenClass)
+    }
 }
