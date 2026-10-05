@@ -25,3 +25,9 @@ import java.util.zip.GZIPOutputStream
 /** One weapon's riven trades in a week: never rolled, and rolled. Either can be missing. */
 data class RivenWeek(val publishedMillis: Long, val unrolled: RivenTrade?, val rolled: RivenTrade?)
 
+/** The weeks of riven trades kept for one platform, oldest first. */
+data class RivenWeeks(val platform: String, val weeks: List<RivenTrades>) {
+    val latest: RivenTrades? get() = weeks.lastOrNull()
+    val previous: RivenTrades? get() = weeks.getOrNull(weeks.size - 2)
+
+
