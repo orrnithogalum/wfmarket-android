@@ -84,6 +84,13 @@ class RivenGradingTest {
     }
 
     @Test
+    fun secondaryShotgunsTakePistolRivens() {
+        assertEquals(RivenClass.PISTOL, RivenClass.of(RivenWeapon("1", "bronco", group = "secondary", rivenType = "shotgun")))
+        assertEquals(RivenClass.ARCHGUN, RivenClass.of(RivenWeapon("2", "imperator", group = "archgun", rivenType = "rifle")))
+        assertEquals(RivenClass.SHOTGUN, RivenClass.ofModName("Shotgun Riven Mod"))
+    }
+
+    @Test
     fun readsWarframesObjectLiterals() {
         val text = """
             [
