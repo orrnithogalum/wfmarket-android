@@ -54,3 +54,21 @@ private const val REFRESH_INTERVAL_MILLIS = 6 * 60 * 60 * 1000L
 private const val WEEKS_KEPT = 26
 private const val SAME_WEEK_MILLIS = 3 * 24 * 60 * 60 * 1000L
 
+/**
+ * Warframe's weekly riven trade figures. Each publication covers one week only, so every new week is
+ * kept on disk, and a history builds up from the day the app is installed.
+ *
+ * The figures also say which riven each weapon takes, more reliably than the site's catalogue does,
+ * so grading uses them when they're loaded.
+ */
+class RivenRepository(
+    context: Context,
+    private val api: WfmApi,
+    private val settings: SettingsStore,
+    private val scope: CoroutineScope,
+) {
+    private val dir = File(context.filesDir, "riven_trades")
+    private val mutex = Mutex()
+
+    @Volatile private var lastFetchMillis = 0L
+
