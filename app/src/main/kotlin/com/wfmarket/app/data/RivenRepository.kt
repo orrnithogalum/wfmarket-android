@@ -50,3 +50,7 @@ data class RivenWeeks(val platform: String, val weeks: List<RivenTrades>) {
 /** What identifies a line from week to week. Veiled rivens have no weapon, so their kind stands in for one. */
 val RivenTrade.weekKey: String get() = compatibility?.lowercase() ?: "veiled ${itemType.lowercase()}"
 
+private const val REFRESH_INTERVAL_MILLIS = 6 * 60 * 60 * 1000L
+private const val WEEKS_KEPT = 26
+private const val SAME_WEEK_MILLIS = 3 * 24 * 60 * 60 * 1000L
+
