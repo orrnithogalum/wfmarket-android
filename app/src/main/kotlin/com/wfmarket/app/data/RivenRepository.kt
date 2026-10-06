@@ -47,3 +47,6 @@ data class RivenWeeks(val platform: String, val weeks: List<RivenTrades>) {
     fun before(trade: RivenTrade): RivenTrade? = if (byWeek.size < 2) null else byWeek[byWeek.size - 2][trade.weekKey to trade.rerolled]
 }
 
+/** What identifies a line from week to week. Veiled rivens have no weapon, so their kind stands in for one. */
+val RivenTrade.weekKey: String get() = compatibility?.lowercase() ?: "veiled ${itemType.lowercase()}"
+
