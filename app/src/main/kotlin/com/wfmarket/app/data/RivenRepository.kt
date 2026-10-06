@@ -43,4 +43,7 @@ data class RivenWeeks(val platform: String, val weeks: List<RivenTrades>) {
         if (unrolled == null && rolled == null) null else RivenWeek(weeks[index].publishedMillis, unrolled, rolled)
     }
 
+    /** The same line in the week before, to show which way it moved. */
+    fun before(trade: RivenTrade): RivenTrade? = if (byWeek.size < 2) null else byWeek[byWeek.size - 2][trade.weekKey to trade.rerolled]
+}
 
