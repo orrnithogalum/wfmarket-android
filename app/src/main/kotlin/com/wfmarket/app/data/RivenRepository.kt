@@ -70,5 +70,9 @@ class RivenRepository(
     private val dir = File(context.filesDir, "riven_trades")
     private val mutex = Mutex()
 
+    private val _weeks = MutableStateFlow<RivenWeeks?>(null)
+    /** The current platform's weeks, or null before any are loaded. */
+    val weeks: StateFlow<RivenWeeks?> = _weeks.asStateFlow()
+
     @Volatile private var lastFetchMillis = 0L
 
