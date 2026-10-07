@@ -80,3 +80,13 @@ class RivenRepository(
 
     @Volatile private var lastFetchMillis = 0L
 
+    fun start() {
+        scope.launch {
+            settings.flow.map { it.platform }.distinctUntilChanged().collect { platform ->
+                lastFetchMillis = 0L
+                load(platform)
+                runCatching { refresh() }.onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+            }
+        }
+    }
+
