@@ -74,5 +74,9 @@ class RivenRepository(
     /** The current platform's weeks, or null before any are loaded. */
     val weeks: StateFlow<RivenWeeks?> = _weeks.asStateFlow()
 
+    private val _classes = MutableStateFlow<Map<String, RivenClass>>(emptyMap())
+    /** Which riven each weapon takes, by lowercased English name. */
+    val classes: StateFlow<Map<String, RivenClass>> = _classes.asStateFlow()
+
     @Volatile private var lastFetchMillis = 0L
 
