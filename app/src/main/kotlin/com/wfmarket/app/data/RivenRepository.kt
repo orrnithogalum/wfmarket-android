@@ -119,3 +119,11 @@ class RivenRepository(
         true
     }
 
+    private suspend fun load(platform: String) = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            val known = readAll(platform)
+            _weeks.value = null
+            if (known.isNotEmpty()) publish(RivenWeeks(platform, known))
+        }
+    }
+
