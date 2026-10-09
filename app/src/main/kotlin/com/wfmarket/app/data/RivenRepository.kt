@@ -95,3 +95,27 @@ class RivenRepository(
         if (System.currentTimeMillis() - lastFetchMillis > REFRESH_INTERVAL_MILLIS) scope.launch { runCatching { refresh() } }
     }
 
+    /** Fetches the latest week. Returns false when there's none for this platform. */
+    suspend fun refresh(): Boolean = withContext(Dispatchers.IO) {
+        val platform = settings.current.platform
+        val week = api.rivenTrades(platform) ?: return@withContext false
+        lastFetchMillis = System.currentTimeMillis()
+        // An empty file is an outage, not a week without trades, and would hide the last good week.
+        if (week.trades.isEmpty()) return@withContext true
+        mutex.withLock {
+            val known = _weeks.value?.takeIf { it.platform == platform }?.weeks ?: readAll(platform)
+            val updated = if (known.any { it.publishedMillis == week.publishedMillis }) {
+                known
+            } else {
+                // A file put out again within days, say to fix it, is the same week, not a new one.
+                // Kept twice, it would be compared with itself.
+                val sameWeek = known.filter { abs(it.publishedMillis - week.publishedMillis) < SAME_WEEK_MILLIS }
+                sameWeek.forEach { delete(it) }
+                write(week)
+                (known - sameWeek.toSet() + week).sortedBy { it.publishedMillis }.takeLast(WEEKS_KEPT)
+            }
+            if (settings.current.platform == platform) publish(RivenWeeks(platform, updated))
+        }
+        true
+    }
+
