@@ -90,3 +90,8 @@ class RivenRepository(
         }
     }
 
+    /** Warframe publishes on Mondays, so a few checks a day are plenty. */
+    fun refreshIfOld() {
+        if (System.currentTimeMillis() - lastFetchMillis > REFRESH_INTERVAL_MILLIS) scope.launch { runCatching { refresh() } }
+    }
+
