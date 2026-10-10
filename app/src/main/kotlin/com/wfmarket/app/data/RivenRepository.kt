@@ -127,3 +127,13 @@ class RivenRepository(
         }
     }
 
+    private fun publish(weeks: RivenWeeks) {
+        _weeks.value = weeks
+        weeks.latest?.let { latest ->
+            _classes.value = latest.trades.mapNotNull { trade ->
+                val name = trade.compatibility ?: return@mapNotNull null
+                trade.rivenClass?.let { name.lowercase() to it }
+            }.toMap()
+        }
+    }
+
