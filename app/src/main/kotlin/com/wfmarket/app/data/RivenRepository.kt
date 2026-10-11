@@ -137,3 +137,5 @@ class RivenRepository(
         }
     }
 
+    private fun platformDir(platform: String) = File(dir, platform)
+
