@@ -139,3 +139,12 @@ class RivenRepository(
 
     private fun platformDir(platform: String) = File(dir, platform)
 
+    private fun readAll(platform: String): List<RivenTrades> {
+        val files = platformDir(platform).listFiles { file -> file.name.endsWith(".json.gz") }.orEmpty()
+        return files.mapNotNull { file ->
+            runCatching {
+                GZIPInputStream(file.inputStream()).bufferedReader().use { WfmJson.decodeFromString(RivenTrades.serializer(), it.readText()) }
+            }.getOrNull()
+        }.sortedBy { it.publishedMillis }.takeLast(WEEKS_KEPT)
+    }
+
