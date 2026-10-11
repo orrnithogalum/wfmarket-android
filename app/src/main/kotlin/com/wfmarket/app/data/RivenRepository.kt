@@ -152,3 +152,14 @@ class RivenRepository(
         File(platformDir(week.platform), "${week.publishedMillis}.json.gz").delete()
     }
 
+    private fun write(week: RivenTrades) {
+        val folder = platformDir(week.platform).apply { mkdirs() }
+        GZIPOutputStream(File(folder, "${week.publishedMillis}.json.gz").outputStream()).bufferedWriter().use {
+            it.write(WfmJson.encodeToString(RivenTrades.serializer(), week))
+        }
+        folder.listFiles { file -> file.name.endsWith(".json.gz") }.orEmpty()
+            .sortedByDescending { it.name.removeSuffix(".json.gz").toLongOrNull() ?: 0L }
+            .drop(WEEKS_KEPT)
+            .forEach { it.delete() }
+    }
+}
