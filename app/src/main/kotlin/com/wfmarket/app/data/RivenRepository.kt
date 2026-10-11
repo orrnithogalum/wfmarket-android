@@ -148,3 +148,7 @@ class RivenRepository(
         }.sortedBy { it.publishedMillis }.takeLast(WEEKS_KEPT)
     }
 
+    private fun delete(week: RivenTrades) {
+        File(platformDir(week.platform), "${week.publishedMillis}.json.gz").delete()
+    }
+
