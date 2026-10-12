@@ -72,3 +72,7 @@ fun rememberRivenRolls(item: AuctionItem, catalog: Catalog): RivenRolls? {
 
 private val WidestGrades = listOf("A+", "B+", "C+")
 
+/** How far apart the bars start filling, and how long after its bar starts a grade appears. */
+private const val BAR_STEP_MILLIS = 50L
+private const val GRADE_DELAY_MILLIS = 200L
+
