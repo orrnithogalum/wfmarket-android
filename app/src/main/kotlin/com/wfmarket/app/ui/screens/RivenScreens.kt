@@ -76,3 +76,5 @@ private val WidestGrades = listOf("A+", "B+", "C+")
 private const val BAR_STEP_MILLIS = 50L
 private const val GRADE_DELAY_MILLIS = 200L
 
+private fun RivenGrade.spoken(): String = label.replace("+", " plus").replace("-", " minus")
+
