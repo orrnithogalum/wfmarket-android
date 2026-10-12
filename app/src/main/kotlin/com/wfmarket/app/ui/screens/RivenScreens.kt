@@ -70,3 +70,5 @@ fun rememberRivenRolls(item: AuctionItem, catalog: Catalog): RivenRolls? {
     return remember(item, catalog, classes) { catalog.rivenRolls(item, classes) }
 }
 
+private val WidestGrades = listOf("A+", "B+", "C+")
+
