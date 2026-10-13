@@ -115,3 +115,26 @@ fun RivenGradeLabel(roll: StatRoll?, modifier: Modifier = Modifier, revealIndex:
     }
 }
 
+/**
+ * Where a stat's roll landed between the worst and best it could be, with those ends under it.
+ * The bar fills in as it appears, so it reads as a measurement rather than a slider.
+ */
+@Composable
+fun RivenRollBar(roll: StatRoll, worst: String, best: String, modifier: Modifier = Modifier, index: Int = 0) {
+    // The bars fill one shortly after another, so a riven's rolls read top to bottom.
+    val fill = remember { Animatable(0f) }
+    LaunchedEffect(roll.position) {
+        if (fill.value == 0f) delay(BAR_STEP_MILLIS * index)
+        fill.animateTo(roll.position.toFloat(), Motion.arrive(500))
+    }
+    val labelStyle = MaterialTheme.typography.labelSmall
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        LinearProgressIndicator(progress = { fill.value.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+        Row {
+            Text("Worst $worst", style = labelStyle, color = labelColor, modifier = Modifier.weight(1f))
+            Text("Best $best", style = labelStyle, color = labelColor)
+        }
+    }
+}
+
