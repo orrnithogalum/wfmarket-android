@@ -138,3 +138,13 @@ fun RivenRollBar(roll: StatRoll, worst: String, best: String, modifier: Modifier
     }
 }
 
+/** What a riven's grading had to assume, in a line, or null when it assumed nothing. */
+fun rivenRollsNote(rolls: RivenRolls, listedRank: Int?): String? = buildList {
+    rolls.nowFactor?.let { factor ->
+        val percent = ((factor - 1) * 100).roundToInt()
+        val change = if (percent >= 0) "$percent% higher" else "${-percent}% lower"
+        add("Listed before Riven Disposition was retired, so in game these stats are now about $change.")
+    }
+    if (rolls.rank != (listedRank ?: 0)) add("These look like maxed stats, so they're graded at rank ${rolls.rank}.")
+}.joinToString(" ").ifEmpty { null }
+
