@@ -152,3 +152,8 @@ fun rivenRollsNote(rolls: RivenRolls, listedRank: Int?): String? = buildList {
 
 private fun Catalog.tradeWeapon(trade: RivenTrade): RivenWeapon? = trade.compatibility?.let { rivenWeaponsByEnglishName[it.lowercase()] }
 
+private fun Catalog.tradeTitle(trade: RivenTrade): String {
+    val name = trade.compatibility ?: return "Veiled ${trade.rivenClass?.label?.lowercase() ?: ""} riven".replace("  ", " ")
+    return tradeWeapon(trade)?.let { weaponName(AuctionType.RIVEN, it.slug) } ?: name
+}
+
