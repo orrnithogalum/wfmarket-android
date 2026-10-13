@@ -148,3 +148,7 @@ fun rivenRollsNote(rolls: RivenRolls, listedRank: Int?): String? = buildList {
     if (rolls.rank != (listedRank ?: 0)) add("These look like maxed stats, so they're graded at rank ${rolls.rank}.")
 }.joinToString(" ").ifEmpty { null }
 
+// ---------------------------------------------------------------- Trade figures
+
+private fun Catalog.tradeWeapon(trade: RivenTrade): RivenWeapon? = trade.compatibility?.let { rivenWeaponsByEnglishName[it.lowercase()] }
+
