@@ -164,3 +164,14 @@ private fun plat(value: Double): String =
 private fun day(millis: Long, pattern: String = "d MMM"): String =
     DateTimeFormatter.ofPattern(pattern, Locale.getDefault()).withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(millis))
 
+/** How a figure moved since the week before, with an arrow so the direction reads without color. */
+private fun change(now: Double, before: Double?): String? {
+    if (before == null || before <= 0) return null
+    val percent = ((now - before) / before * 100).roundToInt()
+    return when {
+        percent > 0 -> "▲ $percent%"
+        percent < 0 -> "▼ ${-percent}%"
+        else -> "– 0%"
+    }
+}
+
