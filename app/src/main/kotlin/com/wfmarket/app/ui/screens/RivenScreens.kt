@@ -161,3 +161,6 @@ private fun Catalog.tradeTitle(trade: RivenTrade): String {
 private fun plat(value: Double): String =
     if (value < 10 && value % 1.0 != 0.0) String.format(Locale.US, "%.1f", value) else String.format(Locale.getDefault(), "%,d", value.roundToLong())
 
+private fun day(millis: Long, pattern: String = "d MMM"): String =
+    DateTimeFormatter.ofPattern(pattern, Locale.getDefault()).withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(millis))
+
