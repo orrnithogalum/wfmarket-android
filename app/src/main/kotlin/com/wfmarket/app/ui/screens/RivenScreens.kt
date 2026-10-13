@@ -157,3 +157,7 @@ private fun Catalog.tradeTitle(trade: RivenTrade): String {
     return tradeWeapon(trade)?.let { weaponName(AuctionType.RIVEN, it.slug) } ?: name
 }
 
+/** Whole platinum with separators, except for the odd small median like 9.5. */
+private fun plat(value: Double): String =
+    if (value < 10 && value % 1.0 != 0.0) String.format(Locale.US, "%.1f", value) else String.format(Locale.getDefault(), "%,d", value.roundToLong())
+
