@@ -175,3 +175,16 @@ private fun change(now: Double, before: Double?): String? {
     }
 }
 
+/** A weapon's riven trades last week, if Warframe's figures have it. */
+@Composable
+private fun rememberLatestWeek(weaponSlug: String, catalog: Catalog): Pair<RivenWeeks, RivenTrade>? {
+    val container = appContainer()
+    val weeks by container.rivens.weeks.collectAsStateWithLifecycle()
+    val all = weeks ?: return null
+    return remember(all, weaponSlug, catalog) {
+        val weapon = catalog.rivenWeaponsBySlug[weaponSlug] ?: return@remember null
+        val week = all.history(catalog.englishName(weapon)).firstOrNull()?.takeIf { it.publishedMillis == all.latest?.publishedMillis }
+        (week?.unrolled ?: week?.rolled)?.let { all to it }
+    }
+}
+
