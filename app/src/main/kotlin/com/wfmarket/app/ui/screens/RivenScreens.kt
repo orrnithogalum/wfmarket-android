@@ -78,3 +78,40 @@ private const val GRADE_DELAY_MILLIS = 200L
 
 private fun RivenGrade.spoken(): String = label.replace("+", " plus").replace("-", " minus")
 
+/**
+ * A stat's grade as a letter. Every grade takes the room of the widest, with the letters at its
+ * start, so a list of stats lines up at any text size. A value no roll can reach shows a question
+ * mark, and a stat that can't be graded leaves the space empty.
+ */
+@Composable
+fun RivenGradeLabel(roll: StatRoll?, modifier: Modifier = Modifier, revealIndex: Int? = null) {
+    val grade = roll?.grade
+    val text = when {
+        roll?.outOfRange == true -> "?"
+        grade != null -> grade.label
+        else -> ""
+    }
+    val spoken = when {
+        roll?.outOfRange == true -> "can't be graded"
+        grade != null -> "grade ${grade.spoken()}"
+        else -> ""
+    }
+    val style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+    // Beside a bar, the letter fades in as the bar nears its value, so the two read as one reading.
+    val reveal = remember { Animatable(if (revealIndex == null) 1f else 0f) }
+    if (revealIndex != null) {
+        LaunchedEffect(Unit) {
+            delay(BAR_STEP_MILLIS * revealIndex + GRADE_DELAY_MILLIS)
+            reveal.animateTo(1f, Motion.fadeIn())
+        }
+    }
+    Box(
+        modifier.semantics(mergeDescendants = true) { if (spoken.isNotEmpty()) contentDescription = spoken }.graphicsLayer { alpha = reveal.value },
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        // Unseen, these size the box to the widest grades.
+        WidestGrades.forEach { Text(it, Modifier.alpha(0f).clearAndSetSemantics {}, style = style, maxLines = 1) }
+        Text(text, Modifier.clearAndSetSemantics {}, style = style, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+    }
+}
+
