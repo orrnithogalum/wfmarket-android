@@ -219,3 +219,10 @@ private fun TradeCardContent(weeks: RivenWeeks, trade: RivenTrade, catalog: Cata
     if (open) RivenTradeSheet(trade, weeks, catalog) { open = false }
 }
 
+/** The same in a line, for where there's less room: under a search or a weapon being listed. */
+@Composable
+fun RivenTradeLine(weaponSlug: String, catalog: Catalog, modifier: Modifier = Modifier, gap: Dp = 0.dp) {
+    val latest = rememberLatestWeek(weaponSlug, catalog)
+    ArrivingContent(latest, modifier, gap) { (weeks, trade) -> TradeLineContent(weeks, trade, catalog) }
+}
+
