@@ -188,3 +188,10 @@ private fun rememberLatestWeek(weaponSlug: String, catalog: Catalog): Pair<Riven
     }
 }
 
+/** Last week's going rates for an auction's weapon, as figures. Opens the full figures when tapped. */
+@Composable
+fun RivenTradeCard(weaponSlug: String, catalog: Catalog, modifier: Modifier = Modifier, gap: Dp = 0.dp) {
+    val latest = rememberLatestWeek(weaponSlug, catalog)
+    ArrivingContent(latest, modifier, gap) { (weeks, trade) -> TradeCardContent(weeks, trade, catalog) }
+}
+
