@@ -195,3 +195,27 @@ fun RivenTradeCard(weaponSlug: String, catalog: Catalog, modifier: Modifier = Mo
     ArrivingContent(latest, modifier, gap) { (weeks, trade) -> TradeCardContent(weeks, trade, catalog) }
 }
 
+@Composable
+private fun TradeCardContent(weeks: RivenWeeks, trade: RivenTrade, catalog: Catalog) {
+    val week = remember(weeks, trade) { weeks.history(trade.weekKey).firstOrNull() } ?: return
+    var open by remember { mutableStateOf(false) }
+    val colors = MaterialTheme.colorScheme
+    Surface(onClick = { open = true }, shape = MaterialTheme.shapes.large, color = colors.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Last week's trades", style = MaterialTheme.typography.titleSmall)
+                    Text("Warframe's figures for this weapon", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+                }
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = colors.onSurfaceVariant)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                val figure = MaterialTheme.typography.titleLarge
+                week.unrolled?.let { Figure("unrolled median") { Platinum(it.median, style = figure) } }
+                week.rolled?.let { Figure("rolled median") { Platinum(it.median, style = figure) } }
+            }
+        }
+    }
+    if (open) RivenTradeSheet(trade, weeks, catalog) { open = false }
+}
+
