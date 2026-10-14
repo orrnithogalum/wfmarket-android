@@ -226,3 +226,21 @@ fun RivenTradeLine(weaponSlug: String, catalog: Catalog, modifier: Modifier = Mo
     ArrivingContent(latest, modifier, gap) { (weeks, trade) -> TradeLineContent(weeks, trade, catalog) }
 }
 
+/**
+ * Content that can turn up after the screen around it, like last week's figures: it opens out into
+ * its space rather than pushing everything down in one jump. Kept while it closes, so it doesn't
+ * vanish mid-animation. [gap] is the space above it, which goes when it does: a parent's own
+ * spacing would leave a gap around nothing.
+ */
+@Composable
+private fun <T : Any> ArrivingContent(value: T?, modifier: Modifier = Modifier, gap: Dp = 0.dp, content: @Composable (T) -> Unit) {
+    var last by remember { mutableStateOf(value) }
+    if (value != null) last = value
+    AnimatedVisibility(
+        visible = value != null,
+        modifier = modifier,
+        enter = expandVertically(Motion.move(), expandFrom = Alignment.Top) + fadeIn(Motion.fadeIn(300)),
+        exit = shrinkVertically(Motion.move(250)) + fadeOut(Motion.fadeOut()),
+    ) { last?.let { Box(Modifier.padding(top = gap)) { content(it) } } }
+}
+
