@@ -244,3 +244,27 @@ private fun <T : Any> ArrivingContent(value: T?, modifier: Modifier = Modifier, 
     ) { last?.let { Box(Modifier.padding(top = gap)) { content(it) } } }
 }
 
+@Composable
+private fun TradeLineContent(weeks: RivenWeeks, trade: RivenTrade, catalog: Catalog) {
+    val week = remember(weeks, trade) { weeks.history(trade.weekKey).firstOrNull() } ?: return
+    var open by remember { mutableStateOf(false) }
+    val text = listOfNotNull(
+        week.unrolled?.let { "${plat(it.median)}p unrolled" },
+        week.rolled?.let { "${plat(it.median)}p rolled" },
+    ).joinToString(" · ")
+    Row(
+        Modifier.clip(MaterialTheme.shapes.small).clickable { open = true }.padding(horizontal = 4.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            "Last week's median: $text",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    if (open) RivenTradeSheet(trade, weeks, catalog) { open = false }
+}
+
