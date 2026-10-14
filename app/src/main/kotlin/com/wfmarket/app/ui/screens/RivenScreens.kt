@@ -268,3 +268,16 @@ private fun TradeLineContent(weeks: RivenWeeks, trade: RivenTrade, catalog: Cata
     if (open) RivenTradeSheet(trade, weeks, catalog) { open = false }
 }
 
+/** How often a riven traded, against the week's most traded, as a short meter and its number. */
+@Composable
+private fun PopularityMeter(pop: Double, modifier: Modifier = Modifier) {
+    // Switching between rolled and unrolled slides each meter to its new reading.
+    val shown by animateFloatAsState((pop / 100).toFloat().coerceIn(0f, 1f), Motion.move(), label = "popularity")
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        LinearProgressIndicator(progress = { shown.coerceIn(0f, 1f) }, modifier = Modifier.width(64.dp))
+        RollingValue(pop.roundToInt()) {
+            Text("popularity $it", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
