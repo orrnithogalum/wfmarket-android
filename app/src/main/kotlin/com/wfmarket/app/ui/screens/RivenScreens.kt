@@ -281,3 +281,98 @@ private fun PopularityMeter(pop: Double, modifier: Modifier = Modifier) {
     }
 }
 
+/** Everything Warframe's figures say about one weapon's rivens, and every week the app has kept. */
+@Composable
+fun RivenTradeSheet(trade: RivenTrade, weeks: RivenWeeks, catalog: Catalog, onDismiss: () -> Unit) {
+    val navigator = LocalNavigator.current
+    val weapon = catalog.tradeWeapon(trade)
+    val history = remember(weeks, trade) { weeks.history(trade.weekKey) }
+    val latest = history.firstOrNull()?.takeIf { it.publishedMillis == weeks.latest?.publishedMillis }
+    val colors = MaterialTheme.colorScheme
+    val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet) {
+        Column(
+            Modifier.fadingVerticalScroll().padding(horizontal = 16.dp).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            var step = 0
+            Row(Modifier.staggeredEntrance(step++), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                WeaponThumb(weapon?.let { catalog.weaponImage(AuctionType.RIVEN, it.slug) }, height = 56.dp)
+                Column {
+                    Text(catalog.tradeTitle(trade), style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        listOfNotNull(trade.rivenClass?.let { "${it.label} riven" }, weeks.latest?.let { "week to ${day(it.publishedMillis)}" }).joinToString(" · "),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onSurfaceVariant,
+                    )
+                }
+            }
+            listOf("Unrolled" to latest?.unrolled, "Rolled" to latest?.rolled).forEach { (label, line) ->
+                Column(Modifier.staggeredEntrance(step++), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(label, style = MaterialTheme.typography.titleSmall)
+                    if (line == null) {
+                        Text("None traded last week", style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+                    } else {
+                        val before = weeks.before(line)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            StatTile("Median", Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Platinum(line.median)
+                                    change(line.median, before?.median)?.let {
+                                        Text(it, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+                                    }
+                                }
+                            }
+                            StatTile("Average", Modifier.weight(1f)) { Platinum(line.avg.roundToLong()) }
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            StatTile("Range", "${plat(line.min)}–${plat(line.max)}", Modifier.weight(1f))
+                            StatTile("Popularity", "${line.pop.roundToInt()} of 100", Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+            Column(Modifier.staggeredEntrance(step++), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Median by week", style = MaterialTheme.typography.titleSmall)
+                if (history.size < 2) {
+                    Text(
+                        "Warframe only publishes the latest week, so the app keeps each one it sees. They'll build up here from now on.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onSurfaceVariant,
+                    )
+                } else {
+                    // A table rather than a chart: a few weeks are read as numbers anyway.
+                    val head = MaterialTheme.typography.labelMedium
+                    Row(Modifier.padding(vertical = 4.dp)) {
+                        Text("Week to", style = head, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+                        Text("Unrolled", style = head, color = colors.onSurfaceVariant, modifier = Modifier.width(88.dp), textAlign = TextAlign.End)
+                        Text("Rolled", style = head, color = colors.onSurfaceVariant, modifier = Modifier.width(88.dp), textAlign = TextAlign.End)
+                    }
+                    history.forEach { week ->
+                        HorizontalDivider(color = colors.outlineVariant)
+                        Row(Modifier.padding(vertical = 8.dp)) {
+                            Text(day(week.publishedMillis, "d MMM yyyy"), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                            Text(week.unrolled?.let { "${plat(it.median)}p" } ?: "–", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.width(88.dp), textAlign = TextAlign.End)
+                            Text(week.rolled?.let { "${plat(it.median)}p" } ?: "–", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.width(88.dp), textAlign = TextAlign.End)
+                        }
+                    }
+                }
+            }
+            if (weapon != null) {
+                Button(
+                    onClick = {
+                        // The sheet slides away first, then the tab moves over to the search.
+                        scope.launch { sheet.hide() }.invokeOnCompletion {
+                            onDismiss()
+                            navigator.auctionSearch(AuctionSearch(weaponUrlName = weapon.slug))
+                        }
+                    },
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.staggeredEntrance(step).fillMaxWidth(),
+                ) { Text("See auctions") }
+            }
+        }
+    }
+}
+
