@@ -380,3 +380,12 @@ fun RivenTradeSheet(trade: RivenTrade, weeks: RivenWeeks, catalog: Catalog, onDi
 
 private enum class PricesState { MOBILE, FAILED, LOADING, READY }
 
+private enum class RivenSort(val label: String, val needsHistory: Boolean = false) {
+    POPULAR("Most traded"),
+    PRICE_HIGH("Highest price"),
+    PRICE_LOW("Lowest price"),
+    RISING("Rising", true),
+    FALLING("Falling", true),
+    NAME("Name"),
+}
+
