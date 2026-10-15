@@ -389,3 +389,148 @@ private enum class RivenSort(val label: String, val needsHistory: Boolean = fals
     NAME("Name"),
 }
 
+/** Last week's riven trades from Warframe's own figures, weapon by weapon. */
+@Composable
+fun RivenPricesPage(catalog: Catalog) {
+    val container = appContainer()
+    val scope = rememberCoroutineScope()
+    val settings by container.settings.flow.collectAsStateWithLifecycle()
+    val allWeeks by container.rivens.weeks.collectAsStateWithLifecycle()
+    val platform = settings.platform
+    val weeks = allWeeks?.takeIf { it.platform == platform }
+
+    var refreshing by remember { mutableStateOf(false) }
+    var failure by remember { mutableStateOf<String?>(null) }
+    var rolled by rememberSaveable { mutableStateOf(true) }
+    var kind by rememberSaveable { mutableStateOf<RivenClass?>(null) }
+    var sort by rememberSaveable { mutableStateOf(RivenSort.POPULAR) }
+    var query by rememberSaveable { mutableStateOf("") }
+    var opened by remember { mutableStateOf<RivenTrade?>(null) }
+    var showHelp by remember { mutableStateOf(false) }
+
+    fun refresh(pulled: Boolean) {
+        scope.launch {
+            refreshing = pulled
+            val hadData = weeks != null
+            runCatching { container.rivens.refresh() }
+                .onSuccess { failure = null }
+                .onFailure {
+                    if (it is kotlinx.coroutines.CancellationException) throw it
+                    failure = it.userMessage()
+                    if (pulled && hadData) container.refreshFailed()
+                }
+            refreshing = false
+        }
+    }
+
+    // The repository loads these on its own, but a failed first try has nobody else to retry it.
+    LaunchedEffect(platform) { if (weeks == null && platform != Platform.MOBILE.wire) refresh(pulled = false) }
+
+    val latest = weeks?.latest
+    val state = when {
+        platform == Platform.MOBILE.wire -> PricesState.MOBILE
+        latest == null && failure != null -> PricesState.FAILED
+        latest == null || weeks == null -> PricesState.LOADING
+        else -> PricesState.READY
+    }
+    // Keyed on the kind of state, as LoadContent is, so fresh figures replace old ones without a fade.
+    Crossfade(state, animationSpec = Motion.fadeIn(), label = "prices") { shown ->
+    when {
+        shown == PricesState.MOBILE -> PullablePage {
+            MessageBox(Icons.Outlined.PhoneAndroid, "No riven figures for mobile", "Warframe publishes riven trades for PC, PlayStation, Xbox and Switch only.")
+        }
+        shown == PricesState.FAILED -> PullablePage { ErrorBox(failure.orEmpty(), onRetry = { refresh(pulled = false) }) }
+        shown == PricesState.LOADING || latest == null || weeks == null -> PullablePage { LoadingBox() }
+        else -> RefreshBox(isRefreshing = refreshing, onRefresh = { refresh(pulled = true) }) {
+            val hasHistory = weeks.previous != null
+            val shownSort = if (sort.needsHistory && !hasHistory) RivenSort.POPULAR else sort
+            val rows = remember(latest, weeks, rolled, kind, shownSort, query, catalog) {
+                val filtered = latest.trades.filter { trade ->
+                    trade.rerolled == rolled &&
+                        (kind == null || trade.rivenClass == kind) &&
+                        (query.isBlank() || catalog.tradeTitle(trade).contains(query.trim(), ignoreCase = true))
+                }
+                fun movement(trade: RivenTrade): Double? = weeks.before(trade)?.median?.takeIf { it > 0 }?.let { (trade.median - it) / it }
+                when (shownSort) {
+                    RivenSort.POPULAR -> filtered.sortedByDescending { it.pop }
+                    RivenSort.PRICE_HIGH -> filtered.sortedByDescending { it.median }
+                    RivenSort.PRICE_LOW -> filtered.sortedBy { it.median }
+                    RivenSort.RISING -> filtered.sortedByDescending { movement(it) ?: Double.NEGATIVE_INFINITY }
+                    RivenSort.FALLING -> filtered.sortedBy { movement(it) ?: Double.POSITIVE_INFINITY }
+                    RivenSort.NAME -> filtered.sortedBy { catalog.tradeTitle(it) }
+                }
+            }
+            FadingLazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 88.dp),
+            ) {
+                item {
+                    Row(Modifier.padding(start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Warframe's figures for ${Platform.of(platform).label}, week to ${day(latest.publishedMillis, "EEE d MMM")}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(onClick = { showHelp = true }) { Icon(Icons.Outlined.Info, "About these figures") }
+                    }
+                }
+                item {
+                    // The same filled pill as the home page's search bar.
+                    TextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Filter weapons") },
+                        leadingIcon = { Icon(Icons.Filled.Search, null) },
+                        singleLine = true,
+                        shape = CircleShape,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                        ),
+                    )
+                }
+                item {
+                    Row(
+                        Modifier.horizontalScroll(rememberScrollState()).padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        ChoiceButtonGroup(listOf(true, false), rolled, { if (it) "Rolled" else "Unrolled" }, { rolled = it })
+                        DropdownChip("Type", kind, listOf(null) + RivenClass.entries, { it?.label ?: "All" }, { kind = it }, isDefault = kind == null)
+                        DropdownChip("", shownSort, RivenSort.entries.filter { hasHistory || !it.needsHistory }, { it.label }, { sort = it }, isDefault = shownSort == RivenSort.POPULAR)
+                    }
+                }
+                if (rows.isEmpty()) item { EmptyBox("No rivens match") }
+                // Rows are keyed by weapon, so a new sort or filter moves them to their places, and
+                // switching rolled and unrolled keeps a weapon's row while its figures roll over.
+                itemsIndexed(rows, key = { _, trade -> trade.weekKey }) { index, trade ->
+                    RivenTradeRow(trade, weeks.before(trade), catalog, ListItemDefaults.segmentedShapes(index, rows.size), listItemMotion()) { opened = trade }
+                }
+            }
+        }
+    }
+
+    }
+
+    opened?.let { trade -> weeks?.let { RivenTradeSheet(trade, it, catalog) { opened = null } } }
+
+    if (showHelp) {
+        AlertDialog(
+            onDismissRequest = { showHelp = false },
+            confirmButton = { TextButton(onClick = { showHelp = false }) { Text("Close") } },
+            title = { Text("Riven prices") },
+            text = {
+                Text(
+                    "Warframe publishes what each weapon's rivens sold for in trades between players, once a week on Mondays. These are its figures for your platform.\n\n" +
+                        "Rolled rivens have been cycled at least once. Popularity is how often a riven traded, where the week's most traded is 100.\n\n" +
+                        "Only the latest week is published, so the app keeps each week it sees. Rising and falling appear once it has two.",
+                )
+            },
+        )
+    }
+}
+
