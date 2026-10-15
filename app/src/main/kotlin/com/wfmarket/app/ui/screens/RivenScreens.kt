@@ -564,3 +564,6 @@ private fun RivenTradeRow(trade: RivenTrade, before: RivenTrade?, catalog: Catal
     ) { Text(catalog.tradeTitle(trade), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) }
 }
 
+/** The worst and best of a stat's range, written as its value would be. */
+fun rollEnds(stat: RivenStat, roll: StatRoll, catalog: Catalog): Pair<String, String> =
+    formatAttributeValue(stat.copy(value = roll.worst), catalog) to formatAttributeValue(stat.copy(value = roll.best), catalog)
