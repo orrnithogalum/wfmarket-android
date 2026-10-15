@@ -376,3 +376,7 @@ fun RivenTradeSheet(trade: RivenTrade, weeks: RivenWeeks, catalog: Catalog, onDi
     }
 }
 
+// ---------------------------------------------------------------- The Riven prices tab
+
+private enum class PricesState { MOBILE, FAILED, LOADING, READY }
+
