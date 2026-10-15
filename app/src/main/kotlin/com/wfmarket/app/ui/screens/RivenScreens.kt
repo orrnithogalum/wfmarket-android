@@ -534,3 +534,33 @@ fun RivenPricesPage(catalog: Catalog) {
     }
 }
 
+@Composable
+private fun RivenTradeRow(trade: RivenTrade, before: RivenTrade?, catalog: Catalog, shapes: ListItemShapes, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val weapon = catalog.tradeWeapon(trade)
+    SegmentedListItem(
+        onClick = onClick,
+        shapes = shapes,
+        colors = ListItemDefaults.segmentedColors(containerColor = colors.surfaceContainer),
+        modifier = modifier.padding(bottom = ListItemDefaults.SegmentedGap),
+        verticalAlignment = Alignment.CenterVertically,
+        leadingContent = { WeaponThumb(weapon?.let { catalog.weaponImage(AuctionType.RIVEN, it.slug) }, height = 40.dp) },
+        supportingContent = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    listOfNotNull(trade.rivenClass?.label, "avg ${plat(trade.avg)}", "${plat(trade.min)}–${plat(trade.max)}").joinToString(" · "),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                PopularityMeter(trade.pop)
+            }
+        },
+        trailingContent = {
+            Column(horizontalAlignment = Alignment.End) {
+                RollingPlatinum(trade.median)
+                Text(change(trade.median, before?.median) ?: "median", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+            }
+        },
+    ) { Text(catalog.tradeTitle(trade), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+}
+
