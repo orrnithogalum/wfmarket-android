@@ -49,3 +49,8 @@ private data class WeaponOption(
     val popularity: Double = 0.0,
 )
 
+private fun WeaponOption.detail(): String? = listOfNotNull(
+    rivenClass?.label,
+    median?.let { "${String.format(Locale.getDefault(), "%,d", it.roundToLong())}p last week" },
+).joinToString(" · ").ifEmpty { null }
+
