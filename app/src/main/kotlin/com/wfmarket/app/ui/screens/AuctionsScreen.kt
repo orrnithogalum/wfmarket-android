@@ -475,6 +475,7 @@ private fun AuctionPriceColumn(auction: Auction) {
 
 /**
  * An auction in a list, the same wherever one is listed. In a grouped list, [shape] is its place's.
+ * A riven opens a quick look when held, so its rolls can be read without leaving the list.
  */
 @Composable
 fun AuctionCard(
@@ -492,6 +493,8 @@ fun AuctionCard(
     val openedFrom = LocalOpenedFrom.current
     val auctions = appContainer().auctions
     val shared = transitionKey?.let { "$it:${auction.id}" }
+    var quickLook by remember { mutableStateOf(false) }
+    val canPeek = item.type == AuctionType.RIVEN && item.attributes.isNotEmpty()
     val interaction = remember { MutableInteractionSource() }
     Card(
         modifier = modifier.fillMaxWidth().clip(shape).combinedClickable(
@@ -501,6 +504,15 @@ fun AuctionCard(
                 openedFrom.key = shared
                 auctions.handoff = auction
                 onClick()
+            },
+            onLongClickLabel = if (canPeek) "Quick look" else null,
+            onLongClick = if (canPeek) {
+                {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    quickLook = true
+                }
+            } else {
+                null
             },
         ),
         shape = shape,
@@ -546,6 +558,7 @@ fun AuctionCard(
             }
         }
     }
+    if (quickLook) RivenQuickLook(auction, catalog, onOpen = onClick) { quickLook = false }
 }
 
 @Composable

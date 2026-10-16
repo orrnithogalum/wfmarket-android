@@ -148,6 +148,95 @@ fun rivenRollsNote(rolls: RivenRolls, listedRank: Int?): String? = buildList {
     if (rolls.rank != (listedRank ?: 0)) add("These look like maxed stats, so they're graded at rank ${rolls.rank}.")
 }.joinToString(" ").ifEmpty { null }
 
+// ---------------------------------------------------------------- Quick look
+
+/**
+ * What holding a riven in a list shows: every roll against its range, who's selling, and what the
+ * weapon's rivens went for last week, with the things one does next. [onOpen] opens the auction.
+ */
+@Composable
+fun RivenQuickLook(auction: Auction, catalog: Catalog, onOpen: () -> Unit, onDismiss: () -> Unit) {
+    val container = appContainer()
+    val navigator = LocalNavigator.current
+    val context = LocalContext.current
+    val item = auction.item
+    val rolls = rememberRivenRolls(item, catalog)
+    val me by container.account.me.collectAsStateWithLifecycle()
+    val colors = MaterialTheme.colorScheme
+    val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    // Each action closes the sheet first, so it slides away instead of vanishing.
+    fun then(action: () -> Unit) {
+        scope.launch { sheet.hide() }.invokeOnCompletion {
+            onDismiss()
+            action()
+        }
+    }
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet) {
+        Column(
+            Modifier.fadingVerticalScroll().padding(horizontal = 16.dp).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            var step = 0
+            Row(Modifier.staggeredEntrance(step++), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                WeaponThumb(catalog.weaponImage(item.type, item.weaponUrlName), height = 56.dp)
+                Column(Modifier.weight(1f)) {
+                    Text(catalog.weaponName(item.type, item.weaponUrlName), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    item.name?.let { Text(it.replaceFirstChar { c -> c.uppercase() }, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant) }
+                }
+                AuctionPrice(auction)
+            }
+            RivenStats(item.attributes, catalog, Modifier.staggeredEntrance(step++).fillMaxWidth(), rolls = rolls, detailed = true)
+            rolls?.let { rivenRollsNote(it, item.modRank) }?.let {
+                Text(it, Modifier.staggeredEntrance(step), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+            }
+            AuctionDetailsLine(item, catalog, Modifier.staggeredEntrance(step++))
+            Column(Modifier.staggeredEntrance(step++)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    UserAvatar(assetUrl(auction.owner.avatar), auction.owner.ingameName, size = 32.dp, status = auction.owner.status)
+                    Text(auction.owner.ingameName.orEmpty(), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    StatusLabel(auction.owner.status)
+                    Text("+${auction.owner.reputation}", style = MaterialTheme.typography.labelMedium, color = colors.primary)
+                }
+                RivenTradeLine(item.weaponUrlName, catalog, gap = 8.dp)
+            }
+            Row(Modifier.staggeredEntrance(step++), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (auction.owner.id != me?.id) {
+                    OutlinedButton(
+                        onClick = {
+                            copyToClipboard(context, auctionWhisper(auction, catalog))
+                            then { container.notices.show("Whisper copied") }
+                        },
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(Icons.Filled.ContentCopy, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Whisper", maxLines = 1)
+                    }
+                }
+                // The cheapest listings with the same buffs, which is what a riven is priced against.
+                OutlinedButton(
+                    onClick = {
+                        val search = AuctionSearch(
+                            weaponUrlName = item.weaponUrlName,
+                            positiveStats = item.attributes.filter { it.positive }.map { it.urlName }.take(3),
+                        )
+                        then { navigator.auctionSearch(search) }
+                    },
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(Icons.Filled.Search, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Find similar", maxLines = 1)
+                }
+            }
+            Button(onClick = { then(onOpen) }, shapes = ButtonDefaults.shapes(), modifier = Modifier.staggeredEntrance(step).fillMaxWidth()) { Text("Open auction") }
+        }
+    }
+}
+
 // ---------------------------------------------------------------- Trade figures
 
 private fun Catalog.tradeWeapon(trade: RivenTrade): RivenWeapon? = trade.compatibility?.let { rivenWeaponsByEnglishName[it.lowercase()] }
