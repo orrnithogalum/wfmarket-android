@@ -54,3 +54,6 @@ private fun WeaponOption.detail(): String? = listOfNotNull(
     median?.let { "${String.format(Locale.getDefault(), "%,d", it.roundToLong())}p last week" },
 ).joinToString(" · ").ifEmpty { null }
 
+/** Names starting with a digit or a symbol share one heading. */
+private fun WeaponOption.letter(): String = name.firstOrNull()?.uppercaseChar()?.takeIf { it.isLetter() }?.toString() ?: "#"
+
