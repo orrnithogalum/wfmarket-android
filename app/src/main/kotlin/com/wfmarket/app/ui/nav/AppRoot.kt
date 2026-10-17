@@ -85,7 +85,7 @@ private enum class TopLevel(val route: String, val label: String, val selected: 
 
 private val NavBackStackEntry.isTab: Boolean get() = TopLevel.entries.any { it.route == destination.route }
 
-private val NavigationBarHeight = 80.dp
+private val NavigationBarHeight = 64.dp
 private val NavigationRailWidth = 80.dp
 private val OfflineBannerHeight = 28.dp
 
@@ -258,9 +258,10 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                         }
                     }
                 } else {
-                    NavigationBar(Modifier.align(Alignment.BottomCenter).then(barSemantics)) {
+                    // Material 3 Expressive's flexible bar: shorter, with the pill behind the chosen icon.
+                    ShortNavigationBar(Modifier.align(Alignment.BottomCenter).then(barSemantics)) {
                         TopLevel.entries.forEach { top ->
-                            NavigationBarItem(
+                            ShortNavigationBarItem(
                                 selected = top == shownTab,
                                 onClick = { navigator.openTab(top.route) },
                                 icon = { TabIcon(top, top == shownTab, unread) },
