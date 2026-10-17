@@ -203,3 +203,5 @@ fun WeaponPicker(
     }
 }
 
+/** How long a choice shows as taken before the sheet goes. */
+private const val CONFIRM_MILLIS = 140L
