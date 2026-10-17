@@ -40,4 +40,7 @@ object Motion {
     /** Material's emphasized curve, for moving between two places on screen. */
     val Emphasized = CubicBezierEasing(0.2f, 0f, 0f, 1f)
 
+    /** Material's emphasized decelerate curve, for things arriving. */
+    val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
+
 
