@@ -49,4 +49,7 @@ object Motion {
     /** Something arriving, such as a section settling in or a bar filling. */
     fun <T> arrive(durationMillis: Int = 300): FiniteAnimationSpec<T> = tween(durationMillis, easing = EmphasizedDecelerate)
 
+    /** Something fading in. */
+    fun <T> fadeIn(durationMillis: Int = 220): FiniteAnimationSpec<T> = tween(durationMillis, easing = EmphasizedDecelerate)
+
 
