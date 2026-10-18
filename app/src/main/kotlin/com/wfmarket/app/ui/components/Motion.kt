@@ -63,3 +63,6 @@ object Motion {
 fun LazyItemScope.listItemMotion(): Modifier =
     Modifier.animateItem(fadeInSpec = Motion.fadeIn(), placementSpec = Motion.move(350), fadeOutSpec = Motion.fadeOut())
 
+/** The layout that shared elements fly across, around all the screens. */
+val LocalSharedTransitionScope = staticCompositionLocalOf<SharedTransitionScope?> { null }
+
