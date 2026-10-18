@@ -66,3 +66,6 @@ fun LazyItemScope.listItemMotion(): Modifier =
 /** The layout that shared elements fly across, around all the screens. */
 val LocalSharedTransitionScope = staticCompositionLocalOf<SharedTransitionScope?> { null }
 
+/** The current screen's way in and out, which its shared elements move with. */
+val LocalNavAnimatedScope = staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
+
