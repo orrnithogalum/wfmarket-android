@@ -46,4 +46,7 @@ object Motion {
     /** Something moving or growing to its place, such as a picture flying to the next screen. */
     fun <T> move(durationMillis: Int = 400): FiniteAnimationSpec<T> = tween(durationMillis, easing = Emphasized)
 
+    /** Something arriving, such as a section settling in or a bar filling. */
+    fun <T> arrive(durationMillis: Int = 300): FiniteAnimationSpec<T> = tween(durationMillis, easing = EmphasizedDecelerate)
+
 
