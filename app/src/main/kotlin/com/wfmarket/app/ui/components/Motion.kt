@@ -69,3 +69,12 @@ val LocalSharedTransitionScope = staticCompositionLocalOf<SharedTransitionScope?
 /** The current screen's way in and out, which its shared elements move with. */
 val LocalNavAnimatedScope = staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
 
+/**
+ * Which card an auction was last opened from, as `list:id`. The same auction can be in several
+ * lists at once, such as Recent and a search, and its picture should fly back to the one it left.
+ */
+@Stable
+class OpenedFrom {
+    var key: String? by mutableStateOf(null)
+}
+
