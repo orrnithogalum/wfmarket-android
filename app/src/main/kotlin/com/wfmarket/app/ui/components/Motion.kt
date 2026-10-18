@@ -56,3 +56,10 @@ object Motion {
     fun <T> fadeOut(durationMillis: Int = 120): FiniteAnimationSpec<T> = tween(durationMillis)
 }
 
+/**
+ * A list row's way in, out, and to a new place when the list changes, in the app's quieter
+ * timing. Rows arriving fade in where they land; rows leaving fade out; the rest slide over.
+ */
+fun LazyItemScope.listItemMotion(): Modifier =
+    Modifier.animateItem(fadeInSpec = Motion.fadeIn(), placementSpec = Motion.move(350), fadeOutSpec = Motion.fadeOut())
+
