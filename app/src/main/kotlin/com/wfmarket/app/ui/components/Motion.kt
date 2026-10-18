@@ -43,4 +43,7 @@ object Motion {
     /** Material's emphasized decelerate curve, for things arriving. */
     val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
 
+    /** Something moving or growing to its place, such as a picture flying to the next screen. */
+    fun <T> move(durationMillis: Int = 400): FiniteAnimationSpec<T> = tween(durationMillis, easing = Emphasized)
+
 
