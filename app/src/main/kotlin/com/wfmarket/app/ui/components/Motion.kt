@@ -52,4 +52,7 @@ object Motion {
     /** Something fading in. */
     fun <T> fadeIn(durationMillis: Int = 220): FiniteAnimationSpec<T> = tween(durationMillis, easing = EmphasizedDecelerate)
 
+    /** Something fading out, quicker than things fade in, so the old never lingers over the new. */
+    fun <T> fadeOut(durationMillis: Int = 120): FiniteAnimationSpec<T> = tween(durationMillis)
+}
 
