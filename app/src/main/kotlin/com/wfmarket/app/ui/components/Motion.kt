@@ -78,3 +78,5 @@ class OpenedFrom {
     var key: String? by mutableStateOf(null)
 }
 
+val LocalOpenedFrom = staticCompositionLocalOf { OpenedFrom() }
+
