@@ -100,3 +100,21 @@ fun Modifier.sharedAcrossScreens(key: String?): Modifier {
     }
 }
 
+/**
+ * Fades this in, rising a few dp into place, when it first appears, [index] steps behind the first,
+ * so content that arrives together settles in reading order.
+ */
+@Composable
+fun Modifier.staggeredEntrance(index: Int, stepMillis: Long = 25): Modifier {
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        delay(index * stepMillis)
+        progress.animateTo(1f, Motion.arrive(300))
+    }
+    val lift = with(LocalDensity.current) { 8.dp.toPx() }
+    return graphicsLayer {
+        alpha = progress.value
+        translationY = (1 - progress.value) * lift
+    }
+}
+
