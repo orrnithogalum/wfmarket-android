@@ -118,3 +118,20 @@ fun Modifier.staggeredEntrance(index: Int, stepMillis: Long = 25): Modifier {
     }
 }
 
+/**
+ * A number that changes in place, shifting a little up as it grows or down as it falls while the
+ * old one fades, so a change reads as a change rather than a swap.
+ */
+@Composable
+fun <T : Comparable<T>> RollingValue(value: T, content: @Composable (T) -> Unit) {
+    AnimatedContent(
+        value,
+        transitionSpec = {
+            val up = targetState > initialState
+            (slideInVertically(Motion.arrive(250)) { (if (up) it else -it) / 3 } + fadeIn(Motion.fadeIn(200)))
+                .togetherWith(slideOutVertically(Motion.move(250)) { (if (up) -it else it) / 3 } + fadeOut(Motion.fadeOut(100)))
+        },
+        label = "rolling",
+    ) { content(it) }
+}
+
