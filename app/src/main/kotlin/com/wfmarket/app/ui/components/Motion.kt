@@ -80,3 +80,23 @@ class OpenedFrom {
 
 val LocalOpenedFrom = staticCompositionLocalOf { OpenedFrom() }
 
+/**
+ * Morphs this into whatever has the same [key] on the next screen: the bounds move while the two
+ * cross-fade, so a card's picture grows into the page's.
+ */
+@Composable
+fun Modifier.sharedAcrossScreens(key: String?): Modifier {
+    val shared = LocalSharedTransitionScope.current
+    val animated = LocalNavAnimatedScope.current
+    if (key == null || shared == null || animated == null) return this
+    return with(shared) {
+        this@sharedAcrossScreens.sharedBounds(
+            rememberSharedContentState(key),
+            animated,
+            enter = androidx.compose.animation.fadeIn(Motion.fadeIn()),
+            exit = androidx.compose.animation.fadeOut(Motion.fadeOut()),
+            boundsTransform = { _, _ -> Motion.move() },
+        )
+    }
+}
+
