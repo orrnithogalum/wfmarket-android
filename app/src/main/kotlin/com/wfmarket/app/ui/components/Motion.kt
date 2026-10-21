@@ -135,3 +135,8 @@ fun <T : Comparable<T>> RollingValue(value: T, content: @Composable (T) -> Unit)
     ) { content(it) }
 }
 
+/** Platinum that changes in place. */
+@Composable
+fun RollingPlatinum(value: Double, style: TextStyle = MaterialTheme.typography.titleMedium) {
+    RollingValue(value) { Platinum(it, style = style) }
+}
