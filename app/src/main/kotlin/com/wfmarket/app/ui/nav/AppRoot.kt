@@ -89,6 +89,50 @@ private val NavigationBarHeight = 64.dp
 private val NavigationRailWidth = 80.dp
 private val OfflineBannerHeight = 28.dp
 
+// Material's motion patterns. In both, the old screen is gone before the new one fades in, so two
+// screens' worth of text are never on top of each other. Switching tabs and going back fade through.
+// Opening a screen also moves forward a little.
+private const val OUT_MILLIS = 90
+private const val IN_MILLIS = 210
+private const val SLIDE_MILLIS = 300
+private const val SLIDE_FRACTION = 12
+
+private fun fadeThroughIn(): EnterTransition =
+    fadeIn(tween(IN_MILLIS, OUT_MILLIS, LinearOutSlowInEasing)) +
+        scaleIn(tween(IN_MILLIS, OUT_MILLIS, LinearOutSlowInEasing), initialScale = 0.96f)
+
+private fun fadeThroughOut(): ExitTransition = fadeOut(tween(OUT_MILLIS, easing = FastOutLinearInEasing))
+
+/**
+ * Screens opened from a button in a bar's corner, which settle in from that corner: a small zoom,
+ * over the screen underneath, which stays until they're in. Settings is opened this way whether
+ * or not anyone's signed in.
+ */
+private val NavBackStackEntry.grows: Boolean get() = destination.route == "settings"
+
+private val TopEnd = TransformOrigin(1f, 0f)
+
+private fun growIn(): EnterTransition =
+    scaleIn(tween(GROW_MILLIS, easing = Motion.EmphasizedDecelerate), initialScale = 0.94f, transformOrigin = TopEnd) +
+        fadeIn(tween(180, easing = LinearOutSlowInEasing))
+
+private fun shrinkOut(): ExitTransition =
+    scaleOut(tween(200, easing = FastOutLinearInEasing), targetScale = 0.94f, transformOrigin = TopEnd) +
+        fadeOut(tween(160, easing = FastOutLinearInEasing))
+
+private fun heldOut(): ExitTransition = fadeOut(tween(150, delayMillis = GROW_MILLIS - 150, easing = LinearEasing))
+
+private fun heldIn(): EnterTransition = fadeIn(tween(150, easing = LinearOutSlowInEasing))
+
+private const val GROW_MILLIS = 300
+
+private fun forwardIn(): EnterTransition =
+    slideInHorizontally(tween(SLIDE_MILLIS, easing = FastOutSlowInEasing)) { it / SLIDE_FRACTION } +
+        fadeIn(tween(IN_MILLIS, OUT_MILLIS, LinearOutSlowInEasing))
+
+private fun forwardOut(): ExitTransition =
+    slideOutHorizontally(tween(SLIDE_MILLIS, easing = FastOutSlowInEasing)) { -it / SLIDE_FRACTION } + fadeThroughOut()
+
 private class Navigator(private val controller: NavHostController, private val container: AppContainer) : AppNavigator {
     override fun back() { controller.popBackStack() }
     override fun item(slug: String) = controller.navigate("item/$slug")
@@ -278,6 +322,22 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                     controller,
                     startDestination = TopLevel.MARKET.route,
                     modifier = Modifier.fillMaxSize(),
+                    enterTransition = {
+                        when {
+                            targetState.grows -> growIn()
+                            initialState.isTab && targetState.isTab -> fadeThroughIn()
+                            else -> forwardIn()
+                        }
+                    },
+                    exitTransition = {
+                        when {
+                            targetState.grows -> heldOut()
+                            initialState.isTab && targetState.isTab -> fadeThroughOut()
+                            else -> forwardOut()
+                        }
+                    },
+                    popEnterTransition = { if (initialState.grows) heldIn() else fadeThroughIn() },
+                    popExitTransition = { if (initialState.grows) shrinkOut() else fadeThroughOut() },
                 ) {
                     screen("market") { tab { MarketScreen() } }
                     screen("auctions") { tab { AuctionsScreen() } }
