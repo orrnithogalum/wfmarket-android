@@ -762,7 +762,15 @@ private fun SendButton(canSend: Boolean, sends: Int, onClick: () -> Unit) {
         ),
         modifier = Modifier.size(56.dp),
     ) {
-        Icon(Icons.AutoMirrored.Filled.Send, "Send")
+        // The plane flies off the way it points, and a fresh one fades in behind it.
+        AnimatedContent(
+            sends,
+            transitionSpec = {
+                fadeIn(tween(220, delayMillis = 120, easing = Motion.EmphasizedDecelerate)) togetherWith
+                    (slideOut(Motion.move(250)) { IntOffset(forward * it.width * 3 / 4, -it.height / 4) } + fadeOut(tween(180)))
+            },
+            label = "sendIcon",
+        ) { Icon(Icons.AutoMirrored.Filled.Send, "Send") }
     }
 }
 
