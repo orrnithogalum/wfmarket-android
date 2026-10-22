@@ -495,9 +495,15 @@ fun AuctionCard(
     val shared = transitionKey?.let { "$it:${auction.id}" }
     var quickLook by remember { mutableStateOf(false) }
     val canPeek = item.type == AuctionType.RIVEN && item.attributes.isNotEmpty()
+    // Held, the card settles back a touch, so a long press is felt building before the quick look opens.
     val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed) 0.985f else 1f, Motion.move(if (pressed) 300 else 200), label = "press")
     Card(
-        modifier = modifier.fillMaxWidth().clip(shape).combinedClickable(
+        modifier = modifier.fillMaxWidth().graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        }.clip(shape).combinedClickable(
             interactionSource = interaction,
             indication = ripple(),
             onClick = {
@@ -520,7 +526,7 @@ fun AuctionCard(
     ) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                WeaponThumb(catalog.weaponImage(item.type, item.weaponUrlName), height = 40.dp, tile = false)
+                WeaponThumb(catalog.weaponImage(item.type, item.weaponUrlName), Modifier.sharedAcrossScreens(shared?.let { "image:$it" }), height = 40.dp, tile = false)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                     Text(catalog.weaponName(item.type, item.weaponUrlName), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
