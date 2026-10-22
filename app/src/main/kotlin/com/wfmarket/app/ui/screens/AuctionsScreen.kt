@@ -397,7 +397,7 @@ fun RivenStats(attributes: List<RivenStat>, catalog: Catalog, modifier: Modifier
                             fontWeight = FontWeight.SemiBold,
                             color = if (stat.positive) semantic.positive else semantic.negative,
                         )
-                        if (rolls != null) RivenGradeLabel(roll)
+                        if (rolls != null) RivenGradeLabel(roll, revealIndex = index.takeIf { detailed && roll?.grade != null })
                     }
                 }
                 if (detailed && roll != null) {
