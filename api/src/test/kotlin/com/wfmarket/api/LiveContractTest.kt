@@ -144,6 +144,29 @@ class LiveContractTest {
         assertEquals(null, api.rivenTrades("mobile"))
     }
 
+    @Test fun rivenGradesFitFreshListings() = runBlocking {
+        // Listings since dispositions were normalized should nearly all be rolls the game can make.
+        // When this drops, the base values or the disposition have changed.
+        val classes = api.rivenTrades("pc")!!.trades.mapNotNull { trade -> trade.compatibility?.lowercase()?.let { name -> trade.rivenClass?.let { name to it } } }.toMap()
+        val weapons = api.rivenWeapons().associateBy { it.slug }
+        var graded = 0
+        var inRange = 0
+        for (search in listOf(AuctionSearch(weaponUrlName = "torid"), AuctionSearch(positiveStats = listOf("critical_chance"), sortBy = "price_desc"))) {
+            for (auction in api.searchAuctions(search).filter { (it.created ?: "") >= "2026-10-23" }) {
+                val weapon = weapons[auction.item.weaponUrlName] ?: continue
+                val rivenClass = classes[weapon.i18n["en"]?.name?.lowercase()] ?: com.wfmarket.api.model.RivenClass.of(weapon) ?: continue
+                val rolls = com.wfmarket.api.model.RivenGrading.grade(rivenClass, auction.item.attributes, auction.item.modRank ?: 0) ?: continue
+                rolls.stats.filterNotNull().filter { !it.tooRounded }.forEach {
+                    graded++
+                    if (!it.outOfRange) inRange++
+                }
+            }
+        }
+        println("riven grades: $inRange of $graded fresh stats in range")
+        assertTrue(graded > 100)
+        assertTrue(inRange > graded * 0.85)
+    }
+
     @Test fun signInReportsReadableErrors() = runBlocking {
         val failure = runCatching {
             api.signIn("nobody-wfm-probe@example.invalid", "probe-not-a-real-password", "contract-test")
