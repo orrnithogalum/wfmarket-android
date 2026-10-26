@@ -36,6 +36,22 @@ class RivenGradingTest {
     }
 
     @Test
+    fun gradesAtTheNormalizedDisposition() {
+        // Middles at rank 8 with two buffs and a curse: 222.75% crit chance, 133.65% multishot, 35.64% zoom.
+        val rolls = grades(
+            RivenClass.RIFLE, 8,
+            RivenStat("critical_chance", 245.0, true),
+            RivenStat("multishot", 121.0, true),
+            RivenStat("zoom", -35.6, false),
+        )
+        assertNull(rolls.oldDisposition)
+        assertEquals(listOf(RivenGrade.S, RivenGrade.C_MINUS, RivenGrade.B), rolls.stats.map { it?.grade })
+        val zoom = rolls.stats[2]!!
+        assertEquals(-39.2, zoom.min, 0.05)
+        assertEquals(-32.1, zoom.max, 0.05)
+    }
+
+    @Test
     fun readsMaxedStatsListedAtRankZero() {
         val rolls = grades(RivenClass.RIFLE, 0, RivenStat("critical_chance", 222.0, true), RivenStat("multishot", 134.0, true), RivenStat("zoom", -36.0, false))
         assertEquals(8, rolls.rank)
