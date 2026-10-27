@@ -98,3 +98,10 @@ A removed auction answers `400` with `{"error": {"auction": ["app.form.not_exist
 In debug builds, `adb shell am broadcast -a com.wfmarket.app.DEBUG_NOTIFY -p com.wfmarket.app.debug --ez alerts true`
 runs the check at once, and `--ez sample true` puts a made-up conversation, `sample`, in the inbox
 for checking how messages group. Nothing about it is sent anywhere.
+
+## Riven grades and prices
+
+`RivenGrading` grades each riven stat from S to F by how far its roll landed from the middle of the
+±10% it can roll, in two-point bands (S is +9.5 and up, F is below −9.5), as riven graders do. A
+smaller curse counts as better. A stat is `base × 10 × (rank + 1) × disposition × layout × roll`. The
+base values are Warframe's public export (`ExportUpgrades`, the `Lotus…RandomModRare` entries).
