@@ -105,3 +105,13 @@ for checking how messages group. Nothing about it is sent anywhere.
 ±10% it can roll, in two-point bands (S is +9.5 and up, F is below −9.5), as riven graders do. A
 smaller curse counts as better. A stat is `base × 10 × (rank + 1) × disposition × layout × roll`. The
 base values are Warframe's public export (`ExportUpgrades`, the `Lotus…RandomModRare` entries).
+
+- **Disposition** was retired in Hotfix 44.1.3 (2026-10-22): every weapon is now 1.2. The site still
+  lists the old per-weapon values, so a listing that only fits its weapon's old value is graded at
+  that value and labelled as older than the change. Its stats in game have since been rescaled.
+- **Rank**: sellers often enter a maxed riven's stats at rank 0, so values are also tried at rank 8.
+- **Riven type** comes from Warframe's trade figures, which name each weapon's riven. The site's
+  `rivenType` is wrong for some: secondary shotguns like the Bronco take pistol rivens, and the
+  Bubonico takes shotgun ones.
+- Values no roll can reach show `?`. Low-rank stats that the game rounds too coarsely, like faction
+  damage at rank 0, aren't graded.
