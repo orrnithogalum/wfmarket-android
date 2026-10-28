@@ -115,3 +115,7 @@ base values are Warframe's public export (`ExportUpgrades`, the `Lotus…RandomM
   Bubonico takes shotgun ones.
 - Values no roll can reach show `?`. Low-rank stats that the game rounds too coarsely, like faction
   damage at rank 0, aren't graded.
+
+Lists show only the letter. An auction's page adds a bar per stat for where it rolled between its
+worst and best, and holding a riven card opens the same as a quick look, with Find similar (the same
+weapon and buffs, cheapest first) for pricing. The auction editor grades stats as they're typed.
