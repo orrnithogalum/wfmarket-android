@@ -119,3 +119,8 @@ base values are Warframe's public export (`ExportUpgrades`, the `Lotus…RandomM
 Lists show only the letter. An auction's page adds a bar per stat for where it rolled between its
 worst and best, and holding a riven card opens the same as a quick look, with Find similar (the same
 weapon and buffs, cheapest first) for pricing. The auction editor grades stats as they're typed.
+
+The Riven prices tab shows Warframe's weekly figures (`www-static.warframe.com/repos/weeklyRivens*.json`,
+published on Mondays, none for mobile). They're a JavaScript literal rather than JSON, which
+`relaxedJson` converts. Each file covers one week only, so `RivenRepository` keeps every week it sees
+in `files/riven_trades`, which is where the week-on-week changes and the history come from.
