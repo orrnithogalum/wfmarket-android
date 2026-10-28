@@ -124,3 +124,11 @@ The Riven prices tab shows Warframe's weekly figures (`www-static.warframe.com/r
 published on Mondays, none for mobile). They're a JavaScript literal rather than JSON, which
 `relaxedJson` converts. Each file covers one week only, so `RivenRepository` keeps every week it sees
 in `files/riven_trades`, which is where the week-on-week changes and the history come from.
+
+## Links and shortcuts
+
+Notifications and launcher shortcuts open the app through links. Site URLs map onto screens in
+`AppRoot`, including `/auctions/search?...`, which `AuctionSearch.toUrl` and `fromQuery` read and
+write. Things with no page on the site use `wfmarket://`: `auctions/search`, `auctions/new`,
+`status` (the status sheet) and `status/<status>`. Shortcuts are published at runtime in `Shortcuts`
+because static ones name the package, which differs in the debug build.
