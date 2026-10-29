@@ -230,15 +230,7 @@ fun ItemScreen(routeSlug: String) {
                     PullablePage { ErrorBox(load.message, onRetry = viewModel::load) }
                 }
                 is Load.Ready -> CollapsingHeaderLayout(header = { ItemHeader(load.value, setItems, catalog, orders, viewModel::select) }) {
-                    PrimaryTabRow(selectedTabIndex = pager.currentPage) {
-                        ItemTab.entries.forEach { tab ->
-                            Tab(
-                                selected = pager.currentPage == tab.ordinal,
-                                onClick = { scope.launch { pager.animateScrollToPage(tab.ordinal) } },
-                                text = { Text(tab.label) },
-                            )
-                        }
-                    }
+                    AdaptiveTabRow(pager.currentPage, ItemTab.entries.map { it.label }) { scope.launch { pager.animateScrollToPage(it) } }
                     HorizontalPager(pager, Modifier.weight(1f), key = { it }) { page ->
                       // A part still loading shows its own spinner, so the pull spinner waits for it.
                       RefreshBox(isRefreshing = refreshing && orders is Load.Ready, onRefresh = viewModel::refresh, modifier = Modifier.fillMaxSize()) {
@@ -542,7 +534,7 @@ fun OrderDetails(order: Order) {
         if (!order.visible) add("Hidden")
     }
     if (tags.isNotEmpty()) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { tags.take(4).forEach { SmallTag(it) } }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) { tags.take(4).forEach { SmallTag(it) } }
     }
 }
 
@@ -848,7 +840,8 @@ private fun DropsTab(drops: Load<List<DropSource>>, catalog: Catalog, onRetry: (
                         Column(Modifier.weight(1f)) {
                             Text(relic?.let(catalog::itemName) ?: "Unknown relic", style = MaterialTheme.typography.bodyLarge)
                             source.rarity?.let { Text(it.humanize(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 4.dp)) {
+                            // Whole tags that wrap to a second line at a larger font, rather than the last one being squeezed.
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 4.dp)) {
                                 RelicRefinements.forEach { level ->
                                     source.rates?.get(level)?.let { SmallTag("${level.take(3).humanize()} ${percent(it)}") }
                                 }
