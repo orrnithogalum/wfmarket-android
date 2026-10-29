@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Shape
@@ -288,13 +289,18 @@ fun AuctionsScreen() {
                             if (tab == AuctionTab.SEARCH) {
                                 item {
                                     val alertOn = alerts.alerts.any { it.search == search }
-                                    Row(Modifier.padding(bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        TextButton(onClick = { filtersOpen = true }, modifier = Modifier.weight(1f, fill = false)) {
+                                    // The two share a line while they fit. With a larger font the chip moves under the
+                                    // filters rather than cutting their label short.
+                                    FlowRow(
+                                        Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        itemVerticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        TextButton(onClick = { filtersOpen = true }) {
                                             Icon(Icons.Filled.FilterList, null, Modifier.size(18.dp))
                                             Spacer(Modifier.width(8.dp))
-                                            Text("${search.type.humanize()} filters · ${auctions.size} results", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                            Text("${search.type.humanize()} filters · ${auctions.size} results", maxLines = 2, overflow = TextOverflow.Ellipsis)
                                         }
-                                        Spacer(Modifier.weight(1f))
                                         FilterChip(
                                             selected = alertOn,
                                             onClick = { toggleAlert(search) },
@@ -385,7 +391,8 @@ fun RivenStats(attributes: List<RivenStat>, catalog: Catalog, modifier: Modifier
                     Text(
                         catalog.attributeName(stat.urlName),
                         style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
+                        // A page has the room to show a long name whole at a large font. A card keeps to one line.
+                        maxLines = if (detailed) 2 else 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f),
                     )
@@ -465,12 +472,23 @@ fun AuctionDetailsLine(item: AuctionItem, catalog: Catalog, modifier: Modifier =
 @Composable
 private fun AuctionPriceColumn(auction: Auction) {
     val main = if (auction.isDirectSell) auction.buyoutPrice ?: auction.startingPrice else auction.topBid ?: auction.startingPrice
-    val label = when {
+    val kind = when {
         auction.isDirectSell -> "buyout"
         auction.topBid != null -> "top bid"
         else -> "starting bid"
-    } + (auction.buyoutPrice?.takeIf { !auction.isDirectSell }?.let { " · ${it}p buyout" } ?: "")
-    Figure(label, alignment = Alignment.End) { Platinum(main) }
+    }
+    val buyout = auction.buyoutPrice?.takeIf { !auction.isDirectSell }?.let { "${it}p buyout" }
+    val line = listOfNotNull(kind, buyout).joinToString(" · ")
+    val style = MaterialTheme.typography.labelSmall
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints {
+        // On one line, unless that would take most of the card from the weapon's name, as it can
+        // with a larger font. The buyout then goes under the kind of price.
+        val stacked = buyout != null && remember(line, style, constraints.maxWidth, measurer) {
+            measurer.measure(line, style, maxLines = 1).size.width > constraints.maxWidth * 0.45f
+        }
+        Figure(if (stacked) "$kind\n$buyout" else line, alignment = Alignment.End) { Platinum(main) }
+    }
 }
 
 /**
