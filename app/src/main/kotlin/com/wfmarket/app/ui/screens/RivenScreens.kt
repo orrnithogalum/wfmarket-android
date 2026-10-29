@@ -342,7 +342,7 @@ private fun TradeLineContent(weeks: RivenWeeks, trade: RivenTrade, catalog: Cata
         week.rolled?.let { "${plat(it.median)}p rolled" },
     ).joinToString(" · ")
     Row(
-        Modifier.clip(MaterialTheme.shapes.small).clickable { open = true }.padding(horizontal = 4.dp, vertical = 6.dp),
+        Modifier.bleed(4.dp).clip(MaterialTheme.shapes.small).clickable { open = true }.padding(horizontal = 4.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {

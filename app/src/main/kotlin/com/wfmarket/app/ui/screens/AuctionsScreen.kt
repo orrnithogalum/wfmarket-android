@@ -307,7 +307,7 @@ fun AuctionsScreen() {
                                 }
                                 val weapon = search.weaponUrlName
                                 if (search.type == AuctionType.RIVEN && weapon != null) {
-                                    item { RivenTradeLine(weapon, catalog, Modifier.padding(start = 8.dp, bottom = 4.dp)) }
+                                    item { RivenTradeLine(weapon, catalog, Modifier.padding(start = 12.dp, bottom = 4.dp)) }
                                 }
                             }
                             if (tab.filtersSellers) {
@@ -548,7 +548,8 @@ fun AuctionCard(
                 // The seller is a way to their profile of its own, apart from the card around it.
                 val navigator = LocalNavigator.current
                 Row(
-                    Modifier.weight(1f, fill = false).clip(MaterialTheme.shapes.small)
+                    // Its press reaches a little past the avatar and the reputation, but the avatar lines up with the text above.
+                    Modifier.weight(1f, fill = false).bleed(4.dp).clip(MaterialTheme.shapes.small)
                         .clickable(enabled = auction.owner.slug != null, onClickLabel = "Open profile") { auction.owner.slug?.let(navigator::user) }
                         .padding(horizontal = 4.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,

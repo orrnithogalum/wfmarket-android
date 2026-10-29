@@ -77,6 +77,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
 import androidx.core.net.toUri
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -873,4 +874,15 @@ fun ClickableRow(onClick: () -> Unit, modifier: Modifier = Modifier, content: @C
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         content = content,
     )
+}
+
+/**
+ * Lets what comes after this, such as a press highlight and its padding, reach [horizontal] past
+ * each side without moving anything, so a pressable row's content still lines up with the text
+ * around it. Pair it with the same horizontal padding inside the highlight.
+ */
+fun Modifier.bleed(horizontal: Dp): Modifier = layout { measurable, constraints ->
+    val extra = horizontal.roundToPx()
+    val placeable = measurable.measure(constraints.offset(horizontal = 2 * extra))
+    layout(placeable.width - 2 * extra, placeable.height) { placeable.place(-extra, 0) }
 }
