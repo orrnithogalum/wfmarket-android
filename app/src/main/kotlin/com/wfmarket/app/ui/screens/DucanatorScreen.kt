@@ -191,13 +191,14 @@ private fun DucatRow(entry: DucatEntry, catalog: Catalog, shapes: ListItemShapes
         leadingContent = { if (item != null) ItemThumb(catalog.art(item)) else ItemThumb(null as String?) },
         supportingContent = {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                // Each figure stays whole, and a larger font moves the last ones down a line instead of squeezing them.
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     LabelledValue("WA", fmt(entry.waPrice))
                     LabelledValue("Med", fmt(entry.median))
                     LabelledValue("Duc", entry.ducats.toString())
                     LabelledValue("Vol", entry.volume.toString())
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     PositionChange("D", entry.positionChangeDay)
                     PositionChange("W", entry.positionChangeWeek)
                     PositionChange("M", entry.positionChangeMonth)
@@ -219,8 +220,8 @@ private fun DucatRow(entry: DucatEntry, catalog: Catalog, shapes: ListItemShapes
 @Composable
 private fun LabelledValue(label: String, value: String) {
     Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
+        Text(value, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
     }
 }
 
@@ -234,8 +235,8 @@ private fun PositionChange(label: String, change: Int) {
         else -> "–" to MaterialTheme.colorScheme.onSurfaceVariant
     }
     Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text("$arrow${if (change != 0) kotlin.math.abs(change).toString() else ""}", style = MaterialTheme.typography.labelSmall, color = color)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
+        Text("$arrow${if (change != 0) kotlin.math.abs(change).toString() else ""}", style = MaterialTheme.typography.labelSmall, color = color, maxLines = 1, softWrap = false)
     }
 }
 
