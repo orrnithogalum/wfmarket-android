@@ -365,7 +365,7 @@ private fun PopularityMeter(pop: Double, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         LinearProgressIndicator(progress = { shown.coerceIn(0f, 1f) }, modifier = Modifier.width(64.dp))
         RollingValue(pop.roundToInt()) {
-            Text("popularity $it", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("popularity $it", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
         }
     }
 }
@@ -435,15 +435,15 @@ fun RivenTradeSheet(trade: RivenTrade, weeks: RivenWeeks, catalog: Catalog, onDi
                     val head = MaterialTheme.typography.labelMedium
                     Row(Modifier.padding(vertical = 4.dp)) {
                         Text("Week to", style = head, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-                        Text("Unrolled", style = head, color = colors.onSurfaceVariant, modifier = Modifier.width(88.dp), textAlign = TextAlign.End)
-                        Text("Rolled", style = head, color = colors.onSurfaceVariant, modifier = Modifier.width(88.dp), textAlign = TextAlign.End)
+                        Text("Unrolled", style = head, color = colors.onSurfaceVariant, modifier = Modifier.widthIn(min = 88.dp), textAlign = TextAlign.End)
+                        Text("Rolled", style = head, color = colors.onSurfaceVariant, modifier = Modifier.widthIn(min = 88.dp), textAlign = TextAlign.End)
                     }
                     history.forEach { week ->
                         HorizontalDivider(color = colors.outlineVariant)
                         Row(Modifier.padding(vertical = 8.dp)) {
                             Text(day(week.publishedMillis, "d MMM yyyy"), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                            Text(week.unrolled?.let { "${plat(it.median)}p" } ?: "–", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.width(88.dp), textAlign = TextAlign.End)
-                            Text(week.rolled?.let { "${plat(it.median)}p" } ?: "–", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.width(88.dp), textAlign = TextAlign.End)
+                            Text(week.unrolled?.let { "${plat(it.median)}p" } ?: "–", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.widthIn(min = 88.dp), textAlign = TextAlign.End)
+                            Text(week.rolled?.let { "${plat(it.median)}p" } ?: "–", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.widthIn(min = 88.dp), textAlign = TextAlign.End)
                         }
                     }
                 }
@@ -638,7 +638,8 @@ private fun RivenTradeRow(trade: RivenTrade, before: RivenTrade?, catalog: Catal
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     listOfNotNull(trade.rivenClass?.label, "avg ${plat(trade.avg)}", "${plat(trade.min)}–${plat(trade.max)}").joinToString(" · "),
-                    maxLines = 1,
+                    // A second line at larger font sizes, so the range isn't the part cut off.
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 PopularityMeter(trade.pop)

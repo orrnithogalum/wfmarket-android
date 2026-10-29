@@ -30,6 +30,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -581,9 +582,11 @@ fun AuctionEditorScreen(id: String?) {
                             catalog.rivenRolls(AuctionItem(weaponUrlName = slug, modRank = modRank.toIntOrNull() ?: 0, attributes = parsed), classes, allowOldDisposition = false)
                         }
                     }
+                    // Fixed widths for everything but the name, so the fields line up row to row. They
+                    // grow with a larger font, so the value and Good or Bad still fit.
+                    val widthScale = LocalDensity.current.fontScale.coerceIn(1f, 1.6f)
                     stats.forEachIndexed { index, stat ->
                         val roll = draftRolls?.stats?.getOrNull(index)
-                        // Fixed widths for everything but the name, so the fields line up row to row.
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Column(Modifier.weight(1f)) {
                                 Text(catalog.attributeName(stat.slug), maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -595,13 +598,13 @@ fun AuctionEditorScreen(id: String?) {
                                 label = { Text("Value") },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                modifier = Modifier.width(96.dp),
+                                modifier = Modifier.width(96.dp * widthScale),
                             )
                             FilterChip(
                                 selected = stat.positive,
                                 onClick = { stats = stats.toMutableList().also { it[index] = stat.copy(positive = !stat.positive) } },
                                 label = { Text(if (stat.positive) "Good" else "Bad", Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                                modifier = Modifier.width(72.dp),
+                                modifier = Modifier.width(72.dp * widthScale),
                             )
                             IconButton(onClick = { stats = stats.toMutableList().also { it.removeAt(index) } }) { Icon(Icons.Filled.Close, "Remove stat") }
                         }
