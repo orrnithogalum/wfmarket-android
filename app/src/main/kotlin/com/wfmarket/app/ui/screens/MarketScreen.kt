@@ -124,7 +124,8 @@ private fun CategoryTile(category: Category, selected: Boolean, onClick: () -> U
     val ink by animateColorAsState(if (selected) colors.onPrimary else colors.onSecondaryContainer, Motion.fadeIn(), label = "categoryInk")
     val label by animateColorAsState(if (selected) colors.primary else colors.onSurface, Motion.fadeIn(), label = "categoryLabel")
     Column(
-        Modifier.width(76.dp).clip(MaterialTheme.shapes.medium).clickable(onClick = onClick).padding(vertical = 6.dp),
+        // At least the icon's width plus a margin, and wider when a larger font needs it, so a name is never cut short.
+        Modifier.widthIn(min = 76.dp).clip(MaterialTheme.shapes.medium).clickable(onClick = onClick).padding(horizontal = 6.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
