@@ -19,8 +19,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WfMarket">
 
+        <!-- Compose redraws for a new size, font scale or orientation by itself. Letting it, instead of
+             recreating the activity, keeps open sheets, tabs and scroll positions where they were. -->
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|fontScale|keyboard|keyboardHidden|navigation"
             android:exported="true"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize">
