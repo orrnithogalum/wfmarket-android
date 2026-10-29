@@ -75,6 +75,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
@@ -590,6 +593,7 @@ fun SmallTag(text: String, modifier: Modifier = Modifier, container: Color = Mat
         style = MaterialTheme.typography.labelSmall,
         color = content,
         maxLines = 1,
+        softWrap = false,
     )
 }
 
@@ -656,7 +660,12 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 fun Figure(label: String, modifier: Modifier = Modifier, alignment: Alignment.Horizontal = Alignment.Start, content: @Composable () -> Unit) {
     Column(modifier, horizontalAlignment = alignment) {
         content()
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = if (alignment == Alignment.End) TextAlign.End else null,
+        )
     }
 }
 
@@ -885,4 +894,41 @@ fun Modifier.bleed(horizontal: Dp): Modifier = layout { measurable, constraints 
     val extra = horizontal.roundToPx()
     val placeable = measurable.measure(constraints.offset(horizontal = 2 * extra))
     layout(placeable.width - 2 * extra, placeable.height) { placeable.place(-extra, 0) }
+}
+
+/**
+ * This style, grown with the system font size only up to [maxScale] times its usual size. For
+ * labels with a fixed amount of room, such as the navigation bar's, which would otherwise overlap.
+ */
+@Composable
+fun TextStyle.withFontScaleUpTo(maxScale: Float): TextStyle {
+    val fontScale = LocalDensity.current.fontScale
+    if (fontScale <= maxScale) return this
+    val factor = maxScale / fontScale
+    return copy(fontSize = fontSize * factor, lineHeight = lineHeight * factor)
+}
+
+/**
+ * Tabs that share the width equally while every label fits its share on one line, and scroll
+ * once a larger font or a narrow screen leaves one too little room, so no label breaks mid-word.
+ */
+@Composable
+fun AdaptiveTabRow(selectedTabIndex: Int, labels: List<String>, modifier: Modifier = Modifier, onSelect: (Int) -> Unit) {
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.titleSmall
+    // A tab's label sits between 16dp of padding on either side.
+    val padding = with(LocalDensity.current) { 32.dp.roundToPx() }
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val share = constraints.maxWidth / labels.size.coerceAtLeast(1)
+        // The measurer changes with the density and font scale, so a new font size measures again.
+        val fits = remember(labels, style, share, padding, measurer) {
+            labels.all { measurer.measure(it, style, maxLines = 1).size.width + padding <= share }
+        }
+        val tabs: @Composable () -> Unit = {
+            labels.forEachIndexed { index, label ->
+                Tab(selected = index == selectedTabIndex, onClick = { onSelect(index) }, text = { Text(label, maxLines = 1) })
+            }
+        }
+        if (fits) PrimaryTabRow(selectedTabIndex) { tabs() } else PrimaryScrollableTabRow(selectedTabIndex, edgePadding = 8.dp) { tabs() }
+    }
 }

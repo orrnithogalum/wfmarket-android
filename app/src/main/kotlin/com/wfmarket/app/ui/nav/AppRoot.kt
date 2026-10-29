@@ -47,8 +47,12 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.wfmarket.app.ui.components.withFontScaleUpTo
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
@@ -87,7 +91,7 @@ private val NavBackStackEntry.isTab: Boolean get() = TopLevel.entries.any { it.r
 
 private val NavigationBarHeight = 64.dp
 private val NavigationRailWidth = 80.dp
-private val OfflineBannerHeight = 28.dp
+private val OfflineBannerMinHeight = 28.dp
 
 // Material's motion patterns. In both, the old screen is gone before the new one fades in, so two
 // screens' worth of text are never on top of each other. Switching tabs and going back fade through.
@@ -268,7 +272,9 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
     LaunchedEffect(Unit) { container.notices.flow.collect { notices.showSnackbar(it) } }
 
     val online by container.connectivity.online.collectAsStateWithLifecycle()
-    val offlineBanner by animateDpAsState(if (online) 0.dp else OfflineBannerHeight, tween(250), label = "offlineBanner")
+    // Room for its label at any font size: one line with a little space around it.
+    val bannerHeight = with(LocalDensity.current) { maxOf(OfflineBannerMinHeight, MaterialTheme.typography.labelMedium.lineHeight.toDp() + 12.dp) }
+    val offlineBanner by animateDpAsState(if (online) 0.dp else bannerHeight, tween(250), label = "offlineBanner")
 
     // Tab screens leave room for the bar instead of being resized by it. If the bar took its space
     // from the layout, every screen would jump as it comes and goes during a transition.
@@ -297,7 +303,7 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                                 selected = top == shownTab,
                                 onClick = { navigator.openTab(top.route) },
                                 icon = { TabIcon(top, top == shownTab, unread) },
-                                label = { Text(top.label) },
+                                label = { TabLabel(top.label) },
                             )
                         }
                     }
@@ -309,7 +315,7 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                                 selected = top == shownTab,
                                 onClick = { navigator.openTab(top.route) },
                                 icon = { TabIcon(top, top == shownTab, unread) },
-                                label = { Text(top.label, maxLines = 1) },
+                                label = { TabLabel(top.label) },
                             )
                         }
                     }
@@ -370,7 +376,7 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                     Modifier.align(Alignment.BottomCenter).padding(bottom = bottomInset + if (!wide && onTopLevel) NavigationBarHeight else 0.dp),
                 )
             }
-            if (offlineBanner > 0.dp) OfflineBanner(offlineBanner)
+            if (offlineBanner > 0.dp) OfflineBanner(offlineBanner, bannerHeight)
         }
     }
 }
@@ -380,16 +386,16 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
  * status bar padding, which ends up behind this, so nothing has to know the banner exists.
  */
 @Composable
-private fun OfflineBanner(height: Dp) {
+private fun OfflineBanner(height: Dp, fullHeight: Dp) {
     val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     Surface(
-        Modifier.fillMaxWidth().height(statusBar + height).graphicsLayer { alpha = height / OfflineBannerHeight }
+        Modifier.fillMaxWidth().height(statusBar + height).graphicsLayer { alpha = height / fullHeight }
             .semantics { liveRegion = LiveRegionMode.Polite },
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
     ) {
         Box(contentAlignment = Alignment.BottomCenter) {
             Row(
-                Modifier.height(OfflineBannerHeight),
+                Modifier.height(fullHeight),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
@@ -398,6 +404,17 @@ private fun OfflineBanner(height: Dp) {
             }
         }
     }
+}
+
+/**
+ * A tab's name, which grows with the system font only so far, because the bar can't grow with it.
+ * Past that, a name too long for its share of the width shrinks to fit rather than run into the next.
+ */
+@Composable
+private fun TabLabel(label: String) {
+    val style = LocalTextStyle.current.withFontScaleUpTo(1.3f)
+    // A little room either side, so neighbouring names never touch.
+    Text(label, Modifier.padding(horizontal = 2.dp), style = style, maxLines = 1, autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize, stepSize = 0.5.sp))
 }
 
 @Composable
