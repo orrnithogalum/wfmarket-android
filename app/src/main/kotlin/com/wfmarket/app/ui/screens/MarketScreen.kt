@@ -5,6 +5,9 @@ package com.wfmarket.app.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -376,12 +379,21 @@ private fun MarketContent(
 
         // Every item is keyed, so switching between the home page and a category fades one set of
         // rows out and the other in, and what stays slides to its new place.
-        if (online != null && online > 0) {
-            item(key = "online") {
+        // Always the first row, empty until the count arrives. Added later above the categories,
+        // it would be scrolled up under the search bar, since a list keeps its first row in place.
+        item(key = "online") {
+            var shown by remember { mutableIntStateOf(0) }
+            if (online != null && online > 0) shown = online
+            AnimatedVisibility(
+                online != null && online > 0,
+                modifier = listItemMotion(),
+                enter = expandVertically(Motion.move(), expandFrom = Alignment.Top) + fadeIn(Motion.fadeIn(300)),
+                exit = shrinkVertically(Motion.move(250)) + fadeOut(Motion.fadeOut()),
+            ) {
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    modifier = listItemMotion().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
                 ) {
                     Row(
                         Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -390,7 +402,7 @@ private fun MarketContent(
                     ) {
                         Box(Modifier.size(8.dp).clip(CircleShape).background(statusColor("online")))
                         Text(
-                            "${java.text.NumberFormat.getIntegerInstance().format(online)} tenno online",
+                            "${java.text.NumberFormat.getIntegerInstance().format(shown)} tenno online",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
