@@ -1,5 +1,6 @@
 package com.wfmarket.app.notifications
 
+import android.annotation.SuppressLint
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -24,7 +25,11 @@ import com.wfmarket.app.data.AuctionAlert
 import com.wfmarket.app.data.FollowedAuction
 import com.wfmarket.app.data.humanize
 
-/** Owns the notification channels and everything the user sees in the shade. */
+/**
+ * Owns the notification channels and everything the user sees in the shade. Every post checks
+ * [canPost] first, which lint can't follow, hence the suppression.
+ */
+@SuppressLint("MissingPermission")
 class Notifier(private val context: Context) {
     private val manager = NotificationManagerCompat.from(context)
     private val delivered = context.getSharedPreferences("delivered_chats", Context.MODE_PRIVATE)
