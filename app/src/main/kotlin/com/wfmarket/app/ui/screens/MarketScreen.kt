@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -79,7 +80,6 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 /**
  * Browse groups for the catalogue. A group matches items carrying any of its tags and none of its
@@ -576,7 +576,7 @@ private fun FeaturedCarousel(catalog: Catalog, showcase: Showcase?, resurgence: 
             val names = it.headline?.substringAfter(':', "")?.trim()?.trimEnd('!')?.takeIf(String::isNotEmpty)
             Text(
                 listOfNotNull("Prime Resurgence", names).joinToString(": ") + " · until " +
-                    DateTimeFormatter.ofPattern("d MMM", Locale.getDefault()).withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(it.expiresAtMillis)),
+                    DateTimeFormatter.ofPattern("d MMM", LocalConfiguration.current.locales[0]).withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(it.expiresAtMillis)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp),

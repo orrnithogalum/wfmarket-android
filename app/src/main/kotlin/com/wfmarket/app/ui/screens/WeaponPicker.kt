@@ -26,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -168,7 +169,7 @@ fun WeaponPicker(
                             items(popular, key = { it.slug }) { option ->
                                 SuggestionTile(
                                     option.image, option.name,
-                                    option.median?.let { "${String.format(Locale.getDefault(), "%,d", it.roundToLong())}p" },
+                                    option.median?.let { "${String.format(LocalConfiguration.current.locales[0], "%,d", it.roundToLong())}p" },
                                     onClick = { choose(option.slug) },
                                     chosen = option.slug == chosen,
                                 )
