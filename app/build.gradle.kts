@@ -13,8 +13,12 @@ android {
         // Android 12 introduced Material You dynamic color.
         minSdk = 31
         targetSdk = 36
+        // Bumped together for each release. The release workflow checks the tag matches versionName.
         versionCode = 1
         versionName = "0.0.0"
+
+        // Where the app looks for new versions. A fork points this at its own repository.
+        buildConfigField("String", "UPDATE_REPOSITORY", "\"orrnithogalum/wfmarket-android\"")
     }
 
     buildTypes {
@@ -38,6 +42,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
@@ -65,4 +70,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    testImplementation(libs.junit)
 }
