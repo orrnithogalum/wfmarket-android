@@ -7,9 +7,14 @@ import androidx.core.app.RemoteInput
 import com.wfmarket.app.WfMarketApp
 import kotlinx.coroutines.launch
 
-/** Starting the app's process is enough: the container resumes whatever delivery is switched on. */
+/**
+ * Starting the app's process is enough: the container resumes whatever delivery is switched on.
+ * After an update, the new version also tidies away the download and says it's installed.
+ */
 class BootReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) = Unit
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == Intent.ACTION_MY_PACKAGE_REPLACED) (context.applicationContext as WfMarketApp).container.updater.onPackageReplaced()
+    }
 }
 
 /** Handles the notification's Reply and Mark as read actions without opening the app. */

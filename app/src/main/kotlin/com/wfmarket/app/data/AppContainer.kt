@@ -13,6 +13,8 @@ import com.wfmarket.app.notifications.Notifier
 import com.wfmarket.app.notifications.RealtimeService
 import com.wfmarket.app.notifications.ServiceNotice
 import com.wfmarket.app.notifications.SyncWorker
+import com.wfmarket.app.update.AppUpdater
+import com.wfmarket.app.update.UpdateWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,6 +68,8 @@ class AppContainer(val context: Context) {
     val appForeground: StateFlow<Boolean> = _appForeground.asStateFlow()
 
     val alerts = AuctionAlerts(context, api, sockets, notifier, myId = { account.me.value?.id }, isAppForeground = { _appForeground.value }, scope = scope)
+
+    val updater = AppUpdater(context, settings, notifier, notices, scope, isAppForeground = { _appForeground.value })
 
     val auctionRequest = MutableStateFlow<AuctionRequest?>(null)
 
@@ -170,6 +174,15 @@ class AppContainer(val context: Context) {
         }
 
         Shortcuts.publish(context)
+
+        // New versions: a look each time the app comes back if it's been a while, and twice a day
+        // in the background, for as long as checking is switched on.
+        scope.launch { appForeground.filter { it }.collect { updater.checkIfDue() } }
+        scope.launch {
+            settings.flow.map { it.checkUpdates }.distinctUntilChanged().collect { on ->
+                if (on && updater.supported) UpdateWorker.schedule(context) else UpdateWorker.cancel(context)
+            }
+        }
 
         // Dropped connections take a long time to time out, so catch up as soon as the network returns.
         scope.launch {
