@@ -50,6 +50,10 @@ class Notifier(private val context: Context) {
                 NotificationChannel(CHANNEL_ACCOUNT, "Account", NotificationManager.IMPORTANCE_DEFAULT).apply {
                     description = "Warnings and bans on your account"
                 },
+                NotificationChannel(CHANNEL_UPDATES, "App updates", NotificationManager.IMPORTANCE_LOW).apply {
+                    description = "New versions of WF Market, as they download and once they're ready to install"
+                    setShowBadge(false)
+                },
                 NotificationChannel(CHANNEL_SERVICE, "Background connection", NotificationManager.IMPORTANCE_MIN).apply {
                     description = "Silent notice Android requires while the app stays connected: to keep your status, or for instant delivery"
                     setShowBadge(false)
@@ -308,6 +312,56 @@ class Notifier(private val context: Context) {
         if (canPost) runCatching { manager.notify(ID_SERVICE, notification) }
     }
 
+    /** A download running with the app closed, as a bar in the shade. */
+    fun showUpdateProgress(version: String, bytes: Long, total: Long) {
+        if (!canPost) return
+        val percent = if (total > 0) (bytes * 100 / total).toInt() else 0
+        val notification = NotificationCompat.Builder(context, CHANNEL_UPDATES)
+            .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setContentTitle("Downloading WF Market $version")
+            .setContentText("$percent%")
+            .setProgress(100, percent, total <= 0)
+            .setOngoing(true)
+            .setSilent(true)
+            .setOnlyAlertOnce(true)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+            .setContentIntent(openUrl(UPDATES_LINK, ID_UPDATE))
+            .build()
+        runCatching { manager.notify(ID_UPDATE, notification) }
+    }
+
+    fun cancelUpdateProgress() = manager.cancel(ID_UPDATE)
+
+    /** A new version downloaded with the app closed. Install runs it straight from the shade. */
+    fun showUpdateReady(version: String) {
+        if (!canPost) return
+        val notification = NotificationCompat.Builder(context, CHANNEL_UPDATES)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setContentTitle("WF Market $version is ready to install")
+            .setContentText("Tap to see what's new")
+            .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+            .setContentIntent(openUrl(UPDATES_LINK, ID_UPDATE))
+            .addAction(R.drawable.ic_stat_notification, "Install", openUrl(INSTALL_LINK, ID_UPDATE + 1))
+            .build()
+        runCatching { manager.notify(ID_UPDATE, notification) }
+    }
+
+    /** Android closes the app to update it, so this says it's done and opens the new version. */
+    fun showUpdated(version: String) {
+        if (!canPost) return
+        val launch = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return
+        val notification = NotificationCompat.Builder(context, CHANNEL_UPDATES)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setContentTitle("Updated to WF Market $version")
+            .setContentText("Tap to open it")
+            .setAutoCancel(true)
+            .setTimeoutAfter(60 * 60 * 1000L)
+            .setContentIntent(PendingIntent.getActivity(context, ID_UPDATE + 2, launch, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+            .build()
+        runCatching { manager.notify(ID_UPDATE, notification) }
+    }
+
     fun cancelChat(chatId: String) = manager.cancel(chatTag(chatId), ID_CHAT)
 
     fun cancelAllChats() {
@@ -337,11 +391,16 @@ class Notifier(private val context: Context) {
         const val CHANNEL_ALERTS = "auction_alerts"
         const val CHANNEL_ACCOUNT = "account"
         const val CHANNEL_SERVICE = "service"
+        const val CHANNEL_UPDATES = "updates"
         const val GROUP_MESSAGES = "messages"
         const val ID_CHAT = 10
         const val ID_AUCTION = 11
         const val ID_ACCOUNT = 12
         const val ID_SERVICE = 13
         const val ID_ALERT = 14
+        const val ID_UPDATE = 15
+
+        const val UPDATES_LINK = "wfmarket://settings"
+        const val INSTALL_LINK = "wfmarket://update/install"
     }
 }

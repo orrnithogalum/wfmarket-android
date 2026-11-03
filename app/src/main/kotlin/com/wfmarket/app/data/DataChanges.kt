@@ -27,12 +27,15 @@ class DataChanges {
     }
 }
 
+/** A short message, and sometimes a button that acts on it. */
+data class Notice(val text: String, val action: String? = null, val onAction: (() -> Unit)? = null)
+
 /** Short messages that have to outlive the screen that caused them, such as one that just closed. */
 class Notices {
-    private val _flow = MutableSharedFlow<String>(extraBufferCapacity = 4)
-    val flow: SharedFlow<String> = _flow.asSharedFlow()
+    private val _flow = MutableSharedFlow<Notice>(extraBufferCapacity = 4)
+    val flow: SharedFlow<Notice> = _flow.asSharedFlow()
 
-    fun show(text: String) {
-        _flow.tryEmit(text)
+    fun show(text: String, action: String? = null, onAction: (() -> Unit)? = null) {
+        _flow.tryEmit(Notice(text, action, onAction))
     }
 }

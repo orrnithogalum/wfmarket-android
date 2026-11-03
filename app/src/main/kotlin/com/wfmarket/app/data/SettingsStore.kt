@@ -52,6 +52,8 @@ data class AppSettings(
     val rivenGrades: Boolean = true,
     val swipeRight: SwipeAction = SwipeAction.MARK_READ,
     val swipeLeft: SwipeAction = SwipeAction.DELETE,
+    val checkUpdates: Boolean = true,
+    val autoDownloadUpdates: Boolean = true,
 )
 
 private val Context.dataStore by preferencesDataStore("settings")
@@ -77,6 +79,8 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         val rivenGrades = booleanPreferencesKey("riven_grades")
         val swipeRight = stringPreferencesKey("swipe_right")
         val swipeLeft = stringPreferencesKey("swipe_left")
+        val checkUpdates = booleanPreferencesKey("check_updates")
+        val autoDownloadUpdates = booleanPreferencesKey("auto_download_updates")
     }
 
     private fun Preferences.toSettings() = AppSettings(
@@ -97,6 +101,8 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
         rivenGrades = this[Keys.rivenGrades] ?: true,
         swipeRight = swipeAction(this[Keys.swipeRight]) ?: SwipeAction.MARK_READ,
         swipeLeft = swipeAction(this[Keys.swipeLeft]) ?: SwipeAction.DELETE,
+        checkUpdates = this[Keys.checkUpdates] ?: true,
+        autoDownloadUpdates = this[Keys.autoDownloadUpdates] ?: true,
     )
 
     private fun swipeAction(name: String?) = name?.let { runCatching { SwipeAction.valueOf(it) }.getOrNull() }
@@ -133,6 +139,8 @@ class SettingsStore(private val context: Context, private val scope: CoroutineSc
     fun setRivenGrades(value: Boolean) = edit { it[Keys.rivenGrades] = value }
     fun setSwipeRight(value: SwipeAction) = edit { it[Keys.swipeRight] = value.name }
     fun setSwipeLeft(value: SwipeAction) = edit { it[Keys.swipeLeft] = value.name }
+    fun setCheckUpdates(value: Boolean) = edit { it[Keys.checkUpdates] = value }
+    fun setAutoDownloadUpdates(value: Boolean) = edit { it[Keys.autoDownloadUpdates] = value }
 
     fun setHeldStatus(value: HeldStatus?) = edit {
         if (value == null) {
