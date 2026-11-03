@@ -770,7 +770,7 @@ private fun SendButton(canSend: Boolean, sends: Int, onClick: () -> Unit) {
                     (slideOut(Motion.move(250)) { IntOffset(forward * it.width * 3 / 4, -it.height / 4) } + fadeOut(tween(180)))
             },
             label = "sendIcon",
-        ) { Icon(Icons.AutoMirrored.Filled.Send, "Send") }
+        ) { sent -> key(sent) { Icon(Icons.AutoMirrored.Filled.Send, "Send") } }
     }
 }
 
