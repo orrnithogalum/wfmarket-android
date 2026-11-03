@@ -176,7 +176,7 @@ fun MyProfileScreen() {
             topBar = {
                 TopAppBar(
                     title = { Text("Profile") },
-                    actions = { IconButton(onClick = navigator::settings) { Icon(Icons.Filled.Settings, "Settings") } },
+                    actions = { IconButton(onClick = navigator::settings) { SettingsIcon() } },
                 )
             },
             contentWindowInsets = WindowInsets.statusBars,
@@ -193,7 +193,7 @@ fun MyProfileScreen() {
             topBar = {
                 TopAppBar(
                     title = { Text("Profile") },
-                    actions = { IconButton(onClick = navigator::settings) { Icon(Icons.Filled.Settings, "Settings") } },
+                    actions = { IconButton(onClick = navigator::settings) { SettingsIcon() } },
                 )
             },
             contentWindowInsets = WindowInsets.statusBars,
@@ -303,7 +303,7 @@ fun ProfileScreen(slug: String, topLevel: Boolean = false) {
                     IconButton(onClick = { openUrl("https://warframe.market/profile/$slug") }, colors = overPicture(barFill)) {
                         Icon(Icons.AutoMirrored.Filled.OpenInNew, "Open on warframe.market")
                     }
-                    if (isMe) IconButton(onClick = navigator::settings, colors = overPicture(barFill)) { Icon(Icons.Filled.Settings, "Settings") }
+                    if (isMe) IconButton(onClick = navigator::settings, colors = overPicture(barFill)) { SettingsIcon() }
                 },
             )
         },

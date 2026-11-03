@@ -5,6 +5,11 @@ package com.wfmarket.app.ui.screens
 import android.content.Intent
 import android.os.PowerManager
 import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -32,9 +37,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wfmarket.api.model.Language
 import com.wfmarket.api.model.Platform
 import com.wfmarket.api.model.assetUrl
+import com.wfmarket.app.BuildConfig
 import com.wfmarket.app.data.SwipeAction
 import com.wfmarket.app.data.ThemeMode
 import com.wfmarket.app.ui.components.*
+import com.wfmarket.app.update.UpdateState
+import com.wfmarket.app.update.release
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -115,6 +123,18 @@ fun SettingsScreen() {
     var batteryExempt by remember { mutableStateOf(power.isIgnoringBatteryOptimizations(context.packageName)) }
     LifecycleResume { batteryExempt = power.isIgnoringBatteryOptimizations(context.packageName) }
 
+    val updater = container.updater
+    val update by updater.state.collectAsStateWithLifecycle()
+    val dismissedUpdate by updater.dismissed.collectAsStateWithLifecycle()
+    val installUpdate = rememberUpdateInstaller(updater)
+    // A notification's Install, or a snackbar's, lands here, where the permission can be asked for.
+    val installRequested by updater.installRequest.collectAsStateWithLifecycle()
+    LaunchedEffect(installRequested) {
+        if (!installRequested) return@LaunchedEffect
+        updater.installRequest.value = false
+        if (update is UpdateState.Ready) installUpdate() else updater.startDownload()
+    }
+
     var platformDialog by remember { mutableStateOf(false) }
     var languageDialog by remember { mutableStateOf(false) }
     var themeDialog by remember { mutableStateOf(false) }
@@ -141,6 +161,21 @@ fun SettingsScreen() {
     ) { padding ->
       RefreshBox(isRefreshing = refreshing, onRefresh = ::refreshAccount, modifier = Modifier.fillMaxSize().padding(padding)) {
         Column(Modifier.fillMaxSize().fadingVerticalScroll()) {
+            // A new version waits at the top until it's installed or put off with Later.
+            val waiting = update.release?.takeIf { updater.supported && it.version != dismissedUpdate && update !is UpdateState.UpToDate }
+            AnimatedVisibility(
+                waiting != null,
+                enter = expandVertically(Motion.move(), expandFrom = Alignment.Top) + fadeIn(Motion.fadeIn(300)),
+                exit = shrinkVertically(Motion.move(300)) + fadeOut(Motion.fadeOut()),
+            ) {
+                UpdateCard(
+                    update,
+                    onDownload = updater::startDownload,
+                    onCancel = updater::cancelDownload,
+                    onInstall = installUpdate,
+                    onLater = { update.release?.let { updater.dismiss(it.version) } },
+                )
+            }
             if (signedIn) {
                 me?.let { user ->
                     SettingsGroup {
@@ -248,11 +283,24 @@ fun SettingsScreen() {
                 }
             }
 
+            SettingsGroup("Updates") {
+                updateRows(
+                    updater,
+                    update,
+                    settings,
+                    onCheck = updater::checkNow,
+                    onSetCheck = container.settings::setCheckUpdates,
+                    onSetDownload = container.settings::setAutoDownloadUpdates,
+                    openUrl = openUrl,
+                )
+            }
+
             SettingsGroup("About") {
                 valueRow("Frequently asked questions") { openUrl("https://warframe.market/faq") }
                 valueRow("Terms of service") { openUrl("https://warframe.market/tos") }
                 valueRow("Privacy") { openUrl("https://warframe.market/privacy") }
-                valueRow("WF Market 1.0", "An unofficial client for warframe.market. Not affiliated with the site or Digital Extremes.")
+                valueRow("Source code", "Free software under the GNU AGPL 3.0, on GitHub") { openUrl("https://github.com/${BuildConfig.UPDATE_REPOSITORY}") }
+                valueRow("WF Market ${BuildConfig.VERSION_NAME}", "An unofficial client for warframe.market. Not affiliated with the site or Digital Extremes.")
             }
             Spacer(Modifier.height(24.dp).navigationBarsPadding())
         }

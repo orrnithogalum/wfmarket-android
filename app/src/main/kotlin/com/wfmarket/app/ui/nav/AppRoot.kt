@@ -178,6 +178,7 @@ private sealed interface LinkTarget {
     data class Screen(val route: String) : LinkTarget
     data class Auctions(val search: AuctionSearch?) : LinkTarget
     data class Status(val status: String?) : LinkTarget
+    data object InstallUpdate : LinkTarget
 }
 
 /** Maps a warframe.market URL, or one of the app's own links, onto a screen. Used by notifications, shortcuts and links. */
@@ -186,6 +187,8 @@ private fun targetFor(uri: Uri): LinkTarget? {
         return when (uri.host) {
             "auctions" -> if (uri.pathSegments.firstOrNull() == "new") LinkTarget.Screen("auction_new") else LinkTarget.Auctions(null)
             "status" -> LinkTarget.Status(uri.pathSegments.firstOrNull())
+            "settings" -> LinkTarget.Screen("settings")
+            "update" -> LinkTarget.InstallUpdate
             else -> null
         }
     }
@@ -231,6 +234,7 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
     val backStack by controller.currentBackStackEntryAsState()
     val destination = backStack?.destination
     val unread by container.chats.unread.collectAsStateWithLifecycle()
+    val updateWaiting = rememberUpdateWaiting()
     val onTopLevel = TopLevel.entries.any { top -> destination?.hierarchy?.any { it.route == top.route } == true }
     val wide = LocalConfiguration.current.screenWidthDp >= 600
 
@@ -257,9 +261,16 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                     }
                 }
             }
+            LinkTarget.InstallUpdate -> container.updater.requestInstall()
             null -> Unit
         }
         onDeepLinkHandled()
+    }
+
+    // Installing starts from Settings, which can ask for the permission to install first.
+    val installRequested by container.updater.installRequest.collectAsStateWithLifecycle()
+    LaunchedEffect(installRequested, destination != null) {
+        if (installRequested && destination != null && destination.route != "settings") navigator.settings()
     }
 
     // While a page is open, the bar underneath still shows the tab that page came from.
@@ -269,7 +280,11 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
     val shownTab = currentTab ?: lastTab
 
     val notices = remember { SnackbarHostState() }
-    LaunchedEffect(Unit) { container.notices.flow.collect { notices.showSnackbar(it) } }
+    LaunchedEffect(Unit) {
+        container.notices.flow.collect { notice ->
+            if (notices.showSnackbar(notice.text, notice.action) == SnackbarResult.ActionPerformed) notice.onAction?.invoke()
+        }
+    }
 
     val online by container.connectivity.online.collectAsStateWithLifecycle()
     // Room for its label at any font size: one line with a little space around it.
@@ -302,7 +317,7 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                             NavigationRailItem(
                                 selected = top == shownTab,
                                 onClick = { navigator.openTab(top.route) },
-                                icon = { TabIcon(top, top == shownTab, unread) },
+                                icon = { TabIcon(top, top == shownTab, unread, updateWaiting) },
                                 label = { TabLabel(top.label) },
                             )
                         }
@@ -314,7 +329,7 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
                             ShortNavigationBarItem(
                                 selected = top == shownTab,
                                 onClick = { navigator.openTab(top.route) },
-                                icon = { TabIcon(top, top == shownTab, unread) },
+                                icon = { TabIcon(top, top == shownTab, unread, updateWaiting) },
                                 label = { TabLabel(top.label) },
                             )
                         }
@@ -418,10 +433,13 @@ private fun TabLabel(label: String) {
 }
 
 @Composable
-private fun TabIcon(top: TopLevel, selected: Boolean, unread: Int) {
+private fun TabIcon(top: TopLevel, selected: Boolean, unread: Int, updateWaiting: Boolean) {
     val icon = if (selected) top.selected else top.unselected
     if (top == TopLevel.MESSAGES && unread > 0) {
         BadgedBox(badge = { Badge { Text(unread.toString()) } }) { Icon(icon, top.label) }
+    } else if (top == TopLevel.PROFILE && updateWaiting) {
+        // Settings, where the update is, opens from the profile.
+        BadgedBox(badge = { Badge() }) { Icon(icon, "${top.label}, update available") }
     } else {
         Icon(icon, top.label)
     }
