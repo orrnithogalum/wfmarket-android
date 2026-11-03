@@ -21,16 +21,32 @@ android {
         buildConfigField("String", "UPDATE_REPOSITORY", "\"orrnithogalum/wfmarket-android\"")
     }
 
+    signingConfigs {
+        // The release key, from ~/.gradle/gradle.properties (wfmarket.signing.*) on a computer, or
+        // from the WFM_SIGNING_* variables in CI. Updates only install over an app signed with the
+        // same key, so every published release has to use this one.
+        create("release") {
+            fun value(property: String, variable: String) =
+                providers.gradleProperty("wfmarket.signing.$property").orElse(providers.environmentVariable("WFM_SIGNING_$variable")).orNull
+            value("storeFile", "STORE_FILE")?.let { storeFile = file(it) }
+            storePassword = value("storePassword", "STORE_PASSWORD")
+            keyAlias = value("keyAlias", "KEY_ALIAS")
+            keyPassword = value("keyPassword", "KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         // Installs beside the release build, so it can be tested from a clean state.
         debug {
             applicationIdSuffix = ".debug"
         }
-        // Signed with the debug key so a release build can be installed straight onto a test phone.
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
+            // Without the release key, as when someone else builds the app, it falls back to the
+            // debug key, so a release build still installs on a test phone.
+            val release = signingConfigs.getByName("release")
+            signingConfig = if (release.storeFile?.exists() == true) release else signingConfigs.getByName("debug")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }

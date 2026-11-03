@@ -5,3 +5,13 @@ local.properties
 *.iml
 .kotlin/
 captures/
+
+# Signing keys stay out of the repository: CI reads the release key from its secrets.
+*.jks
+*.keystore
+
+# Screen recordings from demo/demo.sh, made on a real phone and account.
+demo/*.mp4
+
+# The original warframe.market logo, kept locally as the reference for the icon's redraw.
+app/src/main/art/logo-original.png
