@@ -19,9 +19,11 @@ dependencies {
     testImplementation(libs.junit)
 }
 
-// The live contract tests hit the real warframe.market API; run them explicitly.
+// The Live* tests hit the real warframe.market API, so they only run when asked for with -Plive:
+// CI runs them on a schedule, to catch the site changing under the app, and not on every push.
 tasks.test {
     useJUnit()
+    if (!providers.gradleProperty("live").isPresent) filter { excludeTestsMatching("*Live*") }
     outputs.upToDateWhen { false }
     testLogging { showStandardStreams = true; events("passed", "failed", "skipped"); exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
 }
