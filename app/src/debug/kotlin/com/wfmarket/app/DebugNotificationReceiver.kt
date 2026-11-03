@@ -19,12 +19,20 @@ import kotlinx.serialization.json.Json
  * With `--ez sample true` it puts a made-up conversation, `sample`, in the inbox, for trying out how
  * runs of messages group. It's never sent anywhere. Open it with
  * `adb shell am start -a android.intent.action.VIEW -d https://warframe.market/im/chats/sample -p com.wfmarket.app.debug`.
+ * With `--es update_feed <url>` the updater reads that URL instead of GitHub's latest release and
+ * checks it now, so a stand-in release, such as one served from the computer over `adb reverse`,
+ * can be downloaded and installed over this build. It lasts until the app's process ends.
  */
 class DebugNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val container = (context.applicationContext as WfMarketApp).container
         intent.getStringExtra("inbox")?.let { inbox ->
             container.chats.announce(Json { ignoreUnknownKeys = true }.decodeFromString(ListSerializer(Chat.serializer()), inbox))
+            return
+        }
+        intent.getStringExtra("update_feed")?.let { feed ->
+            container.updater.testFeed = feed
+            container.updater.checkNow()
             return
         }
         if (intent.getBooleanExtra("alerts", false)) {
