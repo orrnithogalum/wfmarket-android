@@ -260,7 +260,7 @@ class AppUpdater(
             _state.value = UpdateState.Ready(release)
             when {
                 !isAppForeground() -> notifier.showUpdateReady(release.version)
-                cardsShown == 0 -> notices.show("WF Market ${release.version} is ready to install", action = "Install", onAction = ::requestInstall)
+                cardsShown == 0 -> notices.show("Warframe Market ${release.version} is ready to install", action = "Install", onAction = ::requestInstall)
             }
             true
         } catch (e: CancellationException) {

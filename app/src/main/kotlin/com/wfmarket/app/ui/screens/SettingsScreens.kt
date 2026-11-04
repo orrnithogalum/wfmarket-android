@@ -300,7 +300,7 @@ fun SettingsScreen() {
                 valueRow("Terms of service") { openUrl("https://warframe.market/tos") }
                 valueRow("Privacy") { openUrl("https://warframe.market/privacy") }
                 valueRow("Source code", "Free software under the GNU AGPL 3.0, on GitHub") { openUrl("https://github.com/${BuildConfig.UPDATE_REPOSITORY}") }
-                valueRow("WF Market ${BuildConfig.VERSION_NAME}", "An unofficial client for warframe.market. Not affiliated with the site or Digital Extremes.")
+                valueRow("Warframe Market ${BuildConfig.VERSION_NAME}", "An unofficial client for warframe.market. Not affiliated with the site or Digital Extremes.")
             }
             Spacer(Modifier.height(24.dp).navigationBarsPadding())
         }

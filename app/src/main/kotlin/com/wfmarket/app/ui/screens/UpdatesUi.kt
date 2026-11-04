@@ -108,7 +108,7 @@ fun rememberUpdateInstaller(updater: AppUpdater): () -> Unit {
             icon = { Icon(Icons.Filled.InstallMobile, null) },
             title = { Text("Allow updates to install") },
             text = {
-                Text("Android asks you once before WF Market can install its own updates. Turn on Allow from this source on the next screen, then come back, and the update carries on.")
+                Text("Android asks you once before Warframe Market can install its own updates. Turn on Allow from this source on the next screen, then come back, and the update carries on.")
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -148,7 +148,7 @@ fun UpdateCard(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 UpdateIcon(state)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("WF Market ${release.version}", style = MaterialTheme.typography.titleMedium, color = colors.onPrimaryContainer)
+                    Text("Warframe Market ${release.version}", style = MaterialTheme.typography.titleMedium, color = colors.onPrimaryContainer)
                     // The line rises into place when the update moves to its next step. Within a step,
                     // such as the download counting up, it changes in place with figures of one width,
                     // so nothing shifts as they tick.

@@ -51,7 +51,7 @@ class Notifier(private val context: Context) {
                     description = "Warnings and bans on your account"
                 },
                 NotificationChannel(CHANNEL_UPDATES, "App updates", NotificationManager.IMPORTANCE_LOW).apply {
-                    description = "New versions of WF Market, as they download and once they're ready to install"
+                    description = "New versions of Warframe Market, as they download and once they're ready to install"
                     setShowBadge(false)
                 },
                 NotificationChannel(CHANNEL_SERVICE, "Background connection", NotificationManager.IMPORTANCE_MIN).apply {
@@ -318,7 +318,7 @@ class Notifier(private val context: Context) {
         val percent = if (total > 0) (bytes * 100 / total).toInt() else 0
         val notification = NotificationCompat.Builder(context, CHANNEL_UPDATES)
             .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setContentTitle("Downloading WF Market $version")
+            .setContentTitle("Downloading Warframe Market $version")
             .setContentText("$percent%")
             .setProgress(100, percent, total <= 0)
             .setOngoing(true)
@@ -337,7 +337,7 @@ class Notifier(private val context: Context) {
         if (!canPost) return
         val notification = NotificationCompat.Builder(context, CHANNEL_UPDATES)
             .setSmallIcon(R.drawable.ic_stat_notification)
-            .setContentTitle("WF Market $version is ready to install")
+            .setContentTitle("Warframe Market $version is ready to install")
             .setContentText("Tap to see what's new")
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
@@ -353,7 +353,7 @@ class Notifier(private val context: Context) {
         val launch = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return
         val notification = NotificationCompat.Builder(context, CHANNEL_UPDATES)
             .setSmallIcon(R.drawable.ic_stat_notification)
-            .setContentTitle("Updated to WF Market $version")
+            .setContentTitle("Updated to Warframe Market $version")
             .setContentText("Tap to open it")
             .setAutoCancel(true)
             .setTimeoutAfter(60 * 60 * 1000L)
