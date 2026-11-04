@@ -1,0 +1,65 @@
+name: CI
+
+# Every push to master or main is built, linted and tested, and so is every pull request.
+on:
+  push:
+    branches: [master, main]
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE']
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+# A new push to the same branch cancels the previous, still-running build.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Caches Gradle's downloads and build outputs, and checks the wrapper jar is the genuine one.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # The live tests against warframe.market run on their own schedule, in contract.yml.
+      - name: Unit tests
+        run: ./gradlew :api:test :app:testDebugUnitTest
+
+      - name: Lint
+        run: ./gradlew :app:lintDebug
+
+      - name: Build the debug APK
+        run: ./gradlew :app:assembleDebug
+
+      - name: Upload the debug APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: wfmarket-debug-${{ github.sha }}
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      - name: Upload the reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports-${{ github.sha }}
+          path: |
+            api/build/reports/
+            app/build/reports/
+          retention-days: 7
