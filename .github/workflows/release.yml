@@ -1,0 +1,184 @@
+name: Release
+
+# You decide the version. Bump versionCode and versionName in app/build.gradle.kts, commit that,
+# then tag the commit and push the tag. CI tests, builds, signs and uploads the APK.
+#
+#   git tag -a v0.1.0 -m "Release notes, in Markdown"
+#   git push origin v0.1.0
+#
+# The tag's message becomes the release notes. A tag without one gets notes made from the commit
+# subjects since the last release, grouped by type (feat, fix, perf).
+#
+# Or Actions -> Release -> Run workflow: that tags the current commit of the branch you pick with
+# the version in the build file.
+#
+# Signing needs four repository secrets, from the release keystore:
+#   WFM_SIGNING_KEYSTORE        the keystore file, base64-encoded (base64 -w0 release.jks)
+#   WFM_SIGNING_STORE_PASSWORD  its password
+#   WFM_SIGNING_KEY_ALIAS       the key's alias
+#   WFM_SIGNING_KEY_PASSWORD    the key's password
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # to create the release and, for manual runs, the tag
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # The whole history and every tag, for the release notes.
+          fetch-depth: 0
+
+      # Checkout can leave an annotated tag as a lightweight one, which loses its message.
+      - name: Fetch the tags as they are
+        run: git fetch --force --tags origin
+
+      # Resolve the version first, so a mismatched tag fails in seconds rather than after a build.
+      - name: Resolve the version
+        id: ver
+        run: |
+          set -eu
+          declared=$(sed -nE 's/^ *versionName = "([^"]+)"$/\1/p' app/build.gradle.kts)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="$declared"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+
+          if ! echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::'$version' is not a semantic version (expected 1.2.3 or v1.2.3)"
+            exit 1
+          fi
+          if [ "$version" != "$declared" ]; then
+            echo "::error::The tag is v$version but app/build.gradle.kts says versionName = \"$declared\". Bump versionName and versionCode first."
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing $version" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check the signing secrets are set
+        env:
+          KEYSTORE: ${{ secrets.WFM_SIGNING_KEYSTORE }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then
+            echo "::error::The WFM_SIGNING_* secrets aren't set. See the top of this workflow."
+            exit 1
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Unit tests
+        run: ./gradlew :api:test :app:testDebugUnitTest
+
+      - name: Build the signed APK
+        env:
+          KEYSTORE: ${{ secrets.WFM_SIGNING_KEYSTORE }}
+          WFM_SIGNING_STORE_FILE: ${{ runner.temp }}/release.jks
+          WFM_SIGNING_STORE_PASSWORD: ${{ secrets.WFM_SIGNING_STORE_PASSWORD }}
+          WFM_SIGNING_KEY_ALIAS: ${{ secrets.WFM_SIGNING_KEY_ALIAS }}
+          WFM_SIGNING_KEY_PASSWORD: ${{ secrets.WFM_SIGNING_KEY_PASSWORD }}
+        run: |
+          set -eu
+          echo "$KEYSTORE" | base64 -d > "$WFM_SIGNING_STORE_FILE"
+          ./gradlew :app:assembleRelease
+          rm -f "$WFM_SIGNING_STORE_FILE"
+
+      # A debug-signed APK would install, but could never update the copies people already have.
+      - name: Verify the signature
+        run: |
+          set -eu
+          apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n1)
+          "$apksigner" verify --print-certs app/build/outputs/apk/release/app-release.apk | tee signature.txt
+          if grep -q "CN=Android Debug" signature.txt; then
+            echo "::error::The APK is signed with the debug key"
+            exit 1
+          fi
+
+      - name: Package
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -eux
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk "dist/wfmarket-${VERSION}.apk"
+          ( cd dist && sha256sum "wfmarket-${VERSION}.apk" > "wfmarket-${VERSION}.apk.sha256" )
+          ls -lh dist
+
+      - name: Write the release notes
+        env:
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          set -eu
+          # A manual run tags the commit afterwards, so until then the release is HEAD.
+          ref=$(git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && echo "$TAG" || echo HEAD)
+          previous=$(git describe --tags --abbrev=0 "$ref^" 2>/dev/null || true)
+
+          # An annotated tag's own message, when it says more than the version.
+          message=""
+          if [ "$(git cat-file -t "$TAG" 2>/dev/null || true)" = "tag" ]; then
+            message=$(git for-each-ref --format='%(contents)' "refs/tags/$TAG" | sed '/-----BEGIN PGP SIGNATURE-----/,$d')
+          fi
+          if [ -n "$message" ] && [ "$message" != "$TAG" ]; then
+            printf '%s\n' "$message" > notes.md
+          else
+            git log --no-merges --format='%s' ${previous:+$previous..}$ref > subjects.txt
+            section() {
+              lines=$(grep -E "^$2(\(|!|:)" subjects.txt | sed -E 's/^[a-z]+(\([^)]*\))?!?: (.)/- \u\2/' || true)
+              if [ -n "$lines" ]; then printf '### %s\n%s\n\n' "$1" "$lines"; fi
+            }
+            {
+              section "Features" feat
+              section "Fixes" fix
+              section "Performance" perf
+            } > notes.md
+          fi
+          if [ -n "$previous" ]; then
+            printf '\n**Full Changelog**: %s/%s/compare/%s...%s\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$previous" "$TAG" >> notes.md
+          fi
+          cat notes.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish a draft release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: Warframe Market ${{ steps.ver.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          body_path: notes.md
+          # Draft: the APK is uploaded and waiting, but nobody's app sees it until you press
+          # Publish, which is when the in-app updater starts offering it. Set false to skip that.
+          draft: true
+          prerelease: ${{ contains(steps.ver.outputs.version, '-') }}
+          files: |
+            dist/*.apk
+            dist/*.apk.sha256
+
+      # R8's mapping turns an obfuscated stack trace from a crash report back into readable code.
+      - name: Keep the R8 mapping
+        uses: actions/upload-artifact@v7
+        with:
+          name: mapping-${{ steps.ver.outputs.version }}
+          path: app/build/outputs/mapping/release/mapping.txt
+          retention-days: 90
