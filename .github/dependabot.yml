@@ -1,0 +1,26 @@
+# Monthly pull requests for outdated dependencies and actions, grouped so they come a few at a time.
+# They target master, where development happens.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    target-branch: master
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      androidx:
+        patterns: ['androidx.*']
+      kotlin:
+        patterns: ['org.jetbrains.kotlin*', 'org.jetbrains.kotlinx*', 'com.android.*']
+      libraries:
+        patterns: ['*']
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: master
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ['*']
