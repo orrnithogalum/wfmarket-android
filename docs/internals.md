@@ -1,0 +1,152 @@
+# How Warframe Market works
+
+Notes on the parts of the app that aren't obvious from the code: how it uses the site's API, how it
+keeps you online with the app closed, and where its riven grades come from. For building and
+installing, see the [README](../README.md).
+
+## Layout
+
+| Module | Contents | Depends on Android? |
+| --- | --- | --- |
+| `api` | HTTP client (`WfmApi`), websockets (`WfmSockets`), models, error translation | No |
+| `app/data` | Repositories, settings, encrypted session, on-disk catalogue cache | Yes |
+| `app/notifications` | Background service, worker, notification actions | Yes |
+| `app/update` | Updates from GitHub releases: checking, downloading, installing | Yes |
+| `app/ui` | Compose screens, charts, theme, navigation | Yes |
+
+Screens talk only to repositories. All knowledge of the site's API lives in `api`.
+
+## Testing
+
+`./gradlew :api:test :app:testDebugUnitTest` runs the unit tests, which need no network. With
+`-Plive`, `:api:test` adds the contract tests against the live public API, including both
+websockets; CI runs those once a week (`.github/workflows/contract.yml`). Set `WFM_EMAIL` and
+`WFM_PASSWORD` to also run the signed-in tests. They sign in once, and anything they create (one
+hidden order, one hidden auction) is removed again. Debug builds add a shell-only hook for testing
+notifications and updates; see `DebugNotificationReceiver`.
+
+## The API, as used here
+
+The site is mid-migration, so the client uses both generations:
+
+- **v2** (`Authorization: Bearer`): catalogue, orders, profiles.
+- **v1** (`Authorization: JWT`): sign-in, auctions, chat, statistics, Ducanator, account settings.
+- **Sign-in**: `POST /v1/auth/signin` with `auth_type: header` returns the token in a response header.
+- **Sockets**: `wss://warframe.market/socket` carries chat and bids, authenticated by the JWT cookie.
+  `wss://ws.warframe.market/socket` (subprotocol `wfm`) carries presence.
+
+- **Featured carousel**: warframe.market's showcase is maintained by hand and goes stale. The current
+  Prime Access is worked out from the catalogue (item ids start with their creation time), and the
+  Prime Resurgence comes from Warframe's official world state.
+
+## Icons
+
+The sources are in `app/src/main/art`. Android launcher icons must be vector drawables rather than
+SVG files, so `ic_launcher.svg` is mirrored by the `ic_launcher_foreground` and `ic_splash` drawables.
+`ic_launcher_monochrome` and `ic_stat_notification` use its hood and eye without the transparent
+layers, since those icons are single-color. The mark is a simplified redraw of the warframe.market
+logo, which belongs to warframe.market.
+
+The polarity symbols (`polarity-*.svg`, drawn by `ic_polarity_*`) come from the Warframe wiki's
+`*_Pol(xBlack).svg` files. The symbols are Digital Extremes' art.
+
+## Background notifications
+
+The site's push channel is Web Push, and Android can only wake a closed app through Firebase Cloud
+Messaging, so using it would take a relay server between the two. The app doesn't have one. So by
+default `SyncWorker` checks the inbox about every 5 minutes with the app closed, which needs no
+ongoing notification. Android may stretch that gap unless the app has unrestricted battery use.
+
+The Instant delivery setting adds `RealtimeService`, which keeps the websocket open in a foreground
+service. Messages and auction bids then arrive right away, but Android requires a silent
+notification while the app is closed. Without it, auction bid alerts only arrive while the app is open.
+
+## Status with the app closed
+
+The site shows you offline as soon as your presence connection closes, and gives a new connection a
+status of its own (invisible, when tried) instead of the one you chose. So the app remembers the
+status you pick, and the time its hold runs out, in `HeldStatus`. Each time the presence socket signs
+in, `AccountRepository` waits out the site's opening report and sets the held status again. A status
+changed elsewhere, such as on the website, becomes the held one.
+
+With "Stay online when the app is closed" on (the default), an Online or In game hold also runs
+`RealtimeService` while the app is closed, so the status stays visible until the hold ends. The
+service starts as the app leaves the screen and stops when it returns. With unrestricted battery
+use it runs as a plain background service, which Android allows for exempt apps, so nothing shows.
+Without the exemption Android stops background services within about a minute, so it runs in the
+foreground with a notification that shows the status and has buttons to switch it or go offline
+(`StatusActionReceiver`). Instant delivery works the same way.
+
+## Auction alerts
+
+The site has no saved-search alerts, so `AuctionAlerts` keeps them in `auction_alerts.json` and
+`SyncWorker` runs each search on every check. Results the alert has already seen are remembered, so
+only new listings notify. The first check after saving takes the baseline silently. The search API
+returns at most 100 results, so a broad search sorted by price only sees the 100 cheapest. Seller
+status isn't a site filter either; `AuctionSearch.sellerStatuses` is applied to the results in the
+app, and invisible sellers count as offline. Nor is price: `priceMin` and `priceMax` are checked
+against what an auction goes for now (its buyout, or its top bid, else its start). With a price
+range, a listing repriced into it notifies too, not only new listings.
+
+Followed auctions are polled the same way and also update live over the socket while it's open.
+A removed auction answers `400` with `{"error": {"auction": ["app.form.not_exist"]}}`.
+
+In debug builds, `adb shell am broadcast -a com.wfmarket.app.DEBUG_NOTIFY -p com.wfmarket.app.debug --ez alerts true`
+runs the check at once, and `--ez sample true` puts a made-up conversation, `sample`, in the inbox
+for checking how messages group. Nothing about it is sent anywhere.
+
+## Riven grades and prices
+
+`RivenGrading` grades each riven stat from S to F by how far its roll landed from the middle of the
+±10% it can roll, in two-point bands (S is +9.5 and up, F is below −9.5), as riven graders do. A
+smaller curse counts as better. A stat is `base × 10 × (rank + 1) × disposition × layout × roll`. The
+base values are Warframe's public export (`ExportUpgrades`, the `Lotus…RandomModRare` entries).
+
+- **Disposition** was retired in Hotfix 44.1.3 (2026-10-22): every weapon is now 1.2. The site still
+  lists the old per-weapon values, so a listing that only fits its weapon's old value is graded at
+  that value and labelled as older than the change. Its stats in game have since been rescaled.
+- **Rank**: sellers often enter a maxed riven's stats at rank 0, so values are also tried at rank 8.
+- **Riven type** comes from Warframe's trade figures, which name each weapon's riven. The site's
+  `rivenType` is wrong for some: secondary shotguns like the Bronco take pistol rivens, and the
+  Bubonico takes shotgun ones.
+- Values no roll can reach show `?`. Low-rank stats that the game rounds too coarsely, like faction
+  damage at rank 0, aren't graded.
+
+Lists show only the letter. An auction's page adds a bar per stat for where it rolled between its
+worst and best, and holding a riven card opens the same as a quick look, with Find similar (the same
+weapon and buffs, cheapest first) for pricing. The auction editor grades stats as they're typed.
+
+The Riven prices tab shows Warframe's weekly figures (`www-static.warframe.com/repos/weeklyRivens*.json`,
+published on Mondays, none for mobile). They're a JavaScript literal rather than JSON, which
+`relaxedJson` converts. Each file covers one week only, so `RivenRepository` keeps every week it sees
+in `files/riven_trades`, which is where the week-on-week changes and the history come from.
+
+## Links and shortcuts
+
+Notifications and launcher shortcuts open the app through links. Site URLs map onto screens in
+`AppRoot`, including `/auctions/search?...`, which `AuctionSearch.toUrl` and `fromQuery` read and
+write. Things with no page on the site use `wfmarket://`: `auctions/search`, `auctions/new`,
+`status` (the status sheet) and `status/<status>`. Shortcuts are published at runtime in `Shortcuts`
+because static ones name the package, which differs in the debug build.
+
+## Updates
+
+`AppUpdater` asks GitHub for the repository's latest release
+(`/repos/{UPDATE_REPOSITORY}/releases/latest`, set in `app/build.gradle.kts`), at most every 6 hours
+while the app is open and about twice a day in the background (`UpdateWorker`). Drafts and
+pre-releases are skipped, and a release only counts if it's a newer [semantic version](https://semver.org)
+than this build (`Version`) and has an APK attached.
+
+The APK downloads into `no_backup/updates`, resuming a partial download with a `Range` request. It
+has to match the SHA-256 digest GitHub records for the asset, be this app's package at a higher
+`versionCode`, and be signed with the same key as the installed app, or it's discarded with a
+reason. It's then written into a `PackageInstaller` session with `USER_ACTION_NOT_REQUIRED`:
+Android asks the user to confirm the first time and, for an app updating itself, may skip that
+afterwards. Before the first install, Android needs the user to allow installs from the app, which
+Settings explains and opens. `InstallReceiver` shows the installer's confirmation, and the new
+version's `MY_PACKAGE_REPLACED` broadcast deletes the download and posts "Updated", since Android
+closes the app to replace it.
+
+In debug builds, `--es update_feed <url>` on the debug hook points the updater at a stand-in for
+GitHub's answer, so a test build can be served from the computer over `adb reverse` and installed
+over the debug app.
