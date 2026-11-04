@@ -27,8 +27,9 @@ import org.junit.Test
  * set. Only leaves no trace: the one order it creates is hidden and is removed again.
  */
 class LiveAccountTest {
-    private val email: String? = System.getenv("WFM_EMAIL")
-    private val password: String? = System.getenv("WFM_PASSWORD")
+    // CI passes an unset secret as an empty string, which counts as not set.
+    private val email: String? = System.getenv("WFM_EMAIL")?.ifBlank { null }
+    private val password: String? = System.getenv("WFM_PASSWORD")?.ifBlank { null }
 
     private class Session : WfmContext {
         override val platform = "pc"
