@@ -1,0 +1,79 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:WeaponPicker.kt$riven &amp;&amp; query.isBlank() &amp;&amp; kind == null &amp;&amp; popular.isNotEmpty()</ID>
+    <ID>CyclomaticComplexMethod:AppRoot.kt$private fun targetFor(uri: Uri): LinkTarget?</ID>
+    <ID>CyclomaticComplexMethod:SettingsStore.kt$SettingsStore$private fun Preferences.toSettings()</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:Version.kt$Version.Companion$val (major, minor, patch, pre) = match.destructured</ID>
+    <ID>EmptyElseBlock:AuctionAlerts.kt$AuctionAlerts$if (file.exists()) Log.w(TAG, "Couldn't read alerts", it)</ID>
+    <ID>ExplicitItLambdaParameter:AppContainer.kt$AppContainer${ signedIn, it -&gt; signedIn &amp;&amp; it.backgroundMessages &amp;&amp; it.instantMessages }</ID>
+    <ID>InstanceOfCheckForException:AppUpdater.kt$AppUpdater$e is BadDownload</ID>
+    <ID>InstanceOfCheckForException:CatalogRepository.kt$CatalogRepository$e is kotlinx.coroutines.CancellationException</ID>
+    <ID>LongMethod:AppContainer.kt$AppContainer$fun start()</ID>
+    <ID>LongParameterList:AuctionAlerts.kt$AuctionAlerts$( context: Context, private val api: WfmApi, private val sockets: WfmSockets, private val notifier: Notifier, private val myId: () -&gt; String?, private val isAppForeground: () -&gt; Boolean, private val scope: CoroutineScope, )</ID>
+    <ID>LongParameterList:ChatRepository.kt$ChatRepository$( private val api: WfmApi, private val sockets: WfmSockets, private val session: SessionStore, private val account: AccountRepository, private val notifier: Notifier, private val settings: SettingsStore, private val scope: CoroutineScope, )</ID>
+    <ID>LongParameterList:SettingsGroup.kt$( title: String, subtitle: String? = null, checked: Boolean, enabled: Boolean = true, icon: ImageVector? = null, onChange: (Boolean) -&gt; Unit, )</ID>
+    <ID>LongParameterList:SettingsGroup.kt$( title: String, value: String? = null, icon: ImageVector? = null, destructive: Boolean = false, trailing: (@Composable () -&gt; Unit)? = null, onClick: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:Shortcuts.kt$Shortcuts$(context: Context, id: String, short: String, long: String, uri: String, icon: Int)</ID>
+    <ID>LongParameterList:UpdatesUi.kt$(updater: AppUpdater, state: UpdateState, settings: AppSettings, onCheck: () -&gt; Unit, onSetCheck: (Boolean) -&gt; Unit, onSetDownload: (Boolean) -&gt; Unit, openUrl: (String) -&gt; Unit)</ID>
+    <ID>LoopWithTooManyJumpStatements:ChatRepository.kt$ChatRepository$for</ID>
+    <ID>MagicNumber:AccountRepository.kt$AccountRepository$15_000</ID>
+    <ID>MagicNumber:AppUpdater.kt$AppUpdater$1024</ID>
+    <ID>MagicNumber:AppUpdater.kt$AppUpdater$206</ID>
+    <ID>MagicNumber:AppUpdater.kt$AppUpdater$33</ID>
+    <ID>MagicNumber:AppUpdater.kt$AppUpdater$403</ID>
+    <ID>MagicNumber:AppUpdater.kt$AppUpdater$404</ID>
+    <ID>MagicNumber:AppUpdater.kt$AppUpdater$429</ID>
+    <ID>MagicNumber:AppUpdater.kt$AppUpdater$64</ID>
+    <ID>MagicNumber:AppUpdater.kt$AppUpdater$80</ID>
+    <ID>MagicNumber:AuctionRepository.kt$AuctionRepository$10_000</ID>
+    <ID>MagicNumber:AuctionRepository.kt$AuctionRepository$15_000</ID>
+    <ID>MagicNumber:ChatRepository.kt$ChatRepository$45_000</ID>
+    <ID>MagicNumber:ChatRepository.kt$ChatRepository$6</ID>
+    <ID>MagicNumber:ChatRepository.kt$ChatRepository$8_000</ID>
+    <ID>MagicNumber:ChatRepository.kt$ChatRepository$90_000</ID>
+    <ID>MagicNumber:Notifier.kt$Notifier$5</ID>
+    <ID>MagicNumber:Notifier.kt$Notifier$5_000</ID>
+    <ID>MagicNumber:SessionStore.kt$SessionStore$128</ID>
+    <ID>MagicNumber:UpdateWorker.kt$UpdateWorker.Companion$12</ID>
+    <ID>MatchingDeclarationName:AuctionDetailScreen.kt$AuctionDetailViewModel : ViewModel</ID>
+    <ID>MatchingDeclarationName:DucanatorScreen.kt$DucanatorViewModel : ViewModel</ID>
+    <ID>MatchingDeclarationName:ItemScreen.kt$ItemViewModel : ViewModel</ID>
+    <ID>MatchingDeclarationName:ProfileScreen.kt$ProfileViewModel : ViewModel</ID>
+    <ID>MatchingDeclarationName:SettingsGroup.kt$SettingsGroupScope</ID>
+    <ID>MaxLineLength:AuctionDetailScreen.kt$ChoiceButtonGroup(listOf(AuctionType.RIVEN, AuctionType.LICH, AuctionType.SISTER), type, { it.humanize() }, { type = it; weapon = null; quirk = null }, Modifier.fillMaxWidth(), fill = true)</ID>
+    <ID>MaxLineLength:AuctionDetailScreen.kt$OutlinedTextField(rivenName, { rivenName = it }, label = { Text("Riven name, as shown in game") }, supportingText = { Text("For example: hexa-critatis. It has to match the stats.") }, singleLine = true, modifier = Modifier.fillMaxWidth())</ID>
+    <ID>MaxLineLength:DucanatorScreen.kt$DropdownChip("Sort", sort, DucatSort.entries, { it.label }, { sort = it; descending = it != DucatSort.NAME &amp;&amp; it != DucatSort.WA_PRICE &amp;&amp; it != DucatSort.MEDIAN }, isDefault = sort == DucatSort.DPP)</ID>
+    <ID>MaxLineLength:PlatinumIcon.kt$private const val FACE = "M17.055,18.958A8.6,8.6 0 0 1 6.945,18.958L6.626,17.374L5.042,17.055A8.6,8.6 0 0 1 5.042,6.945L6.626,6.626L6.945,5.042A8.6,8.6 0 0 1 17.055,5.042L17.374,6.626L18.958,6.945A8.6,8.6 0 0 1 18.958,17.055L17.374,17.374L17.055,18.958ZM8.1,6.9H15.9V8.9H14.1V15.1H15.9V17.1H8.1V15.1H9.9V8.9H8.1Z"</ID>
+    <ID>MaxLineLength:PlatinumIcon.kt$private const val RIM = "M18.394,20.641A10.75,10.75 0 0 1 5.606,20.641L5.495,18.505L3.359,18.394A10.75,10.75 0 0 1 3.359,5.606L5.495,5.495L5.606,3.359A10.75,10.75 0 0 1 18.394,3.359L18.505,5.495L20.641,5.606A10.75,10.75 0 0 1 20.641,18.394L18.505,18.505L18.394,20.641ZM17.055,18.958A8.6,8.6 0 0 1 6.945,18.958L6.626,17.374L5.042,17.055A8.6,8.6 0 0 1 5.042,6.945L6.626,6.626L6.945,5.042A8.6,8.6 0 0 1 17.055,5.042L17.374,6.626L18.958,6.945A8.6,8.6 0 0 1 18.958,17.055L17.374,17.374L17.055,18.958Z"</ID>
+    <ID>MaxLineLength:ProfileScreen.kt$Text(review.userFrom.ingameName.orEmpty(), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))</ID>
+    <ID>MaxLineLength:SettingsScreens.kt$"Creating an account and resetting a password need a reCAPTCHA check, so they open on the website. If you log in with Steam, Xbox or Discord, add an email and password under Settings › Account on the website first."</ID>
+    <ID>MaxLineLength:SettingsScreens.kt$"Send this code in a private forum message to the bot KycKyc on forums.warframe.com. It checks its inbox every 2 minutes, and your account takes the name you have on the forum."</ID>
+    <ID>MaxLineLength:SettingsScreens.kt$if (batteryExempt) "Messages and auction bids arrive right away" else "Messages and auction bids arrive right away. Without unrestricted battery use, Android shows a silent notification while the app is closed."</ID>
+    <ID>MaxLineLength:SettingsScreens.kt$if (count == 0) "Get notified about new matches for a search, or new bids on an auction" else "${alerts.alerts.size} saved ${if (alerts.alerts.size == 1) "search" else "searches"} · ${alerts.followed.size} followed"</ID>
+    <ID>MaxLineLength:StatisticsTab.kt$"${formatDate(time, if (range == Range.HOURS_48) "d MMM HH:mm" else "d MMM yyyy")}: sell ${num(sell[time]?.median)}, buy ${num(buy[time]?.median)}, gap ${gaps[index]?.let { num(it.toDouble()) } ?: "–"}"</ID>
+    <ID>MaxLineLength:StatisticsTab.kt$val variants = remember(closedAll) { closedAll.map { it.variant() }.distinct().sortedWith(compareBy({ it.rank ?: -1 }, { it.subtype ?: "" }, { it.amber ?: -1 }, { it.cyan ?: -1 }, { it.charges ?: -1 })) }</ID>
+    <ID>MaxLineLength:UpdatesUi.kt$fun</ID>
+    <ID>NestedBlockDepth:AppUpdater.kt$AppUpdater$private suspend fun fetch(release: Release, partial: File)</ID>
+    <ID>ReturnCount:AuctionAlerts.kt$AuctionAlerts$suspend fun refreshFollowed(id: String)</ID>
+    <ID>SwallowedException:AuctionAlerts.kt$AuctionAlerts$e: Exception</ID>
+    <ID>SwallowedException:UpdateWorker.kt$UpdateWorker$e: Exception</ID>
+    <ID>ThrowsCount:AppUpdater.kt$AppUpdater$private fun verify(release: Release, file: File)</ID>
+    <ID>TooGenericExceptionCaught:AppUpdater.kt$AppUpdater$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AuctionAlerts.kt$AuctionAlerts$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CatalogRepository.kt$CatalogRepository$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SyncWorker.kt$SyncWorker$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:UpdateWorker.kt$UpdateWorker$e: Exception</ID>
+    <ID>TooManyFunctions:Common.kt$com.wfmarket.app.ui.components.Common.kt</ID>
+    <ID>TooManyFunctions:Injection.kt$AppNavigator</ID>
+    <ID>UnusedPrivateProperty:AccountRepository.kt$AccountRepository$private val context: Context</ID>
+    <ID>WildcardImport:AuctionDetailScreen.kt$import com.wfmarket.api.model.*</ID>
+    <ID>WildcardImport:AuctionsScreen.kt$import com.wfmarket.api.model.*</ID>
+    <ID>WildcardImport:CatalogRepository.kt$import com.wfmarket.api.model.*</ID>
+    <ID>WildcardImport:ItemScreen.kt$import com.wfmarket.api.model.*</ID>
+    <ID>WildcardImport:ProfileScreen.kt$import com.wfmarket.api.model.*</ID>
+    <ID>WildcardImport:RivenScreens.kt$import com.wfmarket.api.model.*</ID>
+    <ID>WildcardImport:StatisticsTab.kt$import com.wfmarket.app.ui.charts.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,4 +1,6 @@
 plugins {
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
 }
@@ -26,4 +28,22 @@ tasks.test {
     if (!providers.gradleProperty("live").isPresent) filter { excludeTestsMatching("*Live*") }
     outputs.upToDateWhen { false }
     testLogging { showStandardStreams = true; events("passed", "failed", "skipped"); exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    baseline = rootProject.file("config/detekt/baseline-${project.name}.xml")
+    source.setFrom("src/main/kotlin", "src/test/kotlin")
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    jvmTarget = "17"
+    reports {
+        sarif.required.set(true)
+        html.required.set(true)
+        xml.required.set(false)
+        txt.required.set(false)
+        md.required.set(false)
+    }
 }

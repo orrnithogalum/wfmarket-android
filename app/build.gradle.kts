@@ -1,4 +1,6 @@
 plugins {
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
@@ -64,6 +66,13 @@ android {
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
+
+    // SARIF goes to GitHub's code scanning, HTML to people.
+    lint {
+        sarifReport = true
+        htmlReport = true
+        xmlReport = false
+    }
 }
 
 dependencies {
@@ -88,4 +97,22 @@ dependencies {
     implementation(libs.coil.network.okhttp)
 
     testImplementation(libs.junit)
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    baseline = rootProject.file("config/detekt/baseline-${project.name}.xml")
+    source.setFrom("src/main/kotlin", "src/test/kotlin")
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    jvmTarget = "17"
+    reports {
+        sarif.required.set(true)
+        html.required.set(true)
+        xml.required.set(false)
+        txt.required.set(false)
+        md.required.set(false)
+    }
 }

@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:RivenTrades.kt$fun relaxedJson(text: String): String</ID>
+    <ID>CyclomaticComplexMethod:WfmApi.kt$WfmApi$private suspend fun &lt;T&gt; executeBlocking( request: Request, authenticated: Boolean, parse: (Response, String) -&gt; T, ): T</ID>
+    <ID>CyclomaticComplexMethod:WfmSockets.kt$WfmSockets$private fun onLegacyFrame(text: String)</ID>
+    <ID>LongParameterList:Rivens.kt$RivenAttributeScale$( val scale: RollScale, rifle: Double?, shotgun: Double?, pistol: Double?, archgun: Double?, melee: Double?, kitgun: Double?, zaw: Double?, )</ID>
+    <ID>LongParameterList:WfmApi.kt$WfmApi$( base: String, method: String, path: String, query: Map&lt;String, String&gt;, body: JsonElement?, authenticated: Boolean = true, )</ID>
+    <ID>LoopWithTooManyJumpStatements:LiveContractTest.kt$LiveContractTest$for</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrade.A$5.5</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrade.A_MINUS$3.5</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrade.A_PLUS$7.5</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrade.B$1.5</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrade.B_MINUS$3.5</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrade.B_PLUS$1.5</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrade.C$7.5</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrade.C_MINUS$9.5</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrade.C_PLUS$5.5</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrade.S$9.5</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrading$0.005</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrading$0.05</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrading$0.495</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrading$0.75</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrading$0.9</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrading$0.9375</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrading$0.99</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrading$1.1</ID>
+    <ID>MagicNumber:Rivens.kt$RivenGrading$1.2375</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi$400</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi$401</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi$403</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi$404</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi$422</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi$429</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi$500</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi$599</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi$600L</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi$800L</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi.Companion$25</ID>
+    <ID>MagicNumber:WfmApi.kt$WfmApi.Companion$45</ID>
+    <ID>MagicNumber:WfmSockets.kt$ReconnectingSocket.&lt;no name provided&gt;$2_000L</ID>
+    <ID>MagicNumber:WfmSockets.kt$ReconnectingSocket.&lt;no name provided&gt;$5</ID>
+    <ID>MagicNumber:WfmSockets.kt$ReconnectingSocket.&lt;no name provided&gt;$60_000L</ID>
+    <ID>MagicNumber:WfmSockets.kt$WfmSockets$24</ID>
+    <ID>NestedBlockDepth:RivenTrades.kt$fun relaxedJson(text: String): String</ID>
+    <ID>NestedBlockDepth:WfmApi.kt$WfmApi$private suspend fun &lt;T&gt; executeBlocking( request: Request, authenticated: Boolean, parse: (Response, String) -&gt; T, ): T</ID>
+    <ID>ThrowsCount:WfmApi.kt$WfmApi$private suspend fun &lt;T&gt; executeBlocking( request: Request, authenticated: Boolean, parse: (Response, String) -&gt; T, ): T</ID>
+    <ID>TooGenericExceptionCaught:WfmApi.kt$WfmApi$e: Exception</ID>
+    <ID>TooManyFunctions:WfmApi.kt$WfmApi</ID>
+    <ID>WildcardImport:WfmApi.kt$import com.wfmarket.api.model.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

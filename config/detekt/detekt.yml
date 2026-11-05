@@ -1,0 +1,36 @@
+# detekt's defaults, adjusted for Compose and for how this codebase is written. Anything already in
+# the code that these still flag is in the per-module baselines; CI fails on new findings only.
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable', 'Test']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][A-Za-z0-9_]*'
+complexity:
+  LongParameterList:
+    ignoreAnnotated: ['Composable']
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+  CyclomaticComplexMethod:
+    threshold: 20
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    thresholdInFiles: 40
+    thresholdInClasses: 30
+    thresholdInObjects: 20
+style:
+  MaxLineLength:
+    maxLineLength: 200
+  # Screens read better with their sizes and colors where they're used.
+  MagicNumber:
+    excludes: ['**/ui/**', '**/test/**']
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreNumbers: ['-1', '0', '1', '2', '3', '4', '8', '10', '16', '60', '100', '1000']
+  ReturnCount:
+    max: 4
+    excludeGuardClauses: true
+  # Compose code imports whole packages, as Android Studio writes it.
+  WildcardImport:
+    excludeImports: ['androidx.compose.*', 'kotlinx.coroutines.*', 'com.wfmarket.app.ui.components.*', 'com.wfmarket.app.ui.screens.*']
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview']
