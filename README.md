@@ -95,10 +95,12 @@ Each release also has a `.sha256` file to check the download against:
 sha256sum -c wfmarket-<version>.apk.sha256
 ```
 
-> [!TIP]
-> Google Play Protect may warn about an app it hasn't seen before, since Warframe Market isn't on
-> Google Play. Every release is built from this repository's source by the
-> [release workflow](.github/workflows/release.yml), and you can build it yourself instead.
+> [!WARNING]
+> Google Play Protect may block Warframe Market as a harmful app. It does that with apps it hasn't
+> seen before that come from outside Google Play, especially ones that can install their own
+> updates. To install it anyway, tap **More details**, then **Install anyway**. Every release is
+> built from this repository's source by the [release workflow](.github/workflows/release.yml), and
+> you can [build it yourself](#building) instead.
 
 ---
 
