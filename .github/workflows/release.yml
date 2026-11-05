@@ -29,6 +29,8 @@ concurrency:
 
 permissions:
   contents: write # to create the release and, for manual runs, the tag
+  id-token: write # to sign the build's provenance
+  attestations: write
 
 jobs:
   release:
@@ -126,6 +128,13 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "dist/wfmarket-${VERSION}.apk"
           ( cd dist && sha256sum "wfmarket-${VERSION}.apk" > "wfmarket-${VERSION}.apk.sha256" )
           ls -lh dist
+
+      # A signed record that this workflow built the APK from this commit, which anyone can check with
+      # `gh attestation verify wfmarket-<version>.apk -R orrnithogalum/wfmarket-android`.
+      - name: Attest the build's provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/*.apk
 
       - name: Write the release notes
         env:

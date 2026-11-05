@@ -94,6 +94,13 @@ Each release also has a `.sha256` file to check the download against:
 sha256sum -c wfmarket-<version>.apk.sha256
 ```
 
+Each release also carries a signed record of the commit and workflow it was built from. With the
+[GitHub CLI](https://cli.github.com), check it with:
+
+```bash
+gh attestation verify wfmarket-<version>.apk -R orrnithogalum/wfmarket-android
+```
+
 > [!WARNING]
 > Google Play Protect may block Warframe Market as a harmful app. It does that with apps it hasn't
 > seen before that come from outside Google Play, especially ones that can install their own
@@ -134,7 +141,7 @@ Android Studio includes both.
 3. Run the checks CI runs:
 
    ```bash
-   ./gradlew :api:test :app:testDebugUnitTest :app:lintDebug
+   ./gradlew :api:test :app:testDebugUnitTest :app:lintDebug :api:detekt :app:detekt
    ```
 
    `./gradlew :api:test -Plive` adds the contract tests against the live site. Set `WFM_EMAIL` and
@@ -172,9 +179,12 @@ wfmarket.signing.keyAlias=…
 wfmarket.signing.keyPassword=…
 ```
 
-Alongside releases, [CI](.github/workflows/ci.yml) lints, tests and builds every push and pull
-request, a [weekly job](.github/workflows/contract.yml) runs the contract tests against the live
-site to catch API changes early, and Dependabot proposes dependency updates monthly.
+Alongside releases, [CI](.github/workflows/ci.yml) runs on every push and pull request: the unit
+tests with coverage, Android Lint and [detekt](https://detekt.dev) (their findings go to code
+scanning), and the debug and release builds. Pull requests also get their title and any new
+dependencies [checked](.github/workflows/pr.yml). A [weekly job](.github/workflows/contract.yml)
+runs the contract tests against the live site to catch API changes early, and Dependabot proposes
+dependency updates monthly.
 
 ---
 
