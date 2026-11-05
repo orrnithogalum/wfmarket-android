@@ -106,15 +106,8 @@ sha256sum -c wfmarket-<version>.apk.sha256
 
 ## Updates
 
-Warframe Market checks this repository for a new release when you open it (at most every few hours)
-and about twice a day in the background. A new version downloads on its own and waits at the top of
-Settings, with its release notes, until you tap **Install**. Checking and downloading are both
-switches under **Settings › Updates**, which also has a button to check now.
-
-Before installing, the app checks that the download matches the checksum GitHub records for it,
-and that it's signed with the same key as the app you have. The first time, Android asks you to
-allow Warframe Market to install apps; after that, updates may install without asking again.
-Android closes the app to replace it, and a notification takes you back in.
+Update from inside the app: when a new version is out, it appears at the top of **Settings**, ready
+to install. **Settings › Updates** has a button to check now.
 
 ---
 
