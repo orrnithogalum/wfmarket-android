@@ -112,25 +112,36 @@ to install. **Settings › Updates** has a button to check now.
 
 ## Building
 
-You need JDK 17 and the Android SDK.
+You need [JDK 17](https://adoptium.net) and the [Android SDK](https://developer.android.com/studio).
+Android Studio includes both.
 
-```bash
-git clone https://github.com/orrnithogalum/wfmarket-android.git
-cd wfmarket-android
-./gradlew :app:installDebug      # or :app:assembleDebug for just the APK
-```
+1. Clone the repository:
 
-The debug build installs beside a release one, as *Warframe Market debug* with a green icon, so the
-two can be compared. A release build without the release key is signed with your debug key instead.
+   ```bash
+   git clone https://github.com/orrnithogalum/wfmarket-android.git
+   cd wfmarket-android
+   ```
 
-```bash
-./gradlew :api:test :app:testDebugUnitTest   # unit tests, no network needed
-./gradlew :app:lintDebug                     # lint
-./gradlew :api:test -Plive                   # plus the contract tests against the live site
-```
+2. Build the debug APK, or install it straight onto a phone connected with USB debugging:
 
-Set `WFM_EMAIL` and `WFM_PASSWORD` to include the signed-in contract tests. They remove whatever
-they create.
+   ```bash
+   ./gradlew :app:assembleDebug   # the APK is in app/build/outputs/apk/debug/
+   ./gradlew :app:installDebug
+   ```
+
+   The debug build installs beside a release one, as *Warframe Market debug* with a green icon.
+
+3. Run the checks CI runs:
+
+   ```bash
+   ./gradlew :api:test :app:testDebugUnitTest :app:lintDebug
+   ```
+
+   `./gradlew :api:test -Plive` adds the contract tests against the live site. Set `WFM_EMAIL` and
+   `WFM_PASSWORD` to include the signed-in ones, which remove whatever they create.
+
+A release build without the release key is signed with your debug key instead. How the app talks to
+the site, keeps your status and grades rivens is written up in [docs/internals.md](docs/internals.md).
 
 ---
 
