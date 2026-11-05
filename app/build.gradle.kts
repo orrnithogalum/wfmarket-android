@@ -16,8 +16,8 @@ android {
         minSdk = 31
         targetSdk = 36
         // Bumped together for each release. The release workflow checks the tag matches versionName.
-        versionCode = 1
-        versionName = "0.0.0"
+        versionCode = 2
+        versionName = "0.0.1"
 
         // Where the app looks for new versions. A fork points this at its own repository.
         buildConfigField("String", "UPDATE_REPOSITORY", "\"orrnithogalum/wfmarket-android\"")
