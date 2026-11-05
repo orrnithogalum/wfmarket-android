@@ -33,7 +33,6 @@ traders and keep your status up, all from your phone.
 - [Requirements](#requirements)
 - [Download](#download)
 - [Updates](#updates)
-- [Architecture](#architecture)
 - [Building](#building)
 - [Releasing](#releasing)
 - [Privacy](#privacy)
@@ -108,52 +107,6 @@ sha256sum -c wfmarket-<version>.apk.sha256
 
 Update from inside the app: when a new version is out, it appears at the top of **Settings**, ready
 to install. **Settings › Updates** has a button to check now.
-
----
-
-## Architecture
-
-```mermaid
-flowchart LR
-    subgraph app["app (Android)"]
-        UI["Compose screens"] --> Repos["Repositories"]
-        Repos --> Local[("DataStore, encrypted session,<br>catalogue cache")]
-        Background["WorkManager checks,<br>foreground socket"] --> Repos
-        Updater["Updater"]
-    end
-    subgraph api["api (plain Kotlin)"]
-        Http["WfmApi: HTTP, v1 and v2"]
-        Sockets["WfmSockets: chat, presence"]
-    end
-    Repos --> Http & Sockets
-    Http & Sockets --> Site[("warframe.market")]
-    Repos --> Warframe[("Warframe's public data")]
-    Updater --> GitHub[("GitHub Releases")]
-```
-
-Screens talk only to repositories, and all knowledge of the site's API lives in `api`.
-
-| Module | Contents |
-| --- | --- |
-| `api` | The warframe.market client: HTTP API, websockets, models and readable errors |
-| `app/data` | Repositories, settings, the encrypted session and the on-disk catalogue cache |
-| `app/notifications` | The background connection, the periodic check and notification actions |
-| `app/update` | Updates from this repository's releases |
-| `app/ui` | Compose screens, charts, theme, motion and navigation |
-
-| | |
-| --- | --- |
-| Language | Kotlin 2.4, coroutines and Flow |
-| UI | Jetpack Compose, Material 3 Expressive, Navigation Compose |
-| Networking | OkHttp 5 (HTTP and websockets), kotlinx.serialization |
-| Images | Coil 3 |
-| Storage | DataStore, Android Keystore |
-| Background | WorkManager, a foreground service |
-| Testing | JUnit, contract tests against the live API |
-| CI/CD | GitHub Actions, Dependabot |
-
-How the app uses the site's two API generations, keeps your status with the app closed, grades
-rivens and updates itself is written up in [docs/internals.md](docs/internals.md).
 
 ---
 
