@@ -73,11 +73,6 @@ traders and keep your status up, all from your phone.
 - Material 3 Expressive, with your wallpaper's colors or its own pastel blue, and an AMOLED black option
 - warframe.market links open in the app, and launcher shortcuts open your messages, search auctions, start one or set you In game
 
-<p align="center">
-  <img src="docs/screenshots/riven-prices.png" alt="Riven prices" width="24%">
-  <img src="docs/screenshots/updates.png" alt="An update downloading in Settings" width="24%">
-</p>
-
 ---
 
 ## Requirements
