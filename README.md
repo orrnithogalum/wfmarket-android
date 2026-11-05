@@ -29,7 +29,6 @@ traders and keep your status up, all from your phone.
 
 ## Contents
 
-- [Highlights](#highlights)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Download](#download)
@@ -39,26 +38,6 @@ traders and keep your status up, all from your phone.
 - [Releasing](#releasing)
 - [Privacy](#privacy)
 - [License](#license)
-
----
-
-## Highlights
-
-- **A client for an undocumented API.** warframe.market is midway between two API generations, so
-  the app speaks both, plus its two websockets for chat and presence. That client is a plain Kotlin
-  module with no Android dependency, and it's tested against the live site every week.
-- **Riven grading.** Each stat gets a grade from S to F for how well it rolled, computed from
-  Warframe's public data export. Unit tests check the results against published grades.
-- **Background delivery without Firebase.** Push from the site would need a relay server, so the
-  app combines periodic WorkManager checks with an optional foreground websocket. That also keeps
-  your trading status visible to other players with the app closed.
-- **Updates itself from GitHub.** New releases download in the background, are checked against
-  GitHub's SHA-256 and the app's own signing key, and install through `PackageInstaller`.
-- **Built to scale.** Every screen is checked at 130% font and a large display size, and the
-  busiest ones at 200%. Status, grades and price changes always carry a label or symbol, not color
-  alone.
-- **Automated releases.** Every push is linted, tested and built. A version tag produces a signed,
-  verified APK attached to a draft release.
 
 ---
 
