@@ -15,6 +15,9 @@ object Shortcuts {
     /** Links within the app that have no page on the site. */
     const val SCHEME = "wfmarket"
 
+    /** Which shortcut opened the app, so the launcher can learn which ones get used. */
+    private const val EXTRA_ID = "com.wfmarket.app.SHORTCUT"
+
     fun publish(context: Context) {
         val shortcuts = listOf(
             shortcut(context, "messages", "Messages", "Messages", "https://warframe.market/im/chats", R.drawable.ic_shortcut_messages),
@@ -30,5 +33,11 @@ object Shortcuts {
             .setShortLabel(short)
             .setLongLabel(long)
             .setIcon(IconCompat.createWithResource(context, icon))
-            .setIntent(Intent(Intent.ACTION_VIEW, uri.toUri(), context, MainActivity::class.java))
+            .setIntent(Intent(Intent.ACTION_VIEW, uri.toUri(), context, MainActivity::class.java).putExtra(EXTRA_ID, id))
+
+    /** Tells the launcher a shortcut was used, which it weighs when ranking and suggesting them. */
+    fun reportUsed(context: Context, intent: Intent?) {
+        val id = intent?.getStringExtra(EXTRA_ID) ?: return
+        runCatching { ShortcutManagerCompat.reportShortcutUsed(context, id) }
+    }
 }

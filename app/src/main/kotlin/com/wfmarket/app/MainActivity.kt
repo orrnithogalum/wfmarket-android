@@ -31,6 +31,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         deepLink = intent?.data
+        if (savedInstanceState == null) Shortcuts.reportUsed(this, intent)
         val container = (application as WfMarketApp).container
         setContent {
             val settings by container.settings.flow.collectAsStateWithLifecycle()
@@ -75,5 +76,6 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         intent.data?.let { deepLink = it }
+        Shortcuts.reportUsed(this, intent)
     }
 }
