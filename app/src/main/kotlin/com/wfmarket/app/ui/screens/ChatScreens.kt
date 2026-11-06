@@ -193,6 +193,11 @@ private fun BatteryPrompt(enabled: Boolean, dismissed: Boolean) {
     }
 }
 
+/**
+ * The app isn't on Google Play, whose policy this request is about. The exemption is what keeps your
+ * status and messages arriving with the app closed, and it's only asked for when you choose to.
+ */
+@android.annotation.SuppressLint("BatteryLife")
 fun requestBatteryExemption(context: android.content.Context) {
     runCatching {
         context.startActivity(
