@@ -5,6 +5,7 @@ import android.app.UiModeManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -36,7 +37,10 @@ class MainActivity : ComponentActivity() {
             val signedIn by container.account.isSignedIn.collectAsStateWithLifecycle()
             // Asked right after sign-in, when the reason for it is obvious.
             LaunchedEffect(signedIn) {
-                if (signedIn && ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // Android 12 and 12L have no such permission: notifications are allowed until turned off.
+                if (signedIn && Build.VERSION.SDK_INT >= 33 &&
+                    ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                ) {
                     requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }

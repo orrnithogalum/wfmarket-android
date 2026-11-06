@@ -1,14 +1,11 @@
 package com.wfmarket.app.notifications
 
 import android.annotation.SuppressLint
-import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
@@ -70,8 +67,12 @@ class Notifier(private val context: Context) {
         return PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
+    /**
+     * Whether notifications can show: the runtime permission on Android 13 and later, which doesn't
+     * exist before it, and the app's notification setting everywhere.
+     */
     private val canPost: Boolean
-        get() = ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        get() = manager.areNotificationsEnabled()
 
     /** A conversation-style notification with inline reply, used for messages seen live. */
     fun showMessage(chat: Chat?, message: ChatMessage, recent: List<ChatMessage>) {
