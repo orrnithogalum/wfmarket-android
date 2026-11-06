@@ -4,6 +4,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
@@ -43,7 +44,9 @@ class RealtimeService : Service() {
                 this,
                 Notifier.ID_SERVICE,
                 notification(container.serviceNotice.value),
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+                // The special-use type is Android 14's. Earlier versions refuse a type they don't know,
+                // and take the one in the manifest when given none.
+                if (Build.VERSION.SDK_INT >= 34) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0,
             )
         }.onFailure {
             // Android refuses background starts in some states. The worker will retry.
