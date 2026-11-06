@@ -15,6 +15,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.ui.platform.LocalWindowInfo
 import com.wfmarket.app.ui.components.Motion
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.animation.scaleOut
@@ -42,7 +43,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.liveRegion
@@ -236,7 +236,8 @@ fun AppRoot(deepLink: Uri?, onDeepLinkHandled: () -> Unit) {
     val unread by container.chats.unread.collectAsStateWithLifecycle()
     val updateWaiting = rememberUpdateWaiting()
     val onTopLevel = TopLevel.entries.any { top -> destination?.hierarchy?.any { it.route == top.route } == true }
-    val wide = LocalConfiguration.current.screenWidthDp >= 600
+    // The window's own width, which in split screen or on a foldable isn't the screen's.
+    val wide = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() } >= 600.dp
 
     LaunchedEffect(deepLink, destination != null) {
         val uri = deepLink ?: return@LaunchedEffect

@@ -60,12 +60,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -831,7 +831,7 @@ private fun MessageBubble(
     } else {
         RoundedCornerShape(topEnd = BubbleRound, bottomEnd = BubbleRound, topStart = top, bottomStart = bottom)
     }
-    val maxWidth = (LocalConfiguration.current.screenWidthDp * 0.78f).dp
+    val maxWidth = with(LocalDensity.current) { (LocalWindowInfo.current.containerSize.width * 0.78f).toDp() }
     // Dragging the conversation sideways slides your messages over, and every message's time in at the edge.
     val reveal = with(LocalDensity.current) { TimesWidth.toPx() }
     val toward = if (LocalLayoutDirection.current == LayoutDirection.Rtl) 1 else -1
