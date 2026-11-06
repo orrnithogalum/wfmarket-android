@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
             // Asked right after sign-in, when the reason for it is obvious.
             LaunchedEffect(signedIn) {
                 // Android 12 and 12L have no such permission: notifications are allowed until turned off.
-                if (signedIn && Build.VERSION.SDK_INT >= 33 &&
+                if (signedIn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                     ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
                 ) {
                     requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)

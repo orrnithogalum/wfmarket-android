@@ -335,12 +335,12 @@ class AppUpdater(
 
     @Suppress("DEPRECATION")
     private fun PackageManager.signedArchiveInfo(path: String): PackageInfo? =
-        if (Build.VERSION.SDK_INT >= 33) getPackageArchiveInfo(path, PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong()))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) getPackageArchiveInfo(path, PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong()))
         else getPackageArchiveInfo(path, PackageManager.GET_SIGNING_CERTIFICATES)
 
     @Suppress("DEPRECATION")
     private fun PackageManager.signedPackageInfo(name: String): PackageInfo =
-        if (Build.VERSION.SDK_INT >= 33) getPackageInfo(name, PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong()))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) getPackageInfo(name, PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong()))
         else getPackageInfo(name, PackageManager.GET_SIGNING_CERTIFICATES)
 
     private fun PackageInfo.signatures(): Set<String> =
@@ -370,7 +370,7 @@ class AppUpdater(
                     setInstallReason(PackageManager.INSTALL_REASON_USER)
                     // An app updating itself may skip the confirmation once the user has allowed it to install apps.
                     setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
-                    if (Build.VERSION.SDK_INT >= 33) setPackageSource(PackageInstaller.PACKAGE_SOURCE_DOWNLOADED_FILE)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) setPackageSource(PackageInstaller.PACKAGE_SOURCE_DOWNLOADED_FILE)
                 }
                 val id = installer.createSession(params)
                 installer.openSession(id).use { session ->
