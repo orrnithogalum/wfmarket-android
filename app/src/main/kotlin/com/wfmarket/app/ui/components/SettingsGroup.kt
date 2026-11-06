@@ -37,7 +37,7 @@ class SettingsGroupScope {
  * [settingsBackground], so the rows stand out from it.
  */
 @Composable
-fun SettingsGroup(title: String? = null, modifier: Modifier = Modifier, content: SettingsGroupScope.() -> Unit) {
+fun SettingsGroup(modifier: Modifier = Modifier, title: String? = null, content: SettingsGroupScope.() -> Unit) {
     val rows = SettingsGroupScope().apply(content).rows
     if (rows.isEmpty()) return
     Column(modifier.fillMaxWidth().padding(horizontal = 16.dp)) {

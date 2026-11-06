@@ -526,7 +526,7 @@ fun RivenPricesPage(catalog: Catalog) {
     Crossfade(state, animationSpec = Motion.fadeIn(), label = "prices") { shown ->
     when {
         shown == PricesState.MOBILE -> PullablePage {
-            MessageBox(Icons.Outlined.PhoneAndroid, "No riven figures for mobile", "Warframe publishes riven trades for PC, PlayStation, Xbox and Switch only.")
+            MessageBox(Icons.Outlined.PhoneAndroid, "No riven figures for mobile", body = "Warframe publishes riven trades for PC, PlayStation, Xbox and Switch only.")
         }
         shown == PricesState.FAILED -> PullablePage { ErrorBox(failure.orEmpty(), onRetry = { refresh(pulled = false) }) }
         shown == PricesState.LOADING || latest == null || weeks == null -> PullablePage { LoadingBox() }

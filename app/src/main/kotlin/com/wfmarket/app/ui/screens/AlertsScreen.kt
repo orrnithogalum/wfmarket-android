@@ -51,8 +51,8 @@ fun AlertsScreen() {
             MessageBox(
                 Icons.Outlined.NotificationsNone,
                 "No alerts yet",
-                "Search auctions and tap “Notify me” to hear about new matches. Tap the bell on someone's auction to follow its bids.",
-                Modifier.padding(padding),
+                body = "Search auctions and tap “Notify me” to hear about new matches. Tap the bell on someone's auction to follow its bids.",
+                modifier = Modifier.padding(padding),
                 shape = MaterialShapes.Sunny,
             ) {
                 FilledTonalButton(onClick = { navigator.auctionSearch(null) }, shapes = ButtonDefaults.shapes()) { Text("Search auctions") }
@@ -67,7 +67,7 @@ fun AlertsScreen() {
                     }
                 }
             }
-            SettingsGroup("Saved searches") {
+            SettingsGroup(title = "Saved searches") {
                 state.alerts.forEachIndexed { index, alert ->
                     row { shapes ->
                         SegmentedListItem(
@@ -95,7 +95,7 @@ fun AlertsScreen() {
                 }
                 valueRow("Add a search", icon = Icons.Filled.Add) { navigator.auctionSearch(null) }
             }
-            SettingsGroup("Followed auctions") {
+            SettingsGroup(title = "Followed auctions") {
                 state.followed.forEach { followed ->
                     valueRow(
                         followed.title,

@@ -189,7 +189,7 @@ fun SettingsScreen() {
                 }
             }
 
-            SettingsGroup("Market") {
+            SettingsGroup(title = "Market") {
                 valueRow("Platform", Platform.of(settings.platform).label) { platformDialog = true }
                 switchRow(
                     "Crossplay",
@@ -200,7 +200,7 @@ fun SettingsScreen() {
                 valueRow("Language", Language.of(settings.language).label) { languageDialog = true }
             }
 
-            SettingsGroup("Status") {
+            SettingsGroup(title = "Status") {
                 switchRow(
                     "Stay online when the app is closed",
                     if (batteryExempt) "Keeps Online or In game showing until the time you chose runs out."
@@ -209,7 +209,7 @@ fun SettingsScreen() {
                 ) { container.settings.setKeepStatusInBackground(it) }
             }
 
-            SettingsGroup("Messages") {
+            SettingsGroup(title = "Messages") {
                 switchRow(
                     "Messages while the app is closed",
                     "Checks for new messages about every 5 minutes",
@@ -231,7 +231,7 @@ fun SettingsScreen() {
                 }
             }
 
-            SettingsGroup("Auctions") {
+            SettingsGroup(title = "Auctions") {
                 val count = alerts.alerts.size + alerts.followed.size
                 valueRow(
                     "Alerts and followed auctions",
@@ -250,7 +250,7 @@ fun SettingsScreen() {
                 ) { container.settings.setRivenGrades(it) }
             }
 
-            SettingsGroup("Appearance") {
+            SettingsGroup(title = "Appearance") {
                 valueRow("Theme", settings.theme.name.lowercase().replaceFirstChar { it.uppercase() }) { themeDialog = true }
                 switchRow("Dynamic color", "Match your wallpaper", settings.dynamicColor) { container.settings.setDynamicColor(it) }
                 if (settings.theme != ThemeMode.LIGHT) {
@@ -263,13 +263,13 @@ fun SettingsScreen() {
                 ) { container.settings.setScrollToTopButton(it) }
             }
 
-            SettingsGroup("Notifications") {
+            SettingsGroup(title = "Notifications") {
                 valueRow("Notification settings", "Sounds and categories") {
                     context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
                 }
             }
 
-            SettingsGroup("Account") {
+            SettingsGroup(title = "Account") {
                 if (signedIn) {
                     valueRow("Sign out") {
                         scope.launch {
@@ -283,7 +283,7 @@ fun SettingsScreen() {
                 }
             }
 
-            SettingsGroup("Updates") {
+            SettingsGroup(title = "Updates") {
                 updateRows(
                     updater,
                     update,
@@ -295,7 +295,7 @@ fun SettingsScreen() {
                 )
             }
 
-            SettingsGroup("About") {
+            SettingsGroup(title = "About") {
                 valueRow("Frequently asked questions") { openUrl("https://warframe.market/faq") }
                 valueRow("Terms of service") { openUrl("https://warframe.market/tos") }
                 valueRow("Privacy") { openUrl("https://warframe.market/privacy") }
@@ -432,7 +432,7 @@ fun AccountSettingsScreen() {
             Modifier.fillMaxSize().imePadding().fadingVerticalScroll(),
         ) {
             val user = me
-            SettingsGroup("Verification") {
+            SettingsGroup(title = "Verification") {
                 if (user?.verification == true) {
                     valueRow("Verified as ${user.ingameName}", "Changed your in-game name? Follow the same steps again to update it.")
                 } else {
@@ -517,7 +517,7 @@ fun AccountSettingsScreen() {
                 ) { Text("Change email") }
             }
 
-            SettingsGroup("Linked accounts") {
+            SettingsGroup(title = "Linked accounts") {
                 LinkableServices.forEach { (service, label) ->
                     val linked = user?.linkedAccounts?.let { accounts ->
                         (accounts[service] ?: accounts["${service}_profile"])?.let { (it as? JsonPrimitive)?.booleanOrNull }
@@ -542,7 +542,7 @@ fun AccountSettingsScreen() {
             }
 
             user?.ignoreList?.takeIf { it.isNotEmpty() }?.let { ignored ->
-                SettingsGroup("Ignored players · ${ignored.size}") {
+                SettingsGroup(title = "Ignored players · ${ignored.size}") {
                     ignored.forEach { id ->
                         valueRow(
                             id,
@@ -558,7 +558,7 @@ fun AccountSettingsScreen() {
                 }
             }
 
-            SettingsGroup("Danger zone") {
+            SettingsGroup(title = "Danger zone") {
                 if (user?.deleteInProgress == true) {
                     valueRow(
                         "Account scheduled for deletion",

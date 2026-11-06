@@ -268,7 +268,7 @@ fun AuctionsScreen() {
             if (tab == AuctionTab.PRICES) {
                 RivenPricesPage(catalog)
             } else if (tab == AuctionTab.SEARCH && !search.canSearch) {
-                MessageBox(Icons.Filled.FilterList, "Search rivens, liches and sisters", "Pick a weapon, stats or an element to see matching auctions.") {
+                MessageBox(Icons.Filled.FilterList, "Search rivens, liches and sisters", body = "Pick a weapon, stats or an element to see matching auctions.") {
                     FilledTonalButton(onClick = { filtersOpen = true }) { Text("Choose filters") }
                 }
             } else {
@@ -325,12 +325,12 @@ fun AuctionsScreen() {
                                         loaded.isEmpty() -> EmptyBox("No auctions here")
                                         tab == AuctionTab.SEARCH && search.hasPriceRange -> EmptyBox(
                                             "Nothing in that price range",
-                                            // The site returns at most 100 listings, so a range far from
+                                            body = // The site returns at most 100 listings, modifier = so a range far from
                                             // the sort's end can miss some that exist.
                                             "${loaded.size} listings are hidden by your filters." +
                                                 if (loaded.size >= 100) " The site only sends 100 at a time, so a narrower search may find more." else "",
                                         )
-                                        else -> EmptyBox("No sellers with that status", "${loaded.size} auctions are hidden by the status filter.")
+                                        else -> EmptyBox("No sellers with that status", body = "${loaded.size} auctions are hidden by the status filter.")
                                     }
                                 }
                             }
@@ -625,8 +625,9 @@ private fun polarityIcon(polarity: String): Int? = when (polarity) {
 
 /** A polarity's symbol, as the game draws it. Polarities without one draw nothing. */
 @Composable
-fun PolarityIcon(polarity: String, modifier: Modifier = Modifier.size(15.dp), tint: Color = LocalContentColor.current) {
-    polarityIcon(polarity)?.let { Icon(painterResource(it), polarity.humanize(), modifier, tint = tint) }
+fun PolarityIcon(polarity: String, modifier: Modifier = Modifier, tint: Color = LocalContentColor.current) {
+    // 15dp unless the caller sizes it: a size given first wins over this one.
+    polarityIcon(polarity)?.let { Icon(painterResource(it), polarity.humanize(), modifier.size(15.dp), tint = tint) }
 }
 
 /** A polarity chip: the symbol beside the name, since few players know the names alone. */

@@ -421,8 +421,8 @@ fun ShapedIcon(icon: ImageVector, shape: RoundedPolygon, modifier: Modifier = Mo
 fun MessageBox(
     icon: ImageVector,
     title: String,
-    body: String? = null,
     modifier: Modifier = Modifier,
+    body: String? = null,
     shape: RoundedPolygon = MaterialShapes.Cookie9Sided,
     action: (@Composable () -> Unit)? = null,
 ) {
@@ -454,16 +454,16 @@ fun ErrorBox(message: String, modifier: Modifier = Modifier, onRetry: (() -> Uni
     LaunchedEffect(connectivity) { connectivity.reconnected.collect { retry?.invoke() } }
     val button: @Composable () -> Unit = { onRetry?.let { FilledTonalButton(onClick = it) { Text("Try again") } } }
     if (online) {
-        MessageBox(Icons.Outlined.CloudOff, "Couldn't load this", message, modifier, MaterialShapes.SoftBurst, button)
+        MessageBox(Icons.Outlined.CloudOff, "Couldn't load this", body = message, modifier = modifier, shape = MaterialShapes.SoftBurst, action = button)
     } else {
         val body = if (onRetry != null) "This will load by itself when you're back online." else "Connect to the internet to load this."
-        MessageBox(Icons.Outlined.WifiOff, "You're offline", body, modifier, MaterialShapes.Clover4Leaf, button)
+        MessageBox(Icons.Outlined.WifiOff, "You're offline", body = body, modifier = modifier, shape = MaterialShapes.Clover4Leaf, action = button)
     }
 }
 
 @Composable
-fun EmptyBox(title: String, body: String? = null, modifier: Modifier = Modifier) {
-    MessageBox(Icons.Outlined.Inbox, title, body, modifier, MaterialShapes.Cookie9Sided)
+fun EmptyBox(title: String, modifier: Modifier = Modifier, body: String? = null) {
+    MessageBox(Icons.Outlined.Inbox, title, body = body, modifier = modifier, shape = MaterialShapes.Cookie9Sided)
 }
 
 @Composable

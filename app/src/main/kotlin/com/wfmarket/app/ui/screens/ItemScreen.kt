@@ -458,7 +458,7 @@ private fun OrdersTab(
                         item {
                             EmptyBox(
                                 "No matching orders",
-                                if (statuses.isNotEmpty() && statuses.size < StatusFilterOptions.size) "Try including more statuses." else null,
+                                body = if (statuses.isNotEmpty() && statuses.size < StatusFilterOptions.size) "Try including more statuses." else null,
                             )
                         }
                     }
@@ -824,7 +824,7 @@ private fun DropsTab(drops: Load<List<DropSource>>, catalog: Catalog, onRetry: (
     val navigator = LocalNavigator.current
     LoadContent(drops, onRetry) { sources ->
         if (sources.isEmpty()) {
-            EmptyBox("No known drop sources", "This item doesn't drop anywhere the site tracks.")
+            EmptyBox("No known drop sources", body = "This item doesn't drop anywhere the site tracks.")
             return@LoadContent
         }
         val relics = sources.filter { it.type == "relic" }.sortedByDescending { it.rates?.get("radiant") ?: 0.0 }

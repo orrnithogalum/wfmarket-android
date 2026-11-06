@@ -184,8 +184,8 @@ fun MyProfileScreen() {
             MessageBox(
                 Icons.Filled.Person,
                 "You're browsing without an account",
-                "Sign in to post orders, message traders, bid on auctions and see your history.",
-                Modifier.padding(padding),
+                body = "Sign in to post orders, message traders, bid on auctions and see your history.",
+                modifier = Modifier.padding(padding),
             ) { Button(onClick = navigator::signIn) { Text("Sign in") } }
         }
         slug != null -> ProfileScreen(slug, topLevel = true)
@@ -205,8 +205,8 @@ fun MyProfileScreen() {
                 MessageBox(
                     Icons.Filled.Person,
                     "Verify your account",
-                    "Verifying links your in-game name, which your profile needs.",
-                    Modifier.padding(padding),
+                    body = "Verifying links your in-game name, which your profile needs.",
+                    modifier = Modifier.padding(padding),
                 ) { Button(onClick = navigator::accountSettings) { Text("Verify") } }
             } else if (failed != null) {
                 ErrorBox(failed!!, Modifier.padding(padding)) {

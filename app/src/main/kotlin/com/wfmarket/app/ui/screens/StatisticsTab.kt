@@ -88,7 +88,7 @@ fun StatisticsTab(item: Item, statistics: Load<ItemStatistics>, onRetry: () -> U
             }
 
             if (closed.isEmpty()) {
-                item { EmptyBox("No trades recorded", "Nobody has closed an order for this in the last ${range.label}.") }
+                item { EmptyBox("No trades recorded", body = "Nobody has closed an order for this in the last ${range.label}.") }
             } else {
                 item { SummaryTiles(closed) }
 

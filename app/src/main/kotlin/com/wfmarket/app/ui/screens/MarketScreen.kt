@@ -433,7 +433,7 @@ private fun MarketContent(
                 Text("${category.label} · ${items.size}", style = MaterialTheme.typography.titleLarge, modifier = listItemMotion().padding(horizontal = 16.dp, vertical = 12.dp))
             }
             itemsIndexed(items, key = { _, item -> item.id }) { index, item ->
-                ItemRow(catalog, item, ListItemDefaults.segmentedShapes(index, items.size), listItemMotion()) { navigator.item(item.slug) }
+                ItemRow(catalog, item, shapes = ListItemDefaults.segmentedShapes(index, items.size), modifier = listItemMotion()) { navigator.item(item.slug) }
             }
             return@FadingLazyColumn
         }
@@ -706,7 +706,7 @@ private fun featuredCards(catalog: Catalog, showcase: Showcase?, resurgence: Pri
 
 /** An item in a list. Given [shapes], it's a row of a rounded card, as on the home page. */
 @Composable
-fun ItemRow(catalog: Catalog, item: Item, shapes: ListItemShapes? = null, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun ItemRow(catalog: Catalog, item: Item, modifier: Modifier = Modifier, shapes: ListItemShapes? = null, onClick: () -> Unit) {
     val headline: @Composable () -> Unit = {
         Text(catalog.itemName(item), style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }

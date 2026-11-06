@@ -143,7 +143,7 @@ fun ChatsScreen() {
         contentWindowInsets = WindowInsets.statusBars,
     ) { padding ->
         if (!signedIn) {
-            MessageBox(Icons.AutoMirrored.Filled.Chat, "Sign in to trade", "Your conversations with other players show up here.", Modifier.padding(padding)) {
+            MessageBox(Icons.AutoMirrored.Filled.Chat, "Sign in to trade", body = "Your conversations with other players show up here.", modifier = Modifier.padding(padding)) {
                 Button(onClick = navigator::signIn) { Text("Sign in") }
             }
             return@Scaffold
@@ -155,7 +155,7 @@ fun ChatsScreen() {
                 item { BatteryPrompt(settings.backgroundMessages, settings.batteryPromptDismissed) }
                 error?.let { message -> item { ErrorBox(message, onRetry = ::refresh) } }
                 if (shown.isEmpty() && loaded && error == null) {
-                    item { EmptyBox("No conversations yet", "Tap an order and choose “Send a message” to start one.") }
+                    item { EmptyBox("No conversations yet", body = "Tap an order and choose “Send a message” to start one.") }
                 }
                 items(shown, key = { it.id }) { chat ->
                     SwipeableChatRow(
@@ -610,7 +610,7 @@ fun ChatScreen(chatId: String) {
             when {
                 loading && messages.isEmpty() -> PullablePage { LoadingBox() }
                 error != null && messages.isEmpty() -> PullablePage { ErrorBox(error!!) }
-                messages.isEmpty() -> PullablePage { EmptyBox("Say hello", "Messages are between you and ${partnerName.ifBlank { "this player" }}.") }
+                messages.isEmpty() -> PullablePage { EmptyBox("Say hello", body = "Messages are between you and ${partnerName.ifBlank { "this player" }}.") }
                 else -> {
                     FadingLazyColumn(
                         state = listState,
