@@ -672,10 +672,10 @@ fun OrderEditorSheet(
     var platinum by remember { mutableStateOf(existing?.platinum?.toString() ?: bestSell?.toString().orEmpty()) }
     var quantity by remember { mutableStateOf(existing?.quantity?.toString() ?: "1") }
     var perTrade by remember { mutableStateOf(existing?.perTrade?.toString() ?: "1") }
-    var rank by remember { mutableStateOf(existing?.rank ?: 0) }
-    var charges by remember { mutableStateOf(existing?.charges ?: item.maxCharges ?: 0) }
-    var amber by remember { mutableStateOf(existing?.amberStars ?: 0) }
-    var cyan by remember { mutableStateOf(existing?.cyanStars ?: 0) }
+    var rank by remember { mutableIntStateOf(existing?.rank ?: 0) }
+    var charges by remember { mutableIntStateOf(existing?.charges ?: item.maxCharges ?: 0) }
+    var amber by remember { mutableIntStateOf(existing?.amberStars ?: 0) }
+    var cyan by remember { mutableIntStateOf(existing?.cyanStars ?: 0) }
     var subtype by remember { mutableStateOf(existing?.subtype ?: item.subtypes.firstOrNull()) }
     var visible by remember { mutableStateOf(existing?.visible ?: true) }
     var busy by remember { mutableStateOf(false) }
