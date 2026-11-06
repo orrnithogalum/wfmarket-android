@@ -10,6 +10,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.wfmarket.api.model.Auction
 import com.wfmarket.api.model.AuctionType
@@ -367,12 +368,12 @@ class Notifier(private val context: Context) {
 
     fun cancelAllChats() {
         runCatching { manager.activeNotifications.filter { it.id == ID_CHAT }.forEach { manager.cancel(it.tag, it.id) } }
-        delivered.edit().clear().apply()
+        delivered.edit { clear() }
     }
 
     /** Dedupes the socket and poll paths, and survives restarts so old messages never re-alert. */
     fun markDelivered(chatId: String, date: String?) {
-        date?.let { delivered.edit().putString(chatId, it).apply() }
+        date?.let { delivered.edit { putString(chatId, it) } }
     }
 
     fun isNewerThanDelivered(chatId: String, date: String?): Boolean {

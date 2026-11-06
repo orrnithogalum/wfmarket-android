@@ -8,6 +8,7 @@ import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
+import androidx.core.content.edit
 import com.wfmarket.app.BuildConfig
 import com.wfmarket.app.data.Notices
 import com.wfmarket.app.data.SettingsStore
@@ -181,14 +182,14 @@ class AppUpdater(
             return
         }
         val now = System.currentTimeMillis()
-        prefs.edit().putLong(KEY_CHECKED_AT, now).apply()
+        prefs.edit { putLong(KEY_CHECKED_AT, now) }
         if (release == null || !isNewer(release.version)) {
-            prefs.edit().remove(KEY_RELEASE).apply()
+            prefs.edit { remove(KEY_RELEASE) }
             clearDownloads()
             _state.value = UpdateState.UpToDate(now)
             return
         }
-        prefs.edit().putString(KEY_RELEASE, json.encodeToString(Release.serializer(), release)).apply()
+        prefs.edit { putString(KEY_RELEASE, json.encodeToString(Release.serializer(), release)) }
         clearDownloads(except = release)
         if (apkFile(release).isComplete(release)) {
             _state.value = UpdateState.Ready(release)
@@ -377,7 +378,7 @@ class AppUpdater(
                         file.inputStream().use { it.copyTo(output) }
                         session.fsync(output)
                     }
-                    prefs.edit().putString(KEY_INSTALLING, release.version).apply()
+                    prefs.edit { putString(KEY_INSTALLING, release.version) }
                     val status = Intent(context, InstallReceiver::class.java).setAction(InstallReceiver.ACTION_STATUS)
                     // Mutable, so the installer can add the result to it.
                     val callback = PendingIntent.getBroadcast(context, id, status, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
@@ -385,7 +386,7 @@ class AppUpdater(
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Couldn't start installing ${release.version}", e)
-                prefs.edit().remove(KEY_INSTALLING).apply()
+                prefs.edit { remove(KEY_INSTALLING) }
                 _state.value = UpdateState.Failed("Couldn't start the install: ${e.message ?: "unknown error"}", release)
             }
         }
@@ -394,7 +395,7 @@ class AppUpdater(
     /** The installer's answer when it can't finish on its own: the user said no, or it failed. */
     fun onInstallResult(status: Int, message: String?) {
         val release = _state.value.release ?: return
-        prefs.edit().remove(KEY_INSTALLING).apply()
+        prefs.edit { remove(KEY_INSTALLING) }
         _state.value = when (status) {
             PackageInstaller.STATUS_SUCCESS -> UpdateState.Installing(release)
             // Turned down at the confirmation: still ready for when the user wants it.
@@ -409,7 +410,7 @@ class AppUpdater(
     /** The new version's first word after Android replaced the app: tidy up, and say it's done. */
     fun onPackageReplaced() {
         val installed = prefs.getString(KEY_INSTALLING, null)
-        prefs.edit().remove(KEY_INSTALLING).remove(KEY_RELEASE).apply()
+        prefs.edit { remove(KEY_INSTALLING); remove(KEY_RELEASE) }
         clearDownloads()
         _state.value = UpdateState.UpToDate(prefs.getLong(KEY_CHECKED_AT, 0L).takeIf { it > 0 })
         if (installed == BuildConfig.VERSION_NAME) notifier.showUpdated(installed)
@@ -417,7 +418,7 @@ class AppUpdater(
 
     /** Puts the card for [version] away until a newer one comes out. */
     fun dismiss(version: String) {
-        prefs.edit().putString(KEY_DISMISSED, version).apply()
+        prefs.edit { putString(KEY_DISMISSED, version) }
         _dismissed.value = version
     }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import androidx.core.content.edit
 import java.security.KeyStore
 import java.util.UUID
 import javax.crypto.Cipher
@@ -24,17 +25,17 @@ class SessionStore(context: Context) {
 
     val deviceId: String
         get() = prefs.getString(KEY_DEVICE, null) ?: UUID.randomUUID().toString().also {
-            prefs.edit().putString(KEY_DEVICE, it).apply()
+            prefs.edit { putString(KEY_DEVICE, it) }
         }
 
     fun save(newToken: String) {
         token = newToken
-        prefs.edit().putString(KEY_TOKEN, encrypt(newToken)).apply()
+        prefs.edit { putString(KEY_TOKEN, encrypt(newToken)) }
     }
 
     fun clear() {
         token = null
-        prefs.edit().remove(KEY_TOKEN).apply()
+        prefs.edit { remove(KEY_TOKEN) }
     }
 
     private fun key(): SecretKey {

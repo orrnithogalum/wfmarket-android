@@ -1,6 +1,7 @@
 package com.wfmarket.app.data
 
 import android.content.Context
+import androidx.core.content.edit
 import com.wfmarket.api.WfmApi
 import com.wfmarket.api.WfmException
 import com.wfmarket.api.model.*
@@ -215,7 +216,7 @@ class CatalogRepository(
                 runCatching {
                     api.rawV2(path).also { text ->
                         cache.writeText(text)
-                        versionsPrefs.edit().putString(versionKey, remote).apply()
+                        versionsPrefs.edit { putString(versionKey, remote) }
                     }
                 }.getOrElse { failure ->
                     // Stale data beats none: fall back to the old copy when offline.
